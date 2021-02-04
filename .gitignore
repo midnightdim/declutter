@@ -1,0 +1,12 @@
+__pycache__
+archive/
+backup/
+samples/
+sandbox.py
+*.log
+*.exe
+*.bak
+*.spec
+build.bat
+build/
+dist/
