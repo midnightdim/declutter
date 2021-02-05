@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange
+from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
@@ -9,9 +9,9 @@ from declutter_lib import *
 from copy import deepcopy
 from time import time
 
-SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
+#SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 
-class RulesWindow(QDialog):
+class RulesWindow(QMainWindow):
     def __init__(self):
         super(RulesWindow, self).__init__()
         self.ui = Ui_rulesWindow()
@@ -40,6 +40,18 @@ class RulesWindow(QDialog):
         self.service_run_details = []
         #self.start_thread()        
 
+        self.ui.addRule.setVisible(False)
+        self.ui.applyRule.setVisible(False)
+        self.ui.deleteRule.setVisible(False)
+        self.ui.moveUp.setVisible(False)
+        self.ui.moveDown.setVisible(False)
+    
+        self.ui.actionAdd.triggered.connect(self.add_rule)
+        self.ui.actionDelete.triggered.connect(self.delete_rule)
+        self.ui.actionExecute.triggered.connect(self.apply_rule)
+        # self.ui.actionMove_up.triggered.connect(self.move_rule_up)
+        # self.ui.actionMove_down.triggered.connect(self.move_rule_down)
+        
         self.timer = QTimer(self)
         self.timer.setInterval(20000)
         #self.connect(timer, SIGNAL("timeout()"), self.start_thread)
@@ -249,7 +261,6 @@ def main():
     window = RulesWindow()
     window.show()
     sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
     main()
