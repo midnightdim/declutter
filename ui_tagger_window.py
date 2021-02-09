@@ -18,7 +18,7 @@ class Ui_taggerWindow(object):
     def setupUi(self, taggerWindow):
         if not taggerWindow.objectName():
             taggerWindow.setObjectName(u"taggerWindow")
-        taggerWindow.resize(868, 599)
+        taggerWindow.resize(1000, 600)
         icon = QIcon()
         icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
         taggerWindow.setWindowIcon(icon)
@@ -40,7 +40,7 @@ class Ui_taggerWindow(object):
         taggerWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(taggerWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 868, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1000, 21))
         self.menuOptions = QMenu(self.menubar)
         self.menuOptions.setObjectName(u"menuOptions")
         taggerWindow.setMenuBar(self.menubar)

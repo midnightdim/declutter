@@ -1,13 +1,17 @@
 import sys
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow
+from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
 from ui_list_dialog import Ui_listDialog
+from ui_settings_dialog import Ui_settingsDialog
 from declutter_lib import *
 from copy import deepcopy
 from time import time
+import os
+import logging
+
 
 #SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 
@@ -28,7 +32,7 @@ class RulesWindow(QMainWindow):
         self.create_actions()
         self.create_tray_icon()
         self.trayIcon.show()
-        self.settings = load_settings(SETTINGS_FILE)
+        self.settings = load_settings()
         
         self.ui.addRule.clicked.connect(self.add_rule)      
         self.load_rules()
@@ -49,17 +53,60 @@ class RulesWindow(QMainWindow):
         self.ui.actionAdd.triggered.connect(self.add_rule)
         self.ui.actionDelete.triggered.connect(self.delete_rule)
         self.ui.actionExecute.triggered.connect(self.apply_rule)
-        # self.ui.actionMove_up.triggered.connect(self.move_rule_up)
-        # self.ui.actionMove_down.triggered.connect(self.move_rule_down)
+        self.ui.actionOpen_log_file.triggered.connect(self.open_log_file)
+        self.ui.actionClear_log_file.triggered.connect(self.clear_log_file)
+        self.ui.actionSettings.triggered.connect(self.show_settings)
+        self.ui.actionAbout.triggered.connect(self.show_about)
+        
+        self.ui.actionMove_up.triggered.connect(self.not_implemented_yet)
+        self.ui.actionMove_down.triggered.connect(self.not_implemented_yet)
+        #self.ui.actionMove_up.triggered.connect(self.move_rule_up)
+        #self.ui.actionMove_down.triggered.connect(self.move_rule_down)
         
         self.timer = QTimer(self)
-        self.timer.setInterval(20000)
+        self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
         #self.connect(timer, SIGNAL("timeout()"), self.start_thread)
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
 
         #DoubleClicked.connect(self.editRule)
-  
+    
+    def not_implemented_yet(self):
+        QMessageBox.information(self,"Sorry", "This feature is not implemented yet!")
+    
+    def show_about(self):
+        msgbox = QMessageBox.about(self,"About DeClutter", "DeClutter version "+str(VERSION)+"\nhttps://declutter.top\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
+
+    def show_settings(self):
+        self.settings = load_settings()
+        settings_window = QDialog(self)
+        settings_window.ui = Ui_settingsDialog()
+        settings_window.ui.setupUi(settings_window)
+        rbs = [c for c in settings_window.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))] # TBD vN this is not very safe
+        rbs[self.settings['date_type']].setChecked(True)
+        settings_window.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
+        if settings_window.exec_():
+            for c in rbs:
+                if c.isChecked():
+                    self.settings['date_type'] = rbs.index(c)
+            self.settings['rule_exec_interval']=float(settings_window.ui.ruleExecIntervalEdit.text())*60
+            self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
+            save_settings(SETTINGS_FILE, self.settings)
+
+    def open_log_file(self):
+        os.startfile(LOG_FILE)
+
+    def clear_log_file(self):
+        reply = QMessageBox.question(self, "Warning",
+        "Are you sure you want to clear the log?",
+        QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            try:
+                with open(LOG_FILE, 'w'):
+                    pass
+            except Exception as e:
+                logging.exception(f'exception {e}')  
+
     def message_clicked(self):
         msgBox = QDialog(self)
         msgBox.ui = Ui_listDialog()
@@ -229,7 +276,7 @@ class declutter_service(QThread):
         self.settings = load_settings(SETTINGS_FILE)
 
     def run(self):
-        print("Service launched")
+        print("Processing rules...",time())
         #print("Runs every",self.settings['rule_exec_interval'],"seconds")
         # Do something on the worker thread
         #a = 1 + 1
@@ -257,6 +304,8 @@ class declutter_service(QThread):
 def main():
     app = QApplication(sys.argv)
     #QApplication.setQuitOnLastWindowClosed(False)
+
+    #logging.info("DeClutter 2.0 started")
 
     window = RulesWindow()
     window.show()

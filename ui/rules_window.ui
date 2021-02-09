@@ -148,9 +148,17 @@
     <property name="title">
      <string>Options</string>
     </property>
+    <addaction name="actionSettings"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuOptions"/>
    <addaction name="menuOptions_2"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -172,7 +180,7 @@
   <action name="actionAdd">
    <property name="icon">
     <iconset>
-     <normaloff>icons/plus.svg</normaloff>icons/plus.svg</iconset>
+     <normaloff>icons/document-new.svg</normaloff>icons/document-new.svg</iconset>
    </property>
    <property name="text">
     <string>Add</string>
@@ -197,7 +205,7 @@
   <action name="actionDelete">
    <property name="icon">
     <iconset>
-     <normaloff>icons/cross.svg</normaloff>icons/cross.svg</iconset>
+     <normaloff>icons/trash.svg</normaloff>icons/trash.svg</iconset>
    </property>
    <property name="text">
     <string>Delete</string>
@@ -237,6 +245,16 @@
    </property>
    <property name="shortcut">
     <string>Down</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>

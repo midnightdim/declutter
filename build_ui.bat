@@ -4,4 +4,5 @@ pyside6-uic ui\rules_window.ui > ui_rules_window.py
 pyside6-uic ui\condition_dialog.ui > ui_condition_dialog.py
 pyside6-uic ui\list_dialog.ui > ui_list_dialog.py
 pyside6-uic ui\tagger_window.ui > ui_tagger_window.py
+pyside6-uic ui\settings_dialog.ui > ui_settings_dialog.py
 pyside6-rcc ui\DeClutter.qrc > DeClutter_rc.py

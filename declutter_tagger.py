@@ -19,18 +19,12 @@ class TaggerWindow(QMainWindow):
 
     def populate(self):
         path = r"D:\DIM\WinFiles\Downloads"
-        #path = str(Path.home() / "Downloads")
-        #path = r"G:\QUIK_VTB"
-        #path = ""
-        #path = r"D:\DIM\WinFiles\Downloads"
-        #path = normpath(r"D:\Projects.other\Programming\DeClutter archive\test")
-        #path = Path(path)
-        #print(path)
         self.model = TagFSModel()
         #self.model = QFileSystemModel()
         self.model.setRootPath(path)
         self.model.setFilter(QDir.AllEntries | QDir.NoDot)
         self.model.sort(0,Qt.SortOrder.AscendingOrder)
+        #self.model.setHeaderData(4,)
         #self.model.setFilter(QDir.AllDirs | QDir.NoDot)
         #self.model.sort(QDir.DirsFirst)
         self.ui.treeView.setModel(self.model)
@@ -44,7 +38,12 @@ class TaggerWindow(QMainWindow):
         self.ui.treeView.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.ui.treeView.resizeColumnToContents(0)  # doesn't work for some reason
         self.ui.treeView.doubleClicked.connect(self.open)
+        self.ui.actionManage_Tags.triggered.connect(self.manage_tags)
         self.checkAction = {}
+
+
+    def manage_tags(self):
+        print("manage tags")
 
     def open(self):
         index = self.ui.treeView.currentIndex()
@@ -98,6 +97,12 @@ class TaggerWindow(QMainWindow):
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent = QModelIndex()):
         return super(TagFSModel, self).columnCount()+1
+    
+    def headerData(self, section, orientation, role):
+        if section == 4 and role == Qt.DisplayRole:
+            return "Tag(s)"
+        else:
+            return super(TagFSModel, self).headerData(section, orientation, role)        
 
     def data(self, index, role):
         if index.column() == self.columnCount() - 1:

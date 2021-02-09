@@ -14,7 +14,7 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 
-VERSION = '0.55'
+VERSION = '1.00'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -25,7 +25,7 @@ if not Path(APP_FOLDER).is_dir():
 logging.basicConfig(level=logging.DEBUG, filename= LOG_FILE, filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
-def load_settings(settings_file):
+def load_settings(settings_file = SETTINGS_FILE):
     if not os.path.isfile(settings_file):
         settings = {}
         settings['version'] = VERSION
@@ -659,7 +659,7 @@ def remove_all_tags(filename):
     c = conn.cursor()    
     c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename,))
     row = c.fetchone()
-    print(row)
+    #print(row)
     if row is None:
         return
     else:
