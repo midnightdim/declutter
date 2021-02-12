@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="images">
+    <file>DeClutter.ico</file>
+    <file>icons/arrow-thin-down.svg</file>
+    <file>icons/arrow-thin-up.svg</file>
+    <file>icons/document-new.svg</file>
+    <file>icons/trash.svg</file>
+  </qresource>
+</RCC>

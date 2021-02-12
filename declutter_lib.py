@@ -19,8 +19,6 @@ APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
-if not Path(APP_FOLDER).is_dir():
-    Path(APP_FOLDER).mkdir()
 
 logging.basicConfig(level=logging.DEBUG, filename= LOG_FILE, filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
@@ -30,7 +28,6 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings = {}
         settings['version'] = VERSION
         settings['current_folder'] = ''
-        #settings['current_subfolder'] = ''
         settings['current_drive'] = ''
         settings['folders'] = [] # TBD legacy
         settings['tags'] = []
@@ -38,8 +35,6 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['rules'] = []
         settings['rule_exec_interval'] = 300
         settings['dryrun'] = False
-        #settings['treeview'] = False
-        #settings['tree_expanded'] = True
         settings['tag_filter_mode'] = "any"
         settings['date_type'] = 0
         settings['view_show_filter'] = False
@@ -56,25 +51,17 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['version'] = VERSION
         settings['current_drive'] = settings['current_drive'] if 'current_drive' in settings.keys() else ""
         settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""  
-        #settings['current_subfolder'] = settings['current_subfolder'] if 'current_subfolder' in settings.keys() else settings['current_folder']  # TBD legacy
         settings['folders'] = settings['folders'] if 'folders' in settings.keys() else []
         settings['tags'] = settings['tags'] if 'tags' in settings.keys() else []
         settings['filter_tags'] = settings['filter_tags'] if 'filter_tags' in settings.keys() else []
         settings['rules'] = settings['rules'] if 'rules' in settings.keys() else []
         settings['rule_exec_interval'] = settings['rule_exec_interval'] if 'rule_exec_interval' in settings.keys() else 300
         settings['dryrun'] = settings['dryrun'] if 'dryrun' in settings.keys() else False
-        #settings['treeview'] = settings['treeview'] if 'treeview' in settings.keys() else False
-        #settings['tree_expanded'] = settings['tree_expanded'] if 'tree_expanded' in settings.keys() else True
         settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
         settings['date_type'] = settings['date_type'] if 'date_type' in settings.keys() else 0
         settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
     return settings
 
-def get_folders(settings): # TBD obsolete, remove this
-    res = []
-    for f in settings['folders']:
-        res.append(os.path.normpath(f['path']))
-    return res    
 
 def save_settings(settings_file, settings):
     # TBD this should be carefully checked before writing
@@ -89,7 +76,8 @@ def save_settings(settings_file, settings):
         jsondump(settings, f, indent=4)
 
 def get_all_tags():
-    return load_settings(SETTINGS_FILE)['tags']
+    #return load_settings(SETTINGS_FILE)['tags']
+    return get_all_tags_from_db()
 
 def get_all_files(dirname, files_found = [], recursive = True):
     files = os.listdir(dirname)
@@ -374,7 +362,6 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                         if not conditions_met:                    
                             break     
 
-
             #print(fullname)
             #print(conditions_met)
             if conditions_met:
@@ -472,6 +459,13 @@ def get_rule_by_name(name):
     settings = load_settings(SETTINGS_FILE)
     for r in settings['rules']:
         if r['name'] == name:
+            return r
+
+def get_rule_by_id(rule_id, rules = []):
+    if not rules:
+        rules = load_settings(SETTINGS_FILE)['rules']
+    for r in rules:
+        if int(r['id']) == rule_id:
             return r
 
 def advanced_copy(source_path, target_path, overwrite = False):  
@@ -583,6 +577,92 @@ def init_db():
     conn.commit()
     conn.close()    
 
+def migrate_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("PRAGMA user_version")
+    pragma = c.fetchone()[0]
+    logging.info("Database version:" + str(pragma))
+    if (not pragma) or (pragma == 0):
+        try:
+            logging.info("Migration from 0 to 1")
+            tags = load_settings(SETTINGS_FILE)['tags']
+            db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
+            logging.info("Adding missing tags from settings file")
+            for t in [t for t in tags if t not in db_tags]:
+                logging.info("Adding "+t)
+                c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
+                #create_tag(t)
+
+            settings = load_settings()
+            settings['tags'] = []
+            save_settings(SETTINGS_FILE, settings)
+
+            c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")        
+            i=1
+            for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+                c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
+                i+=1
+            #c.execute("DROP TABLE tags")
+            #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
+
+            c.execute("PRAGMA user_version = 1")
+            logging.info("Database updated to version 1")
+            pragma = 1
+        except Exception as e:
+            logging.exception(e)
+       
+    conn.commit()
+    conn.close()        
+
+def create_tag(tag):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    c.execute("SELECT max(list_order) from tags")
+    # print(c.fetchone())
+    # print(c.fetchone() is None)
+    # print(type(c.fetchone()))
+    row = c.fetchone()[0]
+    # print(row)
+    # print(type(row))
+    # print(row is None)
+    if row is None:
+        count = 1
+    else:
+        count = row+1
+        
+    #print(row)
+    c.execute("INSERT INTO tags VALUES (null, ?, ?)", (tag,count))
+    conn.commit()
+    conn.close()
+
+def move_tag(tag, direction): # Moves tag up or down in lists
+    tags = get_all_tags()
+    if tag == tags[0] and direction == "up":
+        print("it's at the top, can't move")
+        return
+    if tag == tags[-1] and direction == "down":
+        print("it's at the bottom, can't move")
+        return
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    ind = tags.index(tag)
+    if direction == "down":
+        swap = tags[ind+1]
+        tags[ind] = swap
+        tags[ind+1] = tag
+    elif direction == "up":
+        swap = tags[ind-1]
+        tags[ind] = swap
+        tags[ind-1] = tag
+    
+    for t in tags:
+        c.execute("UPDATE tags set list_order = ? WHERE name = ?", (tags.index(t)+1,t))
+
+    conn.commit()
+    conn.close()    
+
+
 def set_tags(filename, tags): # TBD optimize this
     filename = str(filename).lower()
     #print('setting tags')
@@ -679,7 +759,7 @@ def get_all_files_from_db():
 def get_all_tags_from_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT name FROM tags")]
+    tags = [f[0] for f in c.execute("SELECT name FROM tags ORDER by list_order")]
     conn.close()
     return tags
 
@@ -693,24 +773,13 @@ def get_files_by_tag(tag):
 def remove_tag(filename, tag):
     remove_tags(filename, [tag])
 
-def remove_tag_global(tag):
+def delete_tag(tag): # Removes tag from the database
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
     c.execute("DELETE FROM file_tags WHERE file_tags.tag_id IN (SELECT id from tags WHERE name = ?)", (tag,))
     c.execute("DELETE FROM tags WHERE name = ?", (tag,))
     conn.commit()
-    conn.close()    
-
-def migrate_to_db(): # TBD remove this in v0.6
-    settings = load_settings(SETTINGS_FILE)
-    for folder in settings['folders']:
-        files = get_all_files(folder['path'])
-        for f in files:
-            if get_tags_sc(f):
-                set_tags(f, get_tags_sc(f))
-        remove_all_tags_in_folder(folder['path'])
-    settings['folders'] = []
-    save_settings(SETTINGS_FILE, settings)
+    conn.close()
 
 def check_files(): # TBD need to check if files still exist and if not remove them
     settings = load_settings(SETTINGS_FILE)
@@ -718,7 +787,7 @@ def check_files(): # TBD need to check if files still exist and if not remove th
     if tags and settings['tags']:
         for t in tags:
             if t not in settings['tags']:
-                remove_tag_global(t)
+                delete_tag(t)
     files = get_all_files_from_db()
     if files:
         for f in files:
@@ -734,7 +803,7 @@ def check_files(): # TBD need to check if files still exist and if not remove th
                 else:
                     filename_tolower(f)
         else:
-            remove_tag_global(t)
+            delete_tag(t)
 
 def filename_tolower(filename): # TBD remove this in the future
     filename = str(filename)
@@ -793,7 +862,21 @@ def import_tags(dirname, tagsfile):
     else:
         logging.error(str(dirname) + ' is not a valid folder')
 
+if not Path(APP_FOLDER).is_dir():
+    Path(APP_FOLDER).mkdir()
 
+if not Path(DB_FILE).exists():
+    logging.info(r"Database doesn't exist, creating")
+    try:
+        init_db()
+        migrate_db()        
+    except Exception as e:
+        logging.exception(e)
+else:
+    try:
+        migrate_db()
+    except Exception as e:
+        logging.exception(e)
 
 
 #migrate_to_db()
@@ -808,3 +891,11 @@ def import_tags(dirname, tagsfile):
 
 #print(get_files_affected_by_rule(get_rule_by_name('Archive invoices')))
 #apply_rule(get_rule_by_name('Archive invoices'))
+#pragma = migrate_db()
+#print(bool(pragma))
+#migrate_db()
+
+
+settings = load_settings()
+settings['tags'] = []
+save_settings(SETTINGS_FILE, settings)

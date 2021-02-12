@@ -18,7 +18,7 @@ class Ui_RuleEditWindow(object):
         if not RuleEditWindow.objectName():
             RuleEditWindow.setObjectName(u"RuleEditWindow")
         RuleEditWindow.setWindowModality(Qt.ApplicationModal)
-        RuleEditWindow.resize(550, 550)
+        RuleEditWindow.resize(694, 550)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -258,6 +258,10 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_7.addWidget(self.overwriteComboBox)
 
+        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_7.addItem(self.horizontalSpacer_4)
+
 
         self.gridLayout.addLayout(self.horizontalLayout_7, 10, 0, 1, 1)
 
@@ -280,6 +284,11 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer)
 
+        self.advancedButton = QPushButton(RuleEditWindow)
+        self.advancedButton.setObjectName(u"advancedButton")
+
+        self.horizontalLayout_8.addWidget(self.advancedButton)
+
         self.testButton = QPushButton(RuleEditWindow)
         self.testButton.setObjectName(u"testButton")
 
@@ -292,11 +301,43 @@ class Ui_RuleEditWindow(object):
         self.horizontalLayout_8.addWidget(self.buttonBox)
 
 
-        self.gridLayout_2.addLayout(self.horizontalLayout_8, 3, 0, 1, 1)
+        self.gridLayout_2.addLayout(self.horizontalLayout_8, 6, 0, 1, 1)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer, 2, 0, 1, 1)
+        self.gridLayout_2.addItem(self.verticalSpacer, 5, 0, 1, 1)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.ignoreNewestCheckBox = QCheckBox(RuleEditWindow)
+        self.ignoreNewestCheckBox.setObjectName(u"ignoreNewestCheckBox")
+
+        self.horizontalLayout_3.addWidget(self.ignoreNewestCheckBox)
+
+        self.numberNewestEdit = QLineEdit(RuleEditWindow)
+        self.numberNewestEdit.setObjectName(u"numberNewestEdit")
+        self.numberNewestEdit.setMaximumSize(QSize(40, 16777215))
+
+        self.horizontalLayout_3.addWidget(self.numberNewestEdit)
+
+        self.newestLabel = QLabel(RuleEditWindow)
+        self.newestLabel.setObjectName(u"newestLabel")
+
+        self.horizontalLayout_3.addWidget(self.newestLabel)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
+
+
+        self.gridLayout_2.addLayout(self.horizontalLayout_3, 3, 0, 1, 1)
+
+        self.line = QFrame(RuleEditWindow)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+
+        self.gridLayout_2.addWidget(self.line, 2, 0, 1, 1)
 
 
         self.retranslateUi(RuleEditWindow)
@@ -326,7 +367,7 @@ class Ui_RuleEditWindow(object):
         self.label_5.setText(QCoreApplication.translate("RuleEditWindow", u"Do the following:", None))
         self.keepTagsCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep tags", None))
         self.keepFolderStructureCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep folder structure", None))
-        self.folderBrowseButton.setText(QCoreApplication.translate("RuleEditWindow", u"Browse..", None))
+        self.folderBrowseButton.setText(QCoreApplication.translate("RuleEditWindow", u"Browse...", None))
         self.actionComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"Move", None))
         self.actionComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"Delete", None))
         self.actionComboBox.setItemText(2, QCoreApplication.translate("RuleEditWindow", u"Send to Trash", None))
@@ -341,6 +382,9 @@ class Ui_RuleEditWindow(object):
         self.overwriteComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"increment name", None))
         self.overwriteComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"overwrite", None))
 
+        self.advancedButton.setText(QCoreApplication.translate("RuleEditWindow", u"Advanced...", None))
         self.testButton.setText(QCoreApplication.translate("RuleEditWindow", u"Test", None))
+        self.ignoreNewestCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Ignore", None))
+        self.newestLabel.setText(QCoreApplication.translate("RuleEditWindow", u"newest file(s) in every folder", None))
     # retranslateUi
 

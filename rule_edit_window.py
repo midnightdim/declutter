@@ -34,17 +34,35 @@ class RuleEditWindow(QDialog):
         self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
         self.ui.tagsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.ui.tagsList.addItems(get_all_tags())
+        self.ui.advancedButton.clicked.connect(self.show_advanced)
         # self.ui.buttonBox.clicked.connect(self.process)
- 
+    
+        self.ui.ignoreNewestCheckBox.setVisible(False)
+        self.ui.numberNewestEdit.setVisible(False)
+        self.ui.newestLabel.setVisible(False)
+        self.ui.line.setVisible(False)
+
+        self.ui.tagAddButton.setVisible(False)
+        self.ui.conditionLoadButton.setVisible(False)
+        self.ui.conditionSaveButton.setVisible(False)
+
         self.action_change()
+
+    def show_advanced(self):
+        self.ui.line.setVisible(True)
+        self.ui.advancedButton.setVisible(False)
+        self.ui.ignoreNewestCheckBox.setVisible(True)
+        self.ui.numberNewestEdit.setVisible(True)
+        self.ui.newestLabel.setVisible(True)
 
     def add_condition(self):
         self.condition_window = ConditionDialog()
         self.condition_window.exec_()
         if not 'conditions' in self.rule.keys():
             self.rule['conditions'] = []
-        self.rule['conditions'].append(self.condition_window.condition)
-        self.refresh_conditions()
+        if self.condition_window.condition:
+            self.rule['conditions'].append(self.condition_window.condition)
+            self.refresh_conditions()
         #print(self.rule['conditions'])
         #print(self.condition_window.condition)
 
@@ -68,6 +86,7 @@ class RuleEditWindow(QDialog):
 
     def refresh_conditions(self):
         conds = []
+
         for c in self.rule['conditions']:
             if c['type'] == 'tags':
                 conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + str(c['tags']) if c['tag_switch']!='no tags' else ''))
@@ -105,16 +124,28 @@ class RuleEditWindow(QDialog):
         self.rule['name_pattern'] = self.ui.renameEdit.text()
         self.rule['overwrite_switch'] = self.ui.overwriteComboBox.currentText()
         self.rule['tags'] = [self.ui.tagsList.item(row).text() for row in range(0,self.ui.tagsList.count()) if self.ui.tagsList.item(row).isSelected()]
+        self.rule['ignore_newest'] = self.ui.ignoreNewestCheckBox.isChecked()
+        self.rule['ignore_N'] = self.ui.numberNewestEdit.text()
 
     def accept(self):
-        #print("Saving")
         self.update_rule_from_ui()
-        self.updated = True
-        #self.rule_init = self.rule
-        #self.setResult(QDialog.DialogCode.Accepted)  # doesn't work for some reason
-        #self.setResult(1)
-        #print(self.result())
-        self.close()
+        error = ""
+        error = "Please specify the number of files to ignore" if (self.rule['ignore_newest'] and self.rule['ignore_N']=="") else error #TBD check if ignore_N is int
+        error = "Please specify the name pattern" if (self.rule['action'] == "Rename" and self.rule['name_pattern'] == "") else error
+        error = "Please specify the target subfolder" if (self.rule['action'] == "Move to subfolder" and self.rule['target_subfolder'] == "") else error
+        error = "Please specify the target folder" if (self.rule['action'] in ("Move","Copy") and self.rule['target_folder'] == "") else error
+        error = "Please add at least one condition" if 'conditions' not in self.rule.keys() or not self.rule['conditions'] else error
+        error = "Please select at least one source" if ('folders' not in self.rule.keys()) or (not self.rule['folders']) else error
+        error = "Please enter the name" if self.rule['name'] == "" else error
+        if error:
+            QMessageBox.critical(self,"Error",error,QMessageBox.Ok)
+        else:
+            self.updated = True
+            #self.rule_init = self.rule
+            #self.setResult(QDialog.DialogCode.Accepted)  # TBD vN doesn't work for some reason, we shouldn't use a special variable self.updated at all
+            #self.setResult(1)
+            #print(self.result())
+            self.close()
 
     def test_rule(self):
         #msgBox = QMessageBox.information(self,"Some title","Files and folders affected by this rule:")
@@ -163,6 +194,15 @@ class RuleEditWindow(QDialog):
             if self.ui.tagsList.item(row).text() in rule['tags']:
                 self.ui.tagsList.item(row).setSelected(True)
         self.action_change()
+
+        self.ui.ignoreNewestCheckBox.setChecked(rule['ignore_newest'])
+        self.ui.numberNewestEdit.setText(rule['ignore_N'])
+
+        if self.rule['ignore_newest']:
+            self.ui.line.setVisible(True)
+            self.ui.ignoreNewestCheckBox.setVisible(True)
+            self.ui.numberNewestEdit.setVisible(True)
+            self.ui.newestLabel.setVisible(True)
 
     def action_change(self):
         state = self.ui.actionComboBox.currentText()

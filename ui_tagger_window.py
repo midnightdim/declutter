@@ -26,8 +26,23 @@ class Ui_taggerWindow(object):
         self.actionManage_Tags.setObjectName(u"actionManage_Tags")
         self.centralwidget = QWidget(taggerWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.gridLayout = QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName(u"gridLayout")
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.pathEdit = QLineEdit(self.centralwidget)
+        self.pathEdit.setObjectName(u"pathEdit")
+
+        self.horizontalLayout.addWidget(self.pathEdit)
+
+        self.browseButton = QPushButton(self.centralwidget)
+        self.browseButton.setObjectName(u"browseButton")
+
+        self.horizontalLayout.addWidget(self.browseButton)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout)
+
         self.treeView = QTreeView(self.centralwidget)
         self.treeView.setObjectName(u"treeView")
         self.treeView.setRootIsDecorated(False)
@@ -35,7 +50,7 @@ class Ui_taggerWindow(object):
         self.treeView.setSortingEnabled(True)
         self.treeView.setExpandsOnDoubleClick(False)
 
-        self.gridLayout.addWidget(self.treeView, 0, 0, 1, 1)
+        self.verticalLayout.addWidget(self.treeView)
 
         taggerWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(taggerWindow)
@@ -59,6 +74,7 @@ class Ui_taggerWindow(object):
     def retranslateUi(self, taggerWindow):
         taggerWindow.setWindowTitle(QCoreApplication.translate("taggerWindow", u"DeClutter: Tagger", None))
         self.actionManage_Tags.setText(QCoreApplication.translate("taggerWindow", u"Manage Tags", None))
+        self.browseButton.setText(QCoreApplication.translate("taggerWindow", u"Browse...", None))
         self.menuOptions.setTitle(QCoreApplication.translate("taggerWindow", u"Options", None))
     # retranslateUi
 

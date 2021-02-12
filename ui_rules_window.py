@@ -140,8 +140,8 @@ class Ui_rulesWindow(object):
         self.toolBar.setObjectName(u"toolBar")
         rulesWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
 
-        self.menubar.addAction(self.menuOptions.menuAction())
         self.menubar.addAction(self.menuOptions_2.menuAction())
+        self.menubar.addAction(self.menuOptions.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
         self.menuOptions.addAction(self.actionOpen_log_file)
         self.menuOptions.addAction(self.actionClear_log_file)

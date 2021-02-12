@@ -41,6 +41,197 @@ Ci\x86\x1e\xa0O\x9f>\xfd\xbf\xfe\xc53\xf2\x1aD\
 \xbf\xacVZ\x99\xe8_:/\xafT\xf43\x96\xe3\xcf\
 \x1f\xfa\xf4\xe9\xffw?\xdb\xff?\xc0r\xb0\xda\xe4.\
 ?\xcb\x8b`\x8c1\xb6W\x7f\x00c&\x87,\
+\x00\x00\x02d\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0a<!-- Gener\
+ator: Adobe Illu\
+strator 19.2.1, \
+SVG Export Plug-\
+In . SVG Version\
+: 6.00 Build 0) \
+ -->\x0a<svg versio\
+n=\x221.1\x22 id=\x22Laye\
+r_1\x22 xmlns=\x22http\
+://www.w3.org/20\
+00/svg\x22 xmlns:xl\
+ink=\x22http://www.\
+w3.org/1999/xlin\
+k\x22 x=\x220px\x22 y=\x220p\
+x\x22\x0a\x09 width=\x2292px\
+\x22 height=\x2292px\x22 \
+viewBox=\x220 0 92 \
+92\x22 enable-backg\
+round=\x22new 0 0 9\
+2 92\x22 xml:space=\
+\x22preserve\x22>\x0a<pat\
+h id=\x22XMLID_1226\
+_\x22 d=\x22M78.8,25.5\
+L56.7,3.2C55.9,2\
+.4,54.9,2,53.8,2\
+H16c-2.2,0-4,1.8\
+-4,4v80c0,2.2,1.\
+8,4,4,4h60c2.2,0\
+,4-1.8,4-4\x0a\x09V28.\
+3C80,27.2,79.6,2\
+6.2,78.8,25.5z M\
+72,30H52V10h0.2L\
+72,30z M20,82V10\
+h24v23.9c0,2.2,1\
+.7,4.1,3.9,4.1H7\
+2v44H20z\x22/>\x0a</sv\
+g>\x0a\
+\x00\x00\x04\x0e\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0a<!-- Gener\
+ator: Adobe Illu\
+strator 19.2.1, \
+SVG Export Plug-\
+In . SVG Version\
+: 6.00 Build 0) \
+ -->\x0a<svg versio\
+n=\x221.1\x22 id=\x22Laye\
+r_1\x22 xmlns=\x22http\
+://www.w3.org/20\
+00/svg\x22 xmlns:xl\
+ink=\x22http://www.\
+w3.org/1999/xlin\
+k\x22 x=\x220px\x22 y=\x220p\
+x\x22\x0a\x09 width=\x2292px\
+\x22 height=\x2292px\x22 \
+viewBox=\x220 0 92 \
+92\x22 enable-backg\
+round=\x22new 0 0 9\
+2 92\x22 xml:space=\
+\x22preserve\x22>\x0a<pat\
+h id=\x22XMLID_1348\
+_\x22 d=\x22M78.4,30.4\
+l-3.1,57.8c-0.1,\
+2.1-1.9,3.8-4,3.\
+8H20.7c-2.1,0-3.\
+9-1.7-4-3.8l-3.1\
+-57.8\x0a\x09c-0.1-2.2\
+,1.6-4.1,3.8-4.2\
+c2.2-0.1,4.1,1.6\
+,4.2,3.8l2.9,54h\
+43.1l2.9-54c0.1-\
+2.2,2-3.9,4.2-3.\
+8C76.8,26.3,78.5\
+,28.2,78.4,30.4z\
+\x0a\x09 M89,17c0,2.2-\
+1.8,4-4,4H7c-2.2\
+,0-4-1.8-4-4s1.8\
+-4,4-4h22V4c0-1.\
+9,1.3-3,3.2-3h27\
+.6C61.7,1,63,2.1\
+,63,4v9h22C87.2,\
+13,89,14.8,89,17\
+z\x0a\x09 M36,13h20V8H\
+36V13z M37.7,78C\
+37.7,78,37.7,78,\
+37.7,78c2,0,3.5-\
+1.9,3.5-3.8l-1-4\
+3.2c0-1.9-1.6-3.\
+5-3.6-3.5c-1.9,0\
+-3.5,1.6-3.4,3.6\
+\x0a\x09l1,43.3C34.2,7\
+6.3,35.8,78,37.7\
+,78z M54.2,78c1.\
+9,0,3.5-1.6,3.5-\
+3.5l1-43.2c0-1.9\
+-1.5-3.6-3.4-3.6\
+c-2,0-3.5,1.5-3.\
+6,3.4l-1,43.2\x0a\x09C\
+50.6,76.3,52.2,7\
+8,54.2,78C54.1,7\
+8,54.1,78,54.2,7\
+8z\x22/>\x0a</svg>\x0a\
+\x00\x00\x02p\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0a<!-- Gener\
+ator: Adobe Illu\
+strator 19.2.1, \
+SVG Export Plug-\
+In . SVG Version\
+: 6.00 Build 0) \
+ -->\x0a<svg versio\
+n=\x221.1\x22 id=\x22Laye\
+r_1\x22 xmlns=\x22http\
+://www.w3.org/20\
+00/svg\x22 xmlns:xl\
+ink=\x22http://www.\
+w3.org/1999/xlin\
+k\x22 x=\x220px\x22 y=\x220p\
+x\x22\x0a\x09 width=\x2292px\
+\x22 height=\x2292px\x22 \
+viewBox=\x220 0 92 \
+92\x22 enable-backg\
+round=\x22new 0 0 9\
+2 92\x22 xml:space=\
+\x22preserve\x22>\x0a<pat\
+h id=\x22XMLID_341_\
+\x22 d=\x22M73.8,57.9l\
+-25,24.9C48,83.6\
+,47,84,46,84s-2-\
+0.4-2.8-1.2l-25-\
+24.9c-1.6-1.6-1.\
+6-4.1,0-5.7\x0a\x09c1.\
+6-1.6,4.1-1.6,5.\
+7,0L42,70.4V12c0\
+-2.2,1.8-4,4-4c2\
+.2,0,4,1.8,4,4v5\
+8.4l18.2-18.1c1.\
+6-1.6,4.1-1.6,5.\
+7,0\x0a\x09C75.4,53.8,\
+75.4,56.3,73.8,5\
+7.9z\x22/>\x0a</svg>\x0a\
+\x00\x00\x02y\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0a<!-- Gener\
+ator: Adobe Illu\
+strator 19.2.1, \
+SVG Export Plug-\
+In . SVG Version\
+: 6.00 Build 0) \
+ -->\x0a<svg versio\
+n=\x221.1\x22 id=\x22Laye\
+r_1\x22 xmlns=\x22http\
+://www.w3.org/20\
+00/svg\x22 xmlns:xl\
+ink=\x22http://www.\
+w3.org/1999/xlin\
+k\x22 x=\x220px\x22 y=\x220p\
+x\x22\x0a\x09 width=\x2292px\
+\x22 height=\x2292px\x22 \
+viewBox=\x220 0 92 \
+92\x22 enable-backg\
+round=\x22new 0 0 9\
+2 92\x22 xml:space=\
+\x22preserve\x22>\x0a<pat\
+h id=\x22XMLID_356_\
+\x22 d=\x22M73.8,39.8c\
+-0.8,0.8-1.8,1.2\
+-2.8,1.2c-1,0-2-\
+0.4-2.8-1.2L50,2\
+1.6V80c0,2.2-1.8\
+,4-4,4c-2.2,0-4-\
+1.8-4-4V21.6\x0a\x09L2\
+3.8,39.8c-1.6,1.\
+6-4.1,1.6-5.7,0c\
+-1.6-1.6-1.6-4.1\
+,0-5.7l25-24.9c1\
+.6-1.6,4.1-1.6,5\
+.6,0l25,24.9C75.\
+4,35.7,75.4,38.2\
+,73.8,39.8z\x22\x0a\x09/>\
+\x0a</svg>\x0a\
 "
 
 qt_resource_name = b"\
@@ -48,19 +239,51 @@ qt_resource_name = b"\
 \x07\x03}\xc3\
 \x00i\
 \x00m\x00a\x00g\x00e\x00s\
+\x00\x05\
+\x00o\xa6S\
+\x00i\
+\x00c\x00o\x00n\x00s\
 \x00\x0d\
 \x0f\xf17\xdf\
 \x00D\
 \x00e\x00C\x00l\x00u\x00t\x00t\x00e\x00r\x00.\x00i\x00c\x00o\
+\x00\x10\
+\x0c\xbc#\xe7\
+\x00d\
+\x00o\x00c\x00u\x00m\x00e\x00n\x00t\x00-\x00n\x00e\x00w\x00.\x00s\x00v\x00g\
+\x00\x09\
+\x08\x9b\xad\xc7\
+\x00t\
+\x00r\x00a\x00s\x00h\x00.\x00s\x00v\x00g\
+\x00\x13\
+\x01\x9c\xd7\xc7\
+\x00a\
+\x00r\x00r\x00o\x00w\x00-\x00t\x00h\x00i\x00n\x00-\x00d\x00o\x00w\x00n\x00.\x00s\
+\x00v\x00g\
+\x00\x11\
+\x01\xf4\xe7G\
+\x00a\
+\x00r\x00r\x00o\x00w\x00-\x00t\x00h\x00i\x00n\x00-\x00u\x00p\x00.\x00s\x00v\x00g\
+\
 "
 
 qt_resource_struct = b"\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\
+\x00\x00\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x00\x12\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\
+\x00\x00\x00\x12\x00\x02\x00\x00\x00\x04\x00\x00\x00\x04\
+\x00\x00\x00\x00\x00\x00\x00\x00\
+\x00\x00\x00\x22\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\
 \x00\x00\x01r\xdc\xfd_\x83\
+\x00\x00\x00\x80\x00\x00\x00\x00\x00\x01\x00\x00\x08\x8d\
+\x00\x00\x01T+R\xacX\
+\x00\x00\x00\xac\x00\x00\x00\x00\x00\x01\x00\x00\x0b\x01\
+\x00\x00\x01T+R\xacX\
+\x00\x00\x00h\x00\x00\x00\x00\x00\x01\x00\x00\x04{\
+\x00\x00\x01T+R\xacX\
+\x00\x00\x00B\x00\x00\x00\x00\x00\x01\x00\x00\x02\x13\
+\x00\x00\x01T+R\xacX\
 "
 
 def qInitResources():

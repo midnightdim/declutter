@@ -156,8 +156,8 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <addaction name="menuOptions"/>
    <addaction name="menuOptions_2"/>
+   <addaction name="menuOptions"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
