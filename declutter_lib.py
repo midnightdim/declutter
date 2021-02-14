@@ -14,7 +14,7 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 
-VERSION = '1.00'
+VERSION = '1.01'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -234,7 +234,7 @@ def apply_rule(rule, dryrun = False):
                                         remove_all_tags(f)
                                         set_tags(newfullname, tags)
                                     report['renamed'] += 1
-                                    msg = 'Renamed ' + f + ' to ' + newname
+                                    msg = 'Renamed ' + f + ' to ' + result
                             except Exception as e:
                                 logging.exception(e)
                         else:
@@ -489,9 +489,11 @@ def remove_file_or_dir(filepath):
         return False
 
 def advanced_move(source_path, target_path, overwrite = False, copy = False): 
-    #print('advanced move')
-    #print(source_path)
-    #print(target_path)
+    # print('advanced move')
+    # print(source_path)
+    # print(target_path)
+    # print(overwrite)
+    # print(copy)
     if not os.path.exists(source_path):
         return False
     # TBD this may cause problems if some file is tagged inside the folder and the folder is moved/renamed - 
@@ -515,9 +517,9 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):
         #print('tps ' + str(get_size(target_path)))
         if get_size(source_path) == get_size(target_path): # folder with the same size exists            
             #print('its file/dir with the same size, skipping')
-            remove_file_or_dir(source_path)
-            #return False 
-            return target_path # TBD maybe should return something else
+            #remove_file_or_dir(source_path)
+            return False 
+            #return target_path # TBD maybe should return something else
         else:
             #print('its a file/dir with different size')
             if overwrite:
@@ -896,6 +898,8 @@ else:
 #migrate_db()
 
 
-settings = load_settings()
-settings['tags'] = []
-save_settings(SETTINGS_FILE, settings)
+# settings = load_settings()
+# settings['tags'] = []
+# save_settings(SETTINGS_FILE, settings)
+# path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
+# advanced_move(path,path)

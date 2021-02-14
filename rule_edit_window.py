@@ -184,7 +184,7 @@ class RuleEditWindow(QDialog):
         self.ui.actionComboBox.setCurrentIndex(self.ui.actionComboBox.findText(rule['action']))
         self.ui.targetFolderEdit.setText(rule['target_folder'])
         self.ui.keepTagsCheckBox.setChecked(rule['keep_tags'])
-        self.ui.keepFolderStructureCheckBox.setChecked(rule['keep_folder_structure'])
+        self.ui.keepFolderStructureCheckBox.setChecked(rule['keep_folder_structure'] if 'keep_folder_structure' in rule.keys() else False)
         self.ui.subfolderEdit.setText(rule['target_subfolder'] if 'target_subfolder' in rule.keys() else '')
         self.ui.renameEdit.setText(rule['name_pattern'] if 'name_pattern' in rule.keys() else '') 
         if 'overwrite_switch' in rule.keys():

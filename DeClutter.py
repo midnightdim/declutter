@@ -43,6 +43,8 @@ class RulesWindow(QMainWindow):
         self.ui.applyRule.clicked.connect(self.apply_rule)
         #self.ui.moveUp.clicked.connect(self.start_thread)
         self.trayIcon.messageClicked.connect(self.message_clicked)
+        self.trayIcon.activated.connect(self.tray_activated)
+        self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
         self.service_run_details = []
         #self.start_thread()        
 
@@ -77,6 +79,10 @@ class RulesWindow(QMainWindow):
     
     # def not_implemented_yet(self):   
     #     QMessageBox.information(self,"Sorry", "This feature is not implemented yet!")
+
+    def tray_activated(self, reason):
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.setVisible(True)
 
     def move_rule_up(self):
         rule_idx = self.ui.rulesTable.selectedIndexes()[0].row()
@@ -128,8 +134,6 @@ class RulesWindow(QMainWindow):
             save_settings(SETTINGS_FILE, self.settings)
             self.load_rules()
             self.ui.rulesTable.selectRow(rule_idx+1)
-            
-
 
     def show_about(self):
         msgbox = QMessageBox.about(self,"About DeClutter", "DeClutter version "+str(VERSION)+"\nhttps://declutter.top\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
@@ -147,6 +151,7 @@ class RulesWindow(QMainWindow):
                 if c.isChecked():
                     self.settings['date_type'] = rbs.index(c)
             self.settings['rule_exec_interval']=float(settings_window.ui.ruleExecIntervalEdit.text())*60
+            self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")            
             self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
             save_settings(SETTINGS_FILE, self.settings)
 
@@ -207,8 +212,9 @@ class RulesWindow(QMainWindow):
         self.rule_window.exec_() # TBD this should return 1 or 0 for Save and Cancel, but it doesn't, so I had to use .updated flag, should be revised
         if self.rule_window.updated:
             self.settings['rules'][r] = self.rule_window.rule
+        save_settings(SETTINGS_FILE, self.settings)            
         self.load_rules()
-        save_settings(SETTINGS_FILE, self.settings)
+        
 
     def delete_rule(self):
         #r = self.ui.rulesTable.currentRow()
