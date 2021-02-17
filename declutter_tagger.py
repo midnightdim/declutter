@@ -92,18 +92,26 @@ class TaggerWindow(QMainWindow):
         self.filter_tags.reverse()
         for t in self.filter_tags:            
             self.filter_tags_checkboxes[t] = QCheckBox(t)
+            self.filter_tags_checkboxes[t].setChecked(True)
             self.filter_tags_checkboxes[t].stateChanged.connect(self.apply_filter_tags)
             self.ui.horizontalLayout.insertWidget(1,self.filter_tags_checkboxes[t])
+        self.apply_filter_tags()
 
     def apply_filter_tags(self):
-        all_paths = []
+        # all_paths = []
+        # for t in self.filter_tags_checkboxes:
+        #     if self.filter_tags_checkboxes[t].isChecked():
+        #         all_paths = list(set(all_paths + get_files_by_tag(t)))
+        #     for t in all_paths:
+        #         if str(Path(t).parent).lower() not in all_paths:
+        #             all_paths.append(str(Path(t).parent).lower())
+        
+        
+        all_tags=[]
         for t in self.filter_tags_checkboxes:
             if self.filter_tags_checkboxes[t].isChecked():
-                all_paths = list(set(all_paths + get_files_by_tag(t)))
-            for t in all_paths:
-                if str(Path(t).parent).lower() not in all_paths:
-                    all_paths.append(str(Path(t).parent).lower())
-        self.sorting_model.filter_paths = all_paths
+                all_tags.append(t)
+        self.sorting_model.filter_tags = all_tags
         #print(all_paths)
         self.update_treeview()
 
@@ -149,7 +157,11 @@ class TaggerWindow(QMainWindow):
     def update_treeview(self):
         #print('updating treeview')
         #print(self.sorting_model.filter_paths)
-        filter_paths = self.sorting_model.filter_paths   # TBD this is an awkward solution, fix
+        all_tags=[]
+        for t in self.filter_tags_checkboxes:
+            if self.filter_tags_checkboxes[t].isChecked():
+                all_tags.append(t)
+        self.sorting_model.filter_tags = all_tags
         mode = self.ui.sourceComboBox.currentText()
         # self.sorting_model.mode = mode
         if mode == 'Tag(s)': # TBD simplify this
@@ -165,7 +177,7 @@ class TaggerWindow(QMainWindow):
             self.sorting_model = SortingModel()
             self.sorting_model.setSourceModel(self.model)            
             self.sorting_model.mode = mode
-            self.sorting_model.filter_paths = filter_paths
+            self.sorting_model.filter_tags = all_tags
             # self.ui.treeView.setRootIndex(self.model.index(path))
             self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))           
@@ -179,15 +191,18 @@ class TaggerWindow(QMainWindow):
         else:
             #print('not tags')
             self.model = TagFSModel()            
-            self.model.setFilter(QDir.NoDot | QDir.AllEntries)
-            self.model.setIconProvider(QFileIconProvider())
             path = load_settings()['current_folder']            
             self.model.setRootPath(path)
+            self.model.setFilter(QDir.NoDot | QDir.AllEntries)
+            self.model.sort(0,Qt.SortOrder.AscendingOrder)
             self.sorting_model = SortingModel()
             self.sorting_model.mode = mode            
+            self.sorting_model.filter_tags = all_tags
             self.sorting_model.setSourceModel(self.model)
             self.ui.treeView.setModel(self.sorting_model)            
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))            
+            self.model.setIconProvider(QFileIconProvider())
+            self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
             self.ui.treeView.setItemsExpandable(False)
             self.ui.treeView.setRootIsDecorated(False)
 
@@ -238,23 +253,23 @@ class TaggerWindow(QMainWindow):
         index = self.ui.treeView.currentIndex()
         file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
         file_tags = get_tags(file_path)
-        print(file_tags)
+        # print(file_tags)
         menu = QMenu()
         
         self.checkAction = {}
         for t in get_all_tags():
             self.checkAction[t] = CheckBoxAction(self,t)           
             self.checkAction[t].checkbox.stateChanged.connect(self.set_tags)
-            print(t)
+            #print(t)
             if t in file_tags:
-                print('setting checked')
-                print(self.checkAction[t].checkbox)
-                #self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
+                #print('setting checked')
+                #print(self.checkAction[t].checkbox.isChecked())
+                self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
                 self.checkAction[t].checkbox.setChecked(True)
-                print('set')           
-            print('1')
+                # print('set')           
+            # print('1')
             menu.addAction(self.checkAction[t])
-            print('2')
+            # print('2')
 
         cursor = QCursor()
         menu.exec_(cursor.pos())
@@ -263,7 +278,7 @@ class TaggerWindow(QMainWindow):
         sender = self.sender()
         #print("clicked",state)
         index = self.ui.treeView.currentIndex()
-        file_path = normpath(self.model.filePath(index))        
+        file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
         if state == 2: #checked
             #print("tagged",file_path,"with",sender.text())
             add_tag(file_path,sender.text())
@@ -325,7 +340,19 @@ class SortingModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mode = ""
-        self.filter_paths = []
+        self.filter_tags = []
+
+    def tagged_paths(self, tree=False):
+        all_paths=[]
+        for t in self.filter_tags:
+            all_paths = list(set(all_paths + get_files_by_tag(t)))
+        if not tree:
+            return all_paths
+        for t in all_paths:
+            if str(Path(t).parent).lower() not in all_paths:
+                all_paths.append(str(Path(t).parent).lower())
+        # print(all_paths)
+        return all_paths
 
     def lessThan(self, source_left: QModelIndex, source_right: QModelIndex):
         file_info1 = self.sourceModel().fileInfo(source_left)
@@ -344,12 +371,23 @@ class SortingModel(QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row, source_parent):
         # print(self.mode)
-        if self.mode == "Tag(s)":
+        source_model = self.sourceModel()
+        index = source_model.index(source_row, 0, source_parent)
+        path = index.data(QFileSystemModel.FilePathRole)
+
+        if self.mode == "Tag(s)": # and source_parent == source_model.index(source_model.rootPath()):
+            # print(normpath(path))
+            return normpath(path).lower() in self.tagged_paths(True)
+        elif self.mode == "Folder & tags" and source_parent == source_model.index(source_model.rootPath()):
             source_model = self.sourceModel()
             index = source_model.index(source_row, 0, source_parent)
             path = index.data(QFileSystemModel.FilePathRole)
             # print(normpath(path))
-            return normpath(path).lower() in self.filter_paths
+            if normpath(path).lower() in self.tagged_paths():
+                # print(normpath(path))
+                return True
+            #print(self.tagged_paths())
+            return normpath(path).lower() in self.tagged_paths()
         else:
             return True
 
