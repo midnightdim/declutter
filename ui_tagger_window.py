@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tagger_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.1
+## Created by: Qt User Interface Compiler version 6.0.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -99,7 +99,7 @@ class Ui_taggerWindow(object):
     # setupUi
 
     def retranslateUi(self, taggerWindow):
-        taggerWindow.setWindowTitle(QCoreApplication.translate("taggerWindow", u"DeClutter: Tagger", None))
+        taggerWindow.setWindowTitle(QCoreApplication.translate("taggerWindow", u"DeClutter (beta): Tagger", None))
         self.actionManage_Tags.setText(QCoreApplication.translate("taggerWindow", u"Manage Tags", None))
         self.sourceComboBox.setItemText(0, QCoreApplication.translate("taggerWindow", u"Folder", None))
         self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))

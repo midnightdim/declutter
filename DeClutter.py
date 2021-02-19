@@ -64,6 +64,7 @@ class RulesWindow(QMainWindow):
         self.ui.actionClear_log_file.triggered.connect(self.clear_log_file)
         self.ui.actionSettings.triggered.connect(self.show_settings)
         self.ui.actionAbout.triggered.connect(self.show_about)
+        self.ui.actionOpen_Tagger.triggered.connect(self.show_tagger)
         
         # self.ui.actionMove_up.triggered.connect(self.not_implemented_yet)
         # self.ui.actionMove_down.triggered.connect(self.not_implemented_yet)
@@ -303,7 +304,7 @@ class RulesWindow(QMainWindow):
         self.showRulesWindow.triggered.connect(self.showNormal)
 
         self.showTaggerWindow = QAction("Tagger", self)
-        self.showTaggerWindow.triggered.connect(self.showTagger)
+        self.showTaggerWindow.triggered.connect(self.show_tagger)
 
         self.showSettingsWindow = QAction("Settings", self)
         self.showSettingsWindow.triggered.connect(self.showSettings)
@@ -331,8 +332,9 @@ class RulesWindow(QMainWindow):
         self.restoreAction.setEnabled(self.isMaximized() or not visible)
         super().setVisible(visible)        
 
-    def showTagger(self):        
+    def show_tagger(self):        
         self.tagger.show()
+        self.tagger.activateWindow()
 
     def showSettings(self):
         print("Showing settings")

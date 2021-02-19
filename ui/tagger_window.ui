@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>DeClutter: Tagger</string>
+   <string>DeClutter (beta): Tagger</string>
   </property>
   <property name="windowIcon">
    <iconset resource="DeClutter.qrc">

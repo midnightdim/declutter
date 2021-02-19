@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'condition_dialog.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.1
+## Created by: Qt User Interface Compiler version 6.0.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -201,7 +201,7 @@ class Ui_Condition(object):
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.tagsList = QListWidget(Condition)
         self.tagsList.setObjectName(u"tagsList")
-        self.tagsList.setStyleSheet(u"QListView::item:selected {font:bold}")
+        self.tagsList.setStyleSheet(u"")
 
         self.horizontalLayout_8.addWidget(self.tagsList)
 

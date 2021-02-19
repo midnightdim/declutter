@@ -333,7 +333,7 @@
        <item>
         <widget class="QListWidget" name="tagsList">
          <property name="styleSheet">
-          <string notr="true">QListView::item:selected {font:bold}</string>
+          <string notr="true"/>
          </property>
         </widget>
        </item>

@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>DeClutter: Rules</string>
+   <string>DeClutter (beta): Rules</string>
   </property>
   <property name="windowIcon">
    <iconset resource="DeClutter.qrc">
@@ -177,6 +177,8 @@
    <addaction name="separator"/>
    <addaction name="actionMove_up"/>
    <addaction name="actionMove_down"/>
+   <addaction name="separator"/>
+   <addaction name="actionOpen_Tagger"/>
   </widget>
   <action name="actionAdd">
    <property name="icon">
@@ -261,6 +263,15 @@
   <action name="actionManage_Tags">
    <property name="text">
     <string>Manage Tags</string>
+   </property>
+  </action>
+  <action name="actionOpen_Tagger">
+   <property name="icon">
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/tags.svg</normaloff>:/images/icons/tags.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Open Tagger</string>
    </property>
   </action>
  </widget>

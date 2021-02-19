@@ -252,10 +252,14 @@ class TaggerWindow(QMainWindow):
             os.startfile(file_path)
 
     def context_menu(self, position):
-        index = self.ui.treeView.currentIndex()
-        file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
-        file_tags = get_tags(file_path)
-        # print(file_tags)
+        #index = self.ui.treeView.currentIndex()
+        indexes = self.ui.treeView.selectedIndexes()
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+
+        all_files_tags = []
+        for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
+            all_files_tags.extend(get_tags(f))
+
         menu = QMenu()
         
         self.checkAction = {}
@@ -263,15 +267,20 @@ class TaggerWindow(QMainWindow):
             self.checkAction[t] = CheckBoxAction(self,t)           
             self.checkAction[t].checkbox.stateChanged.connect(self.set_tags)
             #print(t)
-            if t in file_tags:
-                #print('setting checked')
-                #print(self.checkAction[t].checkbox.isChecked())
-                self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
+            # if t in file_tags:
+            #     self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
+            #     self.checkAction[t].checkbox.setChecked(True)
+            if t not in all_files_tags:
+                pass
+                #window[r].update(text = CHAR_UNCHECKED + " " + r)
+            elif all_files_tags.count(t) < len(cur_selection):
+                self.checkAction[t].checkbox.setTristate(True)
+                self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
+            else:
                 self.checkAction[t].checkbox.setChecked(True)
-                # print('set')           
-            # print('1')
+
+
             menu.addAction(self.checkAction[t])
-            # print('2')
 
         cursor = QCursor()
         menu.exec_(cursor.pos())
@@ -279,13 +288,18 @@ class TaggerWindow(QMainWindow):
     def set_tags(self, state):
         sender = self.sender()
         #print("clicked",state)
-        index = self.ui.treeView.currentIndex()
-        file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
-        if state == 2: #checked
-            #print("tagged",file_path,"with",sender.text())
-            add_tag(file_path,sender.text())
-        elif state == 0: #unchecked
-            remove_tag(file_path,sender.text())
+        # index = self.ui.treeView.currentIndex()
+        # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
+        
+        indexes = self.ui.treeView.selectedIndexes()
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+
+        for file_path in cur_selection:
+            if state == 2: #checked
+                #print("tagged",file_path,"with",sender.text())
+                add_tag(file_path,sender.text())
+            elif state == 0: #unchecked
+                remove_tag(file_path,sender.text())
 
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent = QModelIndex()):

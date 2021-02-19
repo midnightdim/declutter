@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'rules_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.1
+## Created by: Qt User Interface Compiler version 6.0.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -62,6 +62,11 @@ class Ui_rulesWindow(object):
         self.actionAbout.setObjectName(u"actionAbout")
         self.actionManage_Tags = QAction(rulesWindow)
         self.actionManage_Tags.setObjectName(u"actionManage_Tags")
+        self.actionOpen_Tagger = QAction(rulesWindow)
+        self.actionOpen_Tagger.setObjectName(u"actionOpen_Tagger")
+        icon6 = QIcon()
+        icon6.addFile(u":/images/icons/tags.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.actionOpen_Tagger.setIcon(icon6)
         self.centralwidget = QWidget(rulesWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -156,6 +161,8 @@ class Ui_rulesWindow(object):
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionMove_up)
         self.toolBar.addAction(self.actionMove_down)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionOpen_Tagger)
 
         self.retranslateUi(rulesWindow)
 
@@ -163,7 +170,7 @@ class Ui_rulesWindow(object):
     # setupUi
 
     def retranslateUi(self, rulesWindow):
-        rulesWindow.setWindowTitle(QCoreApplication.translate("rulesWindow", u"DeClutter: Rules", None))
+        rulesWindow.setWindowTitle(QCoreApplication.translate("rulesWindow", u"DeClutter (beta): Rules", None))
         self.actionAdd.setText(QCoreApplication.translate("rulesWindow", u"Add", None))
 #if QT_CONFIG(tooltip)
         self.actionAdd.setToolTip(QCoreApplication.translate("rulesWindow", u"Add", None))
@@ -189,6 +196,7 @@ class Ui_rulesWindow(object):
         self.actionSettings.setText(QCoreApplication.translate("rulesWindow", u"Settings", None))
         self.actionAbout.setText(QCoreApplication.translate("rulesWindow", u"About", None))
         self.actionManage_Tags.setText(QCoreApplication.translate("rulesWindow", u"Manage Tags", None))
+        self.actionOpen_Tagger.setText(QCoreApplication.translate("rulesWindow", u"Open Tagger", None))
         self.addRule.setText(QCoreApplication.translate("rulesWindow", u"Add", None))
         self.deleteRule.setText(QCoreApplication.translate("rulesWindow", u"Delete", None))
         self.applyRule.setText(QCoreApplication.translate("rulesWindow", u"Apply", None))
