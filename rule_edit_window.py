@@ -1,10 +1,10 @@
 import sys
 from PySide6.QtUiTools import loadUiType
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout
+from PySide6.QtGui import QIcon, QColor
+from PySide6.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
 from PySide6.QtCore import (Qt, QAbstractItemModel)
 from ui_rule_edit_window import Ui_RuleEditWindow
-from declutter_lib import get_all_tags, get_files_affected_by_rule
+from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color
 from condition_dialog import ConditionDialog
 from ui_list_dialog import Ui_listDialog
 from os.path import normpath
@@ -33,7 +33,14 @@ class RuleEditWindow(QDialog):
         self.ui.conditionRemoveButton.clicked.connect(self.delete_condition)
         self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
         self.ui.tagsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.ui.tagsList.addItems(get_all_tags())
+        #self.ui.tagsList.addItems(get_all_tags())
+
+        for t in get_all_tags():
+            self.ui.tagsList.addItem(t)
+            color = tag_get_color(t)
+            if color:
+                self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
+
         self.ui.advancedButton.clicked.connect(self.show_advanced)
         # self.ui.buttonBox.clicked.connect(self.process)
     
@@ -140,6 +147,12 @@ class RuleEditWindow(QDialog):
         if error:
             QMessageBox.critical(self,"Error",error,QMessageBox.Ok)
         else:
+            if 'id' not in self.rule.keys() and not self.rule['enabled']:
+                reply = QMessageBox.question(self, "Enable rule?",
+                "The rule is not enabled, would you like to enable it before saving?",
+                QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    self.rule['enabled'] = True
             self.updated = True
             #self.rule_init = self.rule
             #self.setResult(QDialog.DialogCode.Accepted)  # TBD vN doesn't work for some reason, we shouldn't use a special variable self.updated at all

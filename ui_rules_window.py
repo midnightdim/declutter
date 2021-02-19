@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'rules_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.0.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -60,6 +60,8 @@ class Ui_rulesWindow(object):
         self.actionSettings.setObjectName(u"actionSettings")
         self.actionAbout = QAction(rulesWindow)
         self.actionAbout.setObjectName(u"actionAbout")
+        self.actionManage_Tags = QAction(rulesWindow)
+        self.actionManage_Tags.setObjectName(u"actionManage_Tags")
         self.centralwidget = QWidget(rulesWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -146,6 +148,7 @@ class Ui_rulesWindow(object):
         self.menuOptions.addAction(self.actionOpen_log_file)
         self.menuOptions.addAction(self.actionClear_log_file)
         self.menuOptions_2.addAction(self.actionSettings)
+        self.menuOptions_2.addAction(self.actionManage_Tags)
         self.menuHelp.addAction(self.actionAbout)
         self.toolBar.addAction(self.actionAdd)
         self.toolBar.addAction(self.actionDelete)
@@ -185,6 +188,7 @@ class Ui_rulesWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.actionSettings.setText(QCoreApplication.translate("rulesWindow", u"Settings", None))
         self.actionAbout.setText(QCoreApplication.translate("rulesWindow", u"About", None))
+        self.actionManage_Tags.setText(QCoreApplication.translate("rulesWindow", u"Manage Tags", None))
         self.addRule.setText(QCoreApplication.translate("rulesWindow", u"Add", None))
         self.deleteRule.setText(QCoreApplication.translate("rulesWindow", u"Delete", None))
         self.applyRule.setText(QCoreApplication.translate("rulesWindow", u"Apply", None))

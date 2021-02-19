@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tags_dialog.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.0.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -20,6 +20,9 @@ class Ui_tagsDialog(object):
             tagsDialog.setObjectName(u"tagsDialog")
         tagsDialog.setWindowModality(Qt.ApplicationModal)
         tagsDialog.resize(264, 300)
+        icon = QIcon()
+        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
+        tagsDialog.setWindowIcon(icon)
         self.gridLayout = QGridLayout(tagsDialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.verticalLayout = QVBoxLayout()
@@ -28,35 +31,43 @@ class Ui_tagsDialog(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.addButton = QPushButton(tagsDialog)
         self.addButton.setObjectName(u"addButton")
-        icon = QIcon()
-        icon.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.addButton.setIcon(icon)
+        icon1 = QIcon()
+        icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.addButton.setIcon(icon1)
 
         self.horizontalLayout.addWidget(self.addButton)
 
         self.removeButton = QPushButton(tagsDialog)
         self.removeButton.setObjectName(u"removeButton")
-        icon1 = QIcon()
-        icon1.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.removeButton.setIcon(icon1)
+        icon2 = QIcon()
+        icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.removeButton.setIcon(icon2)
 
         self.horizontalLayout.addWidget(self.removeButton)
 
         self.moveUpButton = QPushButton(tagsDialog)
         self.moveUpButton.setObjectName(u"moveUpButton")
-        icon2 = QIcon()
-        icon2.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.moveUpButton.setIcon(icon2)
+        icon3 = QIcon()
+        icon3.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.moveUpButton.setIcon(icon3)
 
         self.horizontalLayout.addWidget(self.moveUpButton)
 
         self.moveDownButton = QPushButton(tagsDialog)
         self.moveDownButton.setObjectName(u"moveDownButton")
-        icon3 = QIcon()
-        icon3.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.moveDownButton.setIcon(icon3)
+        icon4 = QIcon()
+        icon4.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.moveDownButton.setIcon(icon4)
 
         self.horizontalLayout.addWidget(self.moveDownButton)
+
+        self.colorButton = QPushButton(tagsDialog)
+        self.colorButton.setObjectName(u"colorButton")
+        icon5 = QIcon()
+        icon5.addFile(u":/images/icons/brush.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorButton.setIcon(icon5)
+
+        self.horizontalLayout.addWidget(self.colorButton)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -95,5 +106,6 @@ class Ui_tagsDialog(object):
         self.removeButton.setText("")
         self.moveUpButton.setText("")
         self.moveDownButton.setText("")
+        self.colorButton.setText("")
     # retranslateUi
 

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings_dialog.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.0.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -54,6 +54,26 @@ class Ui_settingsDialog(object):
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label_4 = QLabel(self.tab)
+        self.label_4.setObjectName(u"label_4")
+
+        self.horizontalLayout_2.addWidget(self.label_4)
+
+        self.styleComboBox = QComboBox(self.tab)
+        self.styleComboBox.setObjectName(u"styleComboBox")
+        self.styleComboBox.setMinimumSize(QSize(100, 0))
+
+        self.horizontalLayout_2.addWidget(self.styleComboBox)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -139,6 +159,7 @@ class Ui_settingsDialog(object):
         settingsDialog.setWindowTitle(QCoreApplication.translate("settingsDialog", u"Settings", None))
         self.label_2.setText(QCoreApplication.translate("settingsDialog", u"Process rules every", None))
         self.label_3.setText(QCoreApplication.translate("settingsDialog", u"minutes", None))
+        self.label_4.setText(QCoreApplication.translate("settingsDialog", u"Style", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("settingsDialog", u"Main", None))
         self.dateDefGroupBox.setTitle(QCoreApplication.translate("settingsDialog", u"Date definition", None))
         self.label.setText(QCoreApplication.translate("settingsDialog", u"Which date (from file metadata) should be used in rule conditions?", None))

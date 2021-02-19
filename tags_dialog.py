@@ -1,10 +1,11 @@
 import sys
 from PySide6.QtUiTools import loadUiType
 
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog
 from PySide6.QtCore import (Qt, QAbstractItemModel)
+from PySide6.QtGui import QPalette, QColor
 from ui_tags_dialog import Ui_tagsDialog
-from declutter_lib import get_all_tags, create_tag, delete_tag, move_tag
+from declutter_lib import get_all_tags, create_tag, delete_tag, move_tag, tag_set_color, tag_get_color
 
 
 class TagsDialog(QDialog):
@@ -16,8 +17,16 @@ class TagsDialog(QDialog):
 
         self.ui.addButton.clicked.connect(self.add_tag)
         self.ui.removeButton.clicked.connect(self.remove_tag)
-        self.ui.moveUpButton.clicked.connect(self.move_up)
+        self.ui.moveUpButton.clicked.connect(self.move_up)        
         self.ui.moveDownButton.clicked.connect(self.move_down)
+        self.ui.colorButton.clicked.connect(self.set_color)
+
+    def set_color(self):        
+        color = QColorDialog.getColor(Qt.green, self)
+        if color.isValid():
+            tag = self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).text()
+            self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).setBackground(color)
+            tag_set_color(tag,color.rgb())
 
     def add_tag(self):
         tag, ok = QInputDialog.getText(self, "Add new tag",
@@ -48,7 +57,18 @@ class TagsDialog(QDialog):
 
     def load_tags(self):
         self.ui.tagsList.clear()
-        self.ui.tagsList.addItems(get_all_tags())
+        #self.ui.tagsList.addItems(get_all_tags())
+        #self.setStyleSheet("QListWidget::item:selected {color:black; image: url(icons/checkmark.svg); image-position: right;}")
+        for t in get_all_tags():
+            self.ui.tagsList.addItem(t)
+            color = tag_get_color(t)
+            if color:
+                self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
+
+        #self.setStyleSheet("QListWidget::item:selected {image: url(icons/checkmark.svg); image-position: right; color: red; border: 2px solid black; font: bold;}")
+        
+        #self.ui.tagsList.setStyleSheet("QListWidget::item:selected {font-weight: bold; color: red; border: 3px solid black;} QListWidget {show-decoration-selected: 1;}")
+        #print(self.ui.tagsList.styleSheet())
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

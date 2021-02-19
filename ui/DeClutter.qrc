@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="images">
+    <file>icons/brush.svg</file>
     <file>DeClutter.ico</file>
     <file>icons/arrow-thin-down.svg</file>
     <file>icons/arrow-thin-up.svg</file>

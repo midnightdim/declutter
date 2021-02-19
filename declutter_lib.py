@@ -584,7 +584,7 @@ def migrate_db():
     c = conn.cursor()
     c.execute("PRAGMA user_version")
     pragma = c.fetchone()[0]
-    logging.info("Database version:" + str(pragma))
+    #logging.info("Database version:" + str(pragma))
     if (not pragma) or (pragma == 0):
         try:
             logging.info("Migration from 0 to 1")
@@ -613,9 +613,40 @@ def migrate_db():
             pragma = 1
         except Exception as e:
             logging.exception(e)
+
+    elif pragma == 1:
+        try:
+            logging.info("Migration from 1 to 2")
+            logging.info("Adding color column")
+            c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")        
+            # i=1
+            # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+            #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
+            #     i+=1
+
+            c.execute("PRAGMA user_version = 2")
+            logging.info("Database updated to version 2")
+            pragma = 1
+        except Exception as e:
+            logging.exception(e)        
        
     conn.commit()
     conn.close()        
+
+def tag_set_color(tag, color):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    c.execute("UPDATE tags set color = ? WHERE name = ?", (color,tag))
+    conn.commit()
+    conn.close()
+
+def tag_get_color(tag):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    c.execute("SELECT color FROM tags WHERE name = ?", (tag,))
+    row = c.fetchone()[0]
+    conn.close()
+    return row
 
 def create_tag(tag):
     conn = sqlite3.connect(DB_FILE)

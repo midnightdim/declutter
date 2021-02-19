@@ -1,6 +1,6 @@
 # Resource object code (Python 3)
 # Created by: object code
-# Created by: The Resource Compiler for Qt version 6.0.0
+# Created by: The Resource Compiler for Qt version 6.0.1
 # WARNING! All changes made in this file will be lost!
 
 from PySide6 import QtCore
@@ -82,6 +82,78 @@ h24v23.9c0,2.2,1\
 .7,4.1,3.9,4.1H7\
 2v44H20z\x22/>\x0a</sv\
 g>\x0a\
+\x00\x00\x04]\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0a<!-- Gener\
+ator: Adobe Illu\
+strator 19.2.1, \
+SVG Export Plug-\
+In . SVG Version\
+: 6.00 Build 0) \
+ -->\x0a<svg versio\
+n=\x221.1\x22 id=\x22Laye\
+r_1\x22 xmlns=\x22http\
+://www.w3.org/20\
+00/svg\x22 xmlns:xl\
+ink=\x22http://www.\
+w3.org/1999/xlin\
+k\x22 x=\x220px\x22 y=\x220p\
+x\x22\x0a\x09 width=\x2292px\
+\x22 height=\x2292px\x22 \
+viewBox=\x220 0 92 \
+92\x22 enable-backg\
+round=\x22new 0 0 9\
+2 92\x22 xml:space=\
+\x22preserve\x22>\x0a<pat\
+h id=\x22XMLID_2158\
+_\x22 d=\x22M92,8.7c0-\
+2.3-0.9-4.4-2.5-\
+6l-0.2-0.2C86-0.\
+8,80.7-0.8,77.4,\
+2.4L28.6,47.7c-6\
+.6-1.4-13.7,0.4-\
+18.7,5.5\x0a\x09C3,60,\
+3.1,67.6,3.2,72.\
+2c0,0.6,0,1.2,0,\
+1.7c-0.1,3.7-2,8\
+.2-2.8,9.7c-0.5,\
+1-0.6,2.2-0.2,3.\
+2c0.4,1.1,1.2,1.\
+9,2.2,2.3\x0a\x09c4.7,\
+2,9.4,2.9,13.9,2\
+.9c7.9,0,15.4-3,\
+21.1-8.7c4.7-4.7\
+,7.3-10.4,7.3-16\
+.1c0-1.4-0.2-2.7\
+-0.4-4l45.2-48.6\
+C91.1,13,92,10.9\
+,92,8.7z\x0a\x09 M31.8\
+,77.6c-5.9,5.9-1\
+4,7.8-22.5,5.4c0\
+.9-2.5,1.8-5.8,1\
+.9-9v0c0-0.6,0-1\
+.3,0-2c-0.1-4.1-\
+0.2-8.7,4.3-13.1\
+c4.8-4.8,12.7-4.\
+8,17.6,0\x0a\x09c2.4,2\
+.4,3.7,5.3,3.7,8\
+.3C36.8,70.7,35,\
+74.4,31.8,77.6z \
+M83.9,9c0,0-0.1,\
+0.1-0.1,0.1L40.7\
+,55.4c-0.6-0.8-1\
+.2-1.5-1.9-2.2\x0a\x09\
+c-0.7-0.7-1.5-1.\
+3-2.2-1.9L82.9,8\
+.2c0,0,0.1-0.1,0\
+.1-0.1c0.2-0.2,0\
+.5-0.2,0.7,0l0.2\
+,0.2C84,8.5,84,8\
+.6,84,8.7C84,8.8\
+,84,8.9,83.9,9z\x0a\
+\x09\x22/>\x0a</svg>\x0a\
 \x00\x00\x04\x0e\
 <\
 ?xml version=\x221.\
@@ -252,6 +324,10 @@ qt_resource_name = b"\
 \x00d\
 \x00o\x00c\x00u\x00m\x00e\x00n\x00t\x00-\x00n\x00e\x00w\x00.\x00s\x00v\x00g\
 \x00\x09\
+\x0c\x9b\x89\xe7\
+\x00b\
+\x00r\x00u\x00s\x00h\x00.\x00s\x00v\x00g\
+\x00\x09\
 \x08\x9b\xad\xc7\
 \x00t\
 \x00r\x00a\x00s\x00h\x00.\x00s\x00v\x00g\
@@ -272,13 +348,15 @@ qt_resource_struct = b"\
 \x00\x00\x00\x00\x00\x00\x00\x00\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x00\x12\x00\x02\x00\x00\x00\x04\x00\x00\x00\x04\
+\x00\x00\x00\x12\x00\x02\x00\x00\x00\x05\x00\x00\x00\x04\
 \x00\x00\x00\x00\x00\x00\x00\x00\
 \x00\x00\x00\x22\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\
 \x00\x00\x01r\xdc\xfd_\x83\
-\x00\x00\x00\x80\x00\x00\x00\x00\x00\x01\x00\x00\x08\x8d\
+\x00\x00\x00\x98\x00\x00\x00\x00\x00\x01\x00\x00\x0c\xee\
 \x00\x00\x01T+R\xacX\
-\x00\x00\x00\xac\x00\x00\x00\x00\x00\x01\x00\x00\x0b\x01\
+\x00\x00\x00\xc4\x00\x00\x00\x00\x00\x01\x00\x00\x0fb\
+\x00\x00\x01T+R\xacX\
+\x00\x00\x00\x80\x00\x00\x00\x00\x00\x01\x00\x00\x08\xdc\
 \x00\x00\x01T+R\xacX\
 \x00\x00\x00h\x00\x00\x00\x00\x00\x01\x00\x00\x04{\
 \x00\x00\x01T+R\xacX\

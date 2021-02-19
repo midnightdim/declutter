@@ -89,37 +89,38 @@ class TaggerWindow(QMainWindow):
         for t in self.filter_tags_checkboxes:
             self.filter_tags_checkboxes[t].destroy()
             self.filter_tags_checkboxes[t].setVisible(False)
+        self.filter_tags_checkboxes = {}
         self.filter_tags.reverse()
         for t in self.filter_tags:            
             self.filter_tags_checkboxes[t] = QCheckBox(t)
+            if tag_get_color(t):
+                self.filter_tags_checkboxes[t].setPalette(QColor(tag_get_color(t)))
+                self.filter_tags_checkboxes[t].setAutoFillBackground(True)            
             self.filter_tags_checkboxes[t].setChecked(True)
-            self.filter_tags_checkboxes[t].stateChanged.connect(self.apply_filter_tags)
+            self.filter_tags_checkboxes[t].stateChanged.connect(self.update_treeview)
             self.ui.horizontalLayout.insertWidget(1,self.filter_tags_checkboxes[t])
-        self.apply_filter_tags()
-
-    def apply_filter_tags(self):
-        # all_paths = []
-        # for t in self.filter_tags_checkboxes:
-        #     if self.filter_tags_checkboxes[t].isChecked():
-        #         all_paths = list(set(all_paths + get_files_by_tag(t)))
-        #     for t in all_paths:
-        #         if str(Path(t).parent).lower() not in all_paths:
-        #             all_paths.append(str(Path(t).parent).lower())
-        
-        
-        all_tags=[]
-        for t in self.filter_tags_checkboxes:
-            if self.filter_tags_checkboxes[t].isChecked():
-                all_tags.append(t)
-        self.sorting_model.filter_tags = all_tags
-        #print(all_paths)
         self.update_treeview()
+
+    # def apply_filter_tags(self):
+          
+    #     all_tags=[]
+    #     for t in self.filter_tags_checkboxes:
+    #         if self.filter_tags_checkboxes[t].isChecked():
+    #             all_tags.append(t)
+    #     self.sorting_model.filter_tags = all_tags
+    #     self.update_treeview()
 
     def select_tags(self):
         tags_dialog = QDialog()
         tags_dialog.setWindowTitle("Select Tags")
         listWidget = QListWidget(tags_dialog)
-        listWidget.addItems(get_all_tags())
+        #listWidget.addItems(get_all_tags())
+        for t in get_all_tags():
+            listWidget.addItem(t)
+            color = tag_get_color(t)
+            if color:
+                listWidget.item(listWidget.count()-1).setBackground(QColor(color))
+
         listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         layout = QVBoxLayout(tags_dialog)
         layout.addWidget(listWidget)        
@@ -134,6 +135,7 @@ class TaggerWindow(QMainWindow):
 
         tags_dialog.setLayout(layout)
         tags_dialog.listWidget = listWidget
+        tags_dialog.setWindowIcon(QIcon('DeClutter.ico'))
         #print(tags_dialog.layout().listWidget)
         
         if tags_dialog.exec_():
@@ -303,7 +305,8 @@ class TagFSModel(QFileSystemModel):
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignLeft
         if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))):
-            return QColor("#ccffff")                
+            #return QColor("#ccffff")
+            return QColor(tag_get_color(get_tags(normpath(self.filePath(index)))[0]))
 
         return super(TagFSModel, self).data(index, role)
 
@@ -322,6 +325,9 @@ class CheckBoxAction(QWidgetAction):
         #label.setAlignment(Qt.AlignLeft)
         self.checkbox = QCheckBox()
         self.checkbox.setText(text)
+        if tag_get_color(text):
+            self.checkbox.setPalette(QColor(tag_get_color(text)))
+            self.checkbox.setAutoFillBackground(True)
         #self.checkbox.setTristate()
         layout.addWidget(self.checkbox)
         #layout.addWidget(label)
@@ -383,10 +389,10 @@ class SortingModel(QSortFilterProxyModel):
             index = source_model.index(source_row, 0, source_parent)
             path = index.data(QFileSystemModel.FilePathRole)
             # print(normpath(path))
-            if normpath(path).lower() in self.tagged_paths():
-                # print(normpath(path))
-                return True
-            #print(self.tagged_paths())
+            # if normpath(path).lower() in self.tagged_paths():
+            #     # print(normpath(path))
+            #     return True
+            # #print(self.tagged_paths())
             return normpath(path).lower() in self.tagged_paths()
         else:
             return True

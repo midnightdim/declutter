@@ -1,10 +1,10 @@
 import sys
 from PySide6.QtUiTools import loadUiType
-
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import (Qt, QAbstractItemModel)
 from ui_condition_dialog import Ui_Condition
-from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags
+from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color
 
 #from PySide6.QtGui import 
 
@@ -15,7 +15,13 @@ class ConditionDialog(QDialog):
         self.ui.setupUi(self)
         self.condition = {}
         self.ui.tagsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.ui.tagsList.addItems(get_all_tags())
+        #self.ui.tagsList.addItems(get_all_tags())
+        for t in get_all_tags():
+            self.ui.tagsList.addItem(t)
+            color = tag_get_color(t)
+            if color:
+                self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
+
         #self.loadCondition()
         self.update_visibility()        
         self.ui.conditionCombo.currentIndexChanged.connect(self.update_visibility)

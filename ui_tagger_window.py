@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tagger_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.0.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -26,22 +26,46 @@ class Ui_taggerWindow(object):
         self.actionManage_Tags.setObjectName(u"actionManage_Tags")
         self.centralwidget = QWidget(taggerWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.gridLayout = QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.sourceComboBox = QComboBox(self.centralwidget)
+        self.sourceComboBox.addItem("")
+        self.sourceComboBox.addItem("")
+        self.sourceComboBox.addItem("")
+        self.sourceComboBox.setObjectName(u"sourceComboBox")
+
+        self.horizontalLayout_3.addWidget(self.sourceComboBox)
+
         self.pathEdit = QLineEdit(self.centralwidget)
         self.pathEdit.setObjectName(u"pathEdit")
 
-        self.horizontalLayout.addWidget(self.pathEdit)
+        self.horizontalLayout_3.addWidget(self.pathEdit)
 
         self.browseButton = QPushButton(self.centralwidget)
         self.browseButton.setObjectName(u"browseButton")
 
-        self.horizontalLayout.addWidget(self.browseButton)
+        self.horizontalLayout_3.addWidget(self.browseButton)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.selectTagsButton = QPushButton(self.centralwidget)
+        self.selectTagsButton.setObjectName(u"selectTagsButton")
+
+        self.horizontalLayout.addWidget(self.selectTagsButton)
+
+        self.horizontalSpacer = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.treeView = QTreeView(self.centralwidget)
         self.treeView.setObjectName(u"treeView")
@@ -50,7 +74,10 @@ class Ui_taggerWindow(object):
         self.treeView.setSortingEnabled(True)
         self.treeView.setExpandsOnDoubleClick(False)
 
-        self.verticalLayout.addWidget(self.treeView)
+        self.verticalLayout_2.addWidget(self.treeView)
+
+
+        self.gridLayout.addLayout(self.verticalLayout_2, 0, 0, 1, 2)
 
         taggerWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(taggerWindow)
@@ -74,7 +101,12 @@ class Ui_taggerWindow(object):
     def retranslateUi(self, taggerWindow):
         taggerWindow.setWindowTitle(QCoreApplication.translate("taggerWindow", u"DeClutter: Tagger", None))
         self.actionManage_Tags.setText(QCoreApplication.translate("taggerWindow", u"Manage Tags", None))
+        self.sourceComboBox.setItemText(0, QCoreApplication.translate("taggerWindow", u"Folder", None))
+        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
+        self.sourceComboBox.setItemText(2, QCoreApplication.translate("taggerWindow", u"Folder & tags", None))
+
         self.browseButton.setText(QCoreApplication.translate("taggerWindow", u"Browse...", None))
+        self.selectTagsButton.setText(QCoreApplication.translate("taggerWindow", u"Select tags...", None))
         self.menuOptions.setTitle(QCoreApplication.translate("taggerWindow", u"Options", None))
     # retranslateUi
 

@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox
+from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
@@ -13,7 +13,8 @@ from time import time
 import os
 import logging
 from datetime import datetime
-
+import requests
+import webbrowser
 
 #SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 
@@ -35,6 +36,8 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
+        if 'style' in self.settings.keys():
+            self.change_style(self.settings['style'])
         
         self.ui.addRule.clicked.connect(self.add_rule)      
         self.load_rules()
@@ -66,6 +69,7 @@ class RulesWindow(QMainWindow):
         # self.ui.actionMove_down.triggered.connect(self.not_implemented_yet)
         self.ui.actionMove_up.triggered.connect(self.move_rule_up)
         self.ui.actionMove_down.triggered.connect(self.move_rule_down)
+
         self.service_runs = False
 
         self.timer = QTimer(self)
@@ -75,6 +79,7 @@ class RulesWindow(QMainWindow):
         self.timer.start()
 
         self.tagger = TaggerWindow() 
+        self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)        
         #DoubleClicked.connect(self.editRule)
     
     # def not_implemented_yet(self):   
@@ -143,6 +148,18 @@ class RulesWindow(QMainWindow):
         settings_window = QDialog(self)
         settings_window.ui = Ui_settingsDialog()
         settings_window.ui.setupUi(settings_window)
+
+        default_style_name = QApplication.style().objectName().lower()
+        result = []
+        for style in QStyleFactory.keys():
+            if style.lower() == default_style_name:
+                result.insert(0, style)
+            else:
+                result.append(style)
+
+        settings_window.ui.styleComboBox.addItems(result)
+        settings_window.ui.styleComboBox.textActivated.connect(self.change_style)
+
         rbs = [c for c in settings_window.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))] # TBD vN this is not very safe
         rbs[self.settings['date_type']].setChecked(True)
         settings_window.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
@@ -153,7 +170,11 @@ class RulesWindow(QMainWindow):
             self.settings['rule_exec_interval']=float(settings_window.ui.ruleExecIntervalEdit.text())*60
             self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")            
             self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
+            self.settings['style'] = settings_window.ui.styleComboBox.currentText()
             save_settings(SETTINGS_FILE, self.settings)
+
+    def change_style(self, style_name):
+        QApplication.setStyle(QStyleFactory.create(style_name))
 
     def open_log_file(self):
         os.startfile(LOG_FILE)
@@ -197,13 +218,13 @@ class RulesWindow(QMainWindow):
         self.rule_window = RuleEditWindow()
         self.rule_window.exec_()
         if self.rule_window.updated:
-            #print("updating")
+            print("updating")
             rule = self.rule_window.rule
             rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1
             self.settings['rules'].append(rule)
             #print(self.settings['rules'])
-        self.load_rules()
         save_settings(SETTINGS_FILE, self.settings)
+        self.load_rules()
 
     def edit_rule(self, r, c):
         rule = deepcopy(self.settings['rules'][r])
@@ -215,7 +236,6 @@ class RulesWindow(QMainWindow):
         save_settings(SETTINGS_FILE, self.settings)            
         self.load_rules()
         
-
     def delete_rule(self):
         #r = self.ui.rulesTable.currentRow()
         #print(r)
@@ -362,6 +382,26 @@ def main():
 
     window = RulesWindow()
     window.show()
+
+    try:
+        url = 'http://declutter.top/latest_version.txt'
+        r = requests.get(url)
+        if r and float(r.text.strip())>float(load_settings()['version']):
+            reply = QMessageBox.question(window, "New version: " + r.text.strip(),
+            r"There's a new version of DeClutter available. Download now?",
+            QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                try:
+                    webbrowser.open('http://declutter.top/DeClutter.latest.exe')
+                except Exception as e:
+                    logging.exception(f'exception {e}')
+
+    except Exception as e:
+        logging.exception(f'exception {e}')
+        #logging.error('No DeClutter_service.exe file found')
+
+
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

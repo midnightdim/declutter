@@ -149,6 +149,7 @@
      <string>Options</string>
     </property>
     <addaction name="actionSettings"/>
+    <addaction name="actionManage_Tags"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -255,6 +256,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionManage_Tags">
+   <property name="text">
+    <string>Manage Tags</string>
    </property>
   </action>
  </widget>

@@ -16,6 +16,10 @@
   <property name="windowTitle">
    <string>Manage Tags</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="DeClutter.qrc">
+    <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -62,6 +66,17 @@
          <property name="icon">
           <iconset resource="DeClutter.qrc">
            <normaloff>:/images/icons/arrow-thin-down.svg</normaloff>:/images/icons/arrow-thin-down.svg</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="colorButton">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="DeClutter.qrc">
+           <normaloff>:/images/icons/brush.svg</normaloff>:/images/icons/brush.svg</iconset>
          </property>
         </widget>
        </item>
