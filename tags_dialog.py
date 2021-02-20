@@ -5,7 +5,8 @@ from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, 
 from PySide6.QtCore import (Qt, QAbstractItemModel)
 from PySide6.QtGui import QPalette, QColor
 from ui_tags_dialog import Ui_tagsDialog
-from declutter_lib import get_all_tags, create_tag, delete_tag, move_tag, tag_set_color, tag_get_color
+from declutter_lib import *
+import logging
 
 
 class TagsDialog(QDialog):
@@ -20,11 +21,30 @@ class TagsDialog(QDialog):
         self.ui.moveUpButton.clicked.connect(self.move_up)        
         self.ui.moveDownButton.clicked.connect(self.move_down)
         self.ui.colorButton.clicked.connect(self.set_color)
+        self.ui.tagsList.doubleClicked.connect(self.rename_tag)
 
+    def rename_tag(self):
+        cur_tag = self.ui.tagsList.itemFromIndex(self.ui.tagsList.currentIndex()).text()
+        newtag, ok = QInputDialog.getText(self, "Rename tag",
+            "Enter new name:", QLineEdit.Normal, cur_tag)            
+        if ok and newtag != '' and newtag != cur_tag:
+            # try:
+            merge = False
+            if newtag in get_all_tags():
+                merge = QMessageBox.question(self, "Warning",
+                    "This tag already exists, files tagged with '" + cur_tag + "' will be tagged with '" + newtag + "'.\nAre you sure you want to proceed?",
+                    QMessageBox.Yes | QMessageBox.No)
+            if newtag and merge in (QMessageBox.Yes,False):
+                rename_tag(cur_tag,newtag)          
+                self.load_tags()
+            # except Exception as e:
+            #     logging.exception(f'exception {e}')
+        
     def set_color(self):        
-        color = QColorDialog.getColor(Qt.green, self)
-        if color.isValid():
-            tag = self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).text()
+        tag = self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).text()
+        cur_color = tag_get_color(tag)
+        color = QColorDialog.getColor(QColor(cur_color) if cur_color is not None else Qt.green, self)
+        if color.isValid():            
             self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).setBackground(color)
             tag_set_color(tag,color.rgb())
 

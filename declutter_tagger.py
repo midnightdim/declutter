@@ -180,6 +180,7 @@ class TaggerWindow(QMainWindow):
             self.sorting_model.setSourceModel(self.model)            
             self.sorting_model.mode = mode
             self.sorting_model.filter_tags = all_tags
+            self.sorting_model.recalc_tagged_paths(True)
             # self.ui.treeView.setRootIndex(self.model.index(path))
             self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))           
@@ -200,6 +201,7 @@ class TaggerWindow(QMainWindow):
             self.sorting_model = SortingModel()
             self.sorting_model.mode = mode            
             self.sorting_model.filter_tags = all_tags
+            self.sorting_model.recalc_tagged_paths()
             self.sorting_model.setSourceModel(self.model)
             self.ui.treeView.setModel(self.sorting_model)            
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))            
@@ -318,7 +320,7 @@ class TagFSModel(QFileSystemModel):
                 return ', '.join(get_tags(normpath(self.filePath(index))))
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignLeft
-        if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))):
+        if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))) and tag_get_color(get_tags(normpath(self.filePath(index)))[0]):
             #return QColor("#ccffff")
             return QColor(tag_get_color(get_tags(normpath(self.filePath(index)))[0]))
 
@@ -361,8 +363,10 @@ class SortingModel(QSortFilterProxyModel):
         super().__init__(parent)
         self.mode = ""
         self.filter_tags = []
+        self.tagged_paths = []
 
-    def tagged_paths(self, tree=False):
+    def recalc_tagged_paths(self, tree=False):
+        print('tagged_paths called')
         all_paths=[]
         for t in self.filter_tags:
             all_paths = list(set(all_paths + get_files_by_tag(t)))
@@ -372,7 +376,8 @@ class SortingModel(QSortFilterProxyModel):
             if str(Path(t).parent).lower() not in all_paths:
                 all_paths.append(str(Path(t).parent).lower())
         # print(all_paths)
-        return all_paths
+        #return all_paths
+        self.tagged_paths = all_paths
 
     def lessThan(self, source_left: QModelIndex, source_right: QModelIndex):
         file_info1 = self.sourceModel().fileInfo(source_left)
@@ -397,7 +402,7 @@ class SortingModel(QSortFilterProxyModel):
 
         if self.mode == "Tag(s)": # and source_parent == source_model.index(source_model.rootPath()):
             # print(normpath(path))
-            return normpath(path).lower() in self.tagged_paths(True)
+            return normpath(path).lower() in self.tagged_paths
         elif self.mode == "Folder & tags" and source_parent == source_model.index(source_model.rootPath()):
             source_model = self.sourceModel()
             index = source_model.index(source_row, 0, source_parent)
@@ -407,7 +412,7 @@ class SortingModel(QSortFilterProxyModel):
             #     # print(normpath(path))
             #     return True
             # #print(self.tagged_paths())
-            return normpath(path).lower() in self.tagged_paths()
+            return normpath(path).lower() in self.tagged_paths
         else:
             return True
 

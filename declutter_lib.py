@@ -128,7 +128,7 @@ def build_file_tree(parent, dirname, tags_filter = [], recurse = False, filter_m
     return found
 
 def apply_rule(rule, dryrun = False):
-    report = {'copied':0, 'moved':0, 'moved to subfolder':0, 'deleted':0, 'trashed':0, 'tagged':0, 'renamed':0}
+    report = {'copied':0, 'moved':0, 'moved to subfolder':0, 'deleted':0, 'trashed':0, 'tagged':0, 'untagged':0, 'cleared tags':0, 'renamed':0}
     details = []
     if rule['enabled']:
         files = get_files_affected_by_rule(rule)
@@ -276,6 +276,18 @@ def apply_rule(rule, dryrun = False):
                         add_tags(f, rule['tags'])
                         msg = "Tagged " + f + " with " + str(rule['tags'])
                         report['tagged'] += 1
+                elif rule['action'] == 'Remove tags':            
+                    #if not dryrun:
+                    if rule['tags'] and set(rule['tags']).issubset(set(get_tags(f))):
+                        remove_tags(f, rule['tags'])
+                        msg = "Removed these tags from  " + f + ": " + str(rule['tags'])
+                        report['untagged'] += 1
+                elif rule['action'] == 'Clear all tags':
+                    #if not dryrun:
+                    if get_tags(f):
+                        remove_all_tags(f)
+                        msg = "Cleared tags for  " + f
+                        report['cleared tags'] += 1                        
                 if msg:
                     details.append(msg)
                     logging.debug(msg)
@@ -369,7 +381,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
             
             # Important: it recurses for 'Rename' and 'Tag' actions, but doesn't recurse for other actions if the folder matches the conditions
             # That's because the whole folder will be copied/moved/trashed and it doesn't make sense to check its files
-            if (rule['action'] in ('Rename', 'Tag') or not conditions_met) and os.path.isdir(fullname) and rule['recursive']:
+            if (rule['action'] in ('Rename', 'Tag', 'Remove tags', 'Clear all tags') or not conditions_met) and os.path.isdir(fullname) and rule['recursive']:
             #if not conditions_met and os.path.isdir(fullname) and rule['recursive']:
                 get_files_affected_by_rule_folder(rule, fullname, out_files)
     return out_files
@@ -665,9 +677,11 @@ def create_tag(tag):
         count = row+1
         
     #print(row)
-    c.execute("INSERT INTO tags VALUES (null, ?, ?)", (tag,count))
+    c.execute("INSERT INTO tags VALUES (null, ?, ?, null)", (tag,count))
+    tag_id = c.lastrowid
     conn.commit()
     conn.close()
+    return tag_id
 
 def move_tag(tag, direction): # Moves tag up or down in lists
     tags = get_all_tags()
@@ -695,6 +709,32 @@ def move_tag(tag, direction): # Moves tag up or down in lists
     conn.commit()
     conn.close()    
 
+def rename_tag(old_tag, new_tag):
+    tagged_files = get_files_by_tag(old_tag)
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    if new_tag in get_all_tags():
+        delete_tag(old_tag)
+    else:
+        c.execute("UPDATE tags set name = ? WHERE name = ?", (new_tag,old_tag))
+    conn.commit()
+    conn.close()   
+    # updating tagged files
+    for f in tagged_files:
+        add_tag(f,new_tag) 
+    # updating rules and conditions
+    settings = load_settings()
+    for r in settings['rules']:  # TBD this should be also moved to lib?
+        if old_tag in r['tags']:
+            print('updating',r['name'])
+            r['tags'].remove(old_tag)
+            r['tags'].append(new_tag)
+        for c in r['conditions']:
+            if c['type'] == 'tags' and old_tag in c['tags']:
+                print('updating condition for',r['name'])
+                c['tags'].remove(old_tag)
+                c['tags'].append(new_tag)
+    save_settings(SETTINGS_FILE, settings)             
 
 def set_tags(filename, tags): # TBD optimize this
     filename = str(filename).lower()
@@ -713,9 +753,10 @@ def set_tags(filename, tags): # TBD optimize this
         c.execute("SELECT id from tags WHERE name = ?", (t,))
         row = c.fetchone()
         if row is None:               
-            c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-            tag_id = c.lastrowid   
-        else:
+            # c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
+            # tag_id = c.lastrowid
+            tag_id = create_tag(t)
+        else:            
             tag_id = row[0] 
         c.execute("INSERT INTO file_tags VALUES (?,?)", (file_id,tag_id))
         #print('inserting tags for {}, {}'.format(file_id,tag_id))

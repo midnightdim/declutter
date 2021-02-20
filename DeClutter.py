@@ -219,7 +219,6 @@ class RulesWindow(QMainWindow):
         self.rule_window = RuleEditWindow()
         self.rule_window.exec_()
         if self.rule_window.updated:
-            print("updating")
             rule = self.rule_window.rule
             rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1
             self.settings['rules'].append(rule)
@@ -228,12 +227,15 @@ class RulesWindow(QMainWindow):
         self.load_rules()
 
     def edit_rule(self, r, c):
-        rule = deepcopy(self.settings['rules'][r])
-        self.rule_window = RuleEditWindow()
-        self.rule_window.load_rule(rule)
-        self.rule_window.exec_() # TBD this should return 1 or 0 for Save and Cancel, but it doesn't, so I had to use .updated flag, should be revised
-        if self.rule_window.updated:
-            self.settings['rules'][r] = self.rule_window.rule
+        if c == 1: # Enabled/Disabled is clicked
+            self.settings['rules'][r]['enabled'] = not self.settings['rules'][r]['enabled']
+        else:
+            rule = deepcopy(self.settings['rules'][r])
+            self.rule_window = RuleEditWindow()
+            self.rule_window.load_rule(rule)
+            self.rule_window.exec_() # TBD this should return 1 or 0 for Save and Cancel, but it doesn't, so I had to use .updated flag, should be revised
+            if self.rule_window.updated:
+                self.settings['rules'][r] = self.rule_window.rule
         save_settings(SETTINGS_FILE, self.settings)            
         self.load_rules()
         

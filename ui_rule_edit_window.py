@@ -18,7 +18,7 @@ class Ui_RuleEditWindow(object):
         if not RuleEditWindow.objectName():
             RuleEditWindow.setObjectName(u"RuleEditWindow")
         RuleEditWindow.setWindowModality(Qt.ApplicationModal)
-        RuleEditWindow.resize(694, 550)
+        RuleEditWindow.resize(694, 554)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -181,6 +181,8 @@ class Ui_RuleEditWindow(object):
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.actionComboBox = QComboBox(RuleEditWindow)
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
         self.actionComboBox.addItem("")
         self.actionComboBox.addItem("")
         self.actionComboBox.addItem("")
@@ -374,7 +376,9 @@ class Ui_RuleEditWindow(object):
         self.actionComboBox.setItemText(3, QCoreApplication.translate("RuleEditWindow", u"Rename", None))
         self.actionComboBox.setItemText(4, QCoreApplication.translate("RuleEditWindow", u"Copy", None))
         self.actionComboBox.setItemText(5, QCoreApplication.translate("RuleEditWindow", u"Tag", None))
-        self.actionComboBox.setItemText(6, QCoreApplication.translate("RuleEditWindow", u"Move to subfolder", None))
+        self.actionComboBox.setItemText(6, QCoreApplication.translate("RuleEditWindow", u"Remove tags", None))
+        self.actionComboBox.setItemText(7, QCoreApplication.translate("RuleEditWindow", u"Clear all tags", None))
+        self.actionComboBox.setItemText(8, QCoreApplication.translate("RuleEditWindow", u"Move to subfolder", None))
 
         self.toFolderLabel.setText(QCoreApplication.translate("RuleEditWindow", u"to folder", None))
         self.renameEdit.setText(QCoreApplication.translate("RuleEditWindow", u"<filename>", None))

@@ -228,7 +228,7 @@ class RuleEditWindow(QDialog):
         self.ui.overwriteComboBox.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))
         self.ui.renameEdit.setVisible(state == "Rename")
         self.ui.subfolderEdit.setVisible(state == "Move to subfolder")
-        self.ui.tagsList.setVisible(state == "Tag")
+        self.ui.tagsList.setVisible(state in ("Tag", "Remove tags"))
 
     def add_folder(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
