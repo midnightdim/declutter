@@ -14,7 +14,7 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 
-VERSION = '1.02'
+VERSION = '1.04'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -33,6 +33,7 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['tags'] = []
         settings['filter_tags'] = []
         settings['rules'] = []
+        settings['recent_folders'] = []
         settings['rule_exec_interval'] = 300
         settings['dryrun'] = False
         settings['tag_filter_mode'] = "any"
@@ -49,6 +50,7 @@ def load_settings(settings_file = SETTINGS_FILE):
             logging.error('No settings file found')
             pass
         settings['version'] = VERSION
+        settings['recent_folders'] = settings['recent_folders'] if 'recent_folders' in settings.keys() else []
         settings['current_drive'] = settings['current_drive'] if 'current_drive' in settings.keys() else ""
         settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""  
         settings['folders'] = settings['folders'] if 'folders' in settings.keys() else []
@@ -726,12 +728,12 @@ def rename_tag(old_tag, new_tag):
     settings = load_settings()
     for r in settings['rules']:  # TBD this should be also moved to lib?
         if old_tag in r['tags']:
-            print('updating',r['name'])
+            # print('updating',r['name'])
             r['tags'].remove(old_tag)
             r['tags'].append(new_tag)
         for c in r['conditions']:
             if c['type'] == 'tags' and old_tag in c['tags']:
-                print('updating condition for',r['name'])
+                # print('updating condition for',r['name'])
                 c['tags'].remove(old_tag)
                 c['tags'].append(new_tag)
     save_settings(SETTINGS_FILE, settings)             

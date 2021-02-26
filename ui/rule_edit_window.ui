@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>694</width>
-    <height>550</height>
+    <height>554</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -269,6 +269,16 @@
          <item>
           <property name="text">
            <string>Tag</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Remove tags</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Clear all tags</string>
           </property>
          </item>
          <item>

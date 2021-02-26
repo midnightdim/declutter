@@ -8,5 +8,6 @@ sandbox.py
 *.bak
 *.spec
 build.bat
-build/
 dist/
+sandbox/
+ui/icons/

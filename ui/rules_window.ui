@@ -182,8 +182,8 @@
   </widget>
   <action name="actionAdd">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/document-new.svg</normaloff>icons/document-new.svg</iconset>
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/document-new.svg</normaloff>:/images/icons/document-new.svg</iconset>
    </property>
    <property name="text">
     <string>Add</string>
@@ -207,8 +207,8 @@
   </action>
   <action name="actionDelete">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/trash.svg</normaloff>icons/trash.svg</iconset>
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
    </property>
    <property name="text">
     <string>Delete</string>
@@ -219,8 +219,8 @@
   </action>
   <action name="actionExecute">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/media-play.svg</normaloff>icons/media-play.svg</iconset>
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
    </property>
    <property name="text">
     <string>Execute</string>
@@ -228,8 +228,8 @@
   </action>
   <action name="actionMove_up">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/arrow-thin-up.svg</normaloff>icons/arrow-thin-up.svg</iconset>
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/arrow-thin-up.svg</normaloff>:/images/icons/arrow-thin-up.svg</iconset>
    </property>
    <property name="text">
     <string>Move up</string>
@@ -240,8 +240,8 @@
   </action>
   <action name="actionMove_down">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/arrow-thin-down.svg</normaloff>icons/arrow-thin-down.svg</iconset>
+    <iconset resource="DeClutter.qrc">
+     <normaloff>:/images/icons/arrow-thin-down.svg</normaloff>:/images/icons/arrow-thin-down.svg</iconset>
    </property>
    <property name="text">
     <string>Move down</string>

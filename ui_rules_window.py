@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'rules_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.0
+## Created by: Qt User Interface Compiler version 6.0.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -30,7 +30,7 @@ class Ui_rulesWindow(object):
         self.actionAdd = QAction(rulesWindow)
         self.actionAdd.setObjectName(u"actionAdd")
         icon1 = QIcon()
-        icon1.addFile(u"icons/document-new.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionAdd.setIcon(icon1)
         self.actionOpen_log_file = QAction(rulesWindow)
         self.actionOpen_log_file.setObjectName(u"actionOpen_log_file")
@@ -39,22 +39,22 @@ class Ui_rulesWindow(object):
         self.actionDelete = QAction(rulesWindow)
         self.actionDelete.setObjectName(u"actionDelete")
         icon2 = QIcon()
-        icon2.addFile(u"icons/trash.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionDelete.setIcon(icon2)
         self.actionExecute = QAction(rulesWindow)
         self.actionExecute.setObjectName(u"actionExecute")
         icon3 = QIcon()
-        icon3.addFile(u"icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionExecute.setIcon(icon3)
         self.actionMove_up = QAction(rulesWindow)
         self.actionMove_up.setObjectName(u"actionMove_up")
         icon4 = QIcon()
-        icon4.addFile(u"icons/arrow-thin-up.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionMove_up.setIcon(icon4)
         self.actionMove_down = QAction(rulesWindow)
         self.actionMove_down.setObjectName(u"actionMove_down")
         icon5 = QIcon()
-        icon5.addFile(u"icons/arrow-thin-down.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon5.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionMove_down.setIcon(icon5)
         self.actionSettings = QAction(rulesWindow)
         self.actionSettings.setObjectName(u"actionSettings")

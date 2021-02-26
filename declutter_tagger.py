@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtGui import QIcon, QColor, QCursor, QAction
 from PySide6.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView
-from PySide6.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox
+from PySide6.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem
 from PySide6.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel
 from ui_tagger_window import Ui_taggerWindow
 from tags_dialog import TagsDialog
@@ -23,16 +23,27 @@ class TaggerWindow(QMainWindow):
 
     def populate(self):
         #path = r"D:\DIM\WinFiles\Downloads"
-        settings = load_settings()
-        self.checkAction = {}  # TBD what's this?
+        self.settings = load_settings()
+        self.checkAction = {}  # checkboxes in context menu
+        self.tag_checkboxes = {} # checkboxes in the dock widget
 
-        path = settings['current_folder'] if 'current_folder' in settings.keys() and settings['current_folder'] != '' else normpath(QDir.homePath())
+        self.ui.actionNone1 = QAction(self)
+        #self.ui.actionNone1.setObjectName(u"actionNone1")
+        # self.ui.actionNone1.setText(r"C:\Users\DIM\AppData\Roaming\DeClutter\Users\DIM\AppData\Roaming\DeClutter\Users\DIM\AppData\Roaming\DeClutter\Users\DIM\AppData\Roaming\DeClutter")
+        # self.ui.actionNone1.triggered.connect(self.open_recent)
+        self.ui.recent_menu.aboutToShow.connect(self.update_recent_menu)
+        self.ui.recent_menu.triggered.connect(self.open_file_from_recent)
+        #self.ui.menuRecent_folders.addAction(self.ui.actionNone1)
+        #self.actionNone.setEnabled(False)
+
+        path = self.settings['current_folder'] if 'current_folder' in self.settings.keys() and self.settings['current_folder'] != '' else normpath(QDir.homePath())
         #path = r"D:\Projects.other\Mikhail Beloglazov"
         #path = r"D:\DIM\WinFiles\Downloads"
         #path = r"."
         
         self.model = TagFSModel()
         #self.model = QFileSystemModel()
+        
         self.model.setRootPath(path)
         self.model.setFilter(QDir.NoDot | QDir.AllEntries)
         self.model.sort(0,Qt.SortOrder.AscendingOrder)
@@ -68,17 +79,66 @@ class TaggerWindow(QMainWindow):
         self.ui.sourceComboBox.currentIndexChanged.connect(self.update_ui)
         self.ui.selectTagsButton.clicked.connect(self.select_tags)
         self.model.directoryLoaded.connect(self.dir_loaded)
+
+        # self.setStyleSheet("QDockWidget::title {position: relative; top: 100px;}")
+        # self.setStyleSheet("QMainWindow::separator{ margin: 100px;}");
+        
+        self.init_tag_checkboxes()
         self.update_ui()
 
-    # def update_filter_paths(self):
-    #     all_paths = []
-    #     for t in self.filter_tags_checkboxes:
-    #         if self.filter_tags_checkboxes[t].isChecked():
-    #             all_tags = list(set(all_paths + get_files_by_tag(t)))
-    #         for t in all_tags:
-    #             if str(Path(t).parent).lower() not in all_tags:
-    #                 all_tags.append(str(Path(t).parent).lower())
-    #     print(all_paths)
+    # def open_recent(self):
+    #     sender = self.sender()
+    #     print('open recent', sender)
+
+    def mouseDoubleClickEvent(self, event):  # TBD maybe remove this
+        widget = self.childAt(event.pos())
+        if widget is not None and widget.objectName() == "scrollAreaWidgetContents":
+            self.manage_tags()
+
+    def init_tag_checkboxes(self):
+        for t in self.tag_checkboxes:
+            self.tag_checkboxes[t].destroy()
+            self.tag_checkboxes[t].setVisible(False)
+        
+        self.tag_checkboxes = {}
+        for t in get_all_tags():
+            self.tag_checkboxes[t] = QCheckBox(t)
+            self.ui.tagsLayout.addWidget(self.tag_checkboxes[t])
+            self.tag_checkboxes[t].stateChanged.connect(self.set_tags)
+
+            if tag_get_color(t):
+                self.tag_checkboxes[t].setPalette(QColor(tag_get_color(t)))
+                self.tag_checkboxes[t].setAutoFillBackground(True)  
+
+    def update_tag_checkboxes(self):
+        indexes = self.ui.treeView.selectedIndexes()
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+
+        all_files_tags = []
+        for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
+            all_files_tags.extend(get_tags(f))
+      
+        for t in get_all_tags():
+            if t not in all_files_tags:
+                self.tag_checkboxes[t].setTristate(False)
+                self.tag_checkboxes[t].setChecked(False)
+            elif all_files_tags.count(t) < len(cur_selection):
+                self.tag_checkboxes[t].setTristate(True)
+                self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
+            else:
+                self.tag_checkboxes[t].setChecked(True)
+
+    def update_recent_menu(self):
+        self.ui.recent_menu.clear()
+        for row, foldername in enumerate(self.settings['recent_folders'], 1):
+            recent_action = self.ui.recent_menu.addAction('&{}. {}'.format(
+                row, foldername))
+            recent_action.setData(foldername)
+
+    def open_file_from_recent(self, action):
+        #self.open_file(action.data())
+        self.ui.pathEdit.setText(normpath(action.data()))
+        self.change_path()
 
     def dir_loaded(self):
         #print("dir loaded")
@@ -213,6 +273,7 @@ class TaggerWindow(QMainWindow):
     def update_status(self):
         num_selected = int(len(self.ui.treeView.selectedIndexes())/5)
         self.ui.statusbar.showMessage(str(num_selected)+" item(s) selected")
+        self.update_tag_checkboxes()
 
     def choose_path(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
@@ -229,14 +290,21 @@ class TaggerWindow(QMainWindow):
             self.ui.statusbar.clearMessage()
             self.model.setRootPath(normpath(file_path)) # TBD reuse this in a function
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path)))
-            self.ui.pathEdit.setText(file_path)            
-            settings = load_settings()
-            settings['current_folder'] = file_path
-            save_settings(SETTINGS_FILE,settings)
+            self.ui.pathEdit.setText(file_path)
+            if normpath(self.settings['current_folder']) != normpath(file_path):
+                self.settings['current_folder'] = file_path
+                if file_path in self.settings['recent_folders']:
+                    self.settings['recent_folders'].remove(file_path)
+                self.settings['recent_folders'].insert(0,file_path)
+                if len(self.settings['recent_folders'])>15:
+                    del self.settings['recent_folders'][-1]
+            save_settings(SETTINGS_FILE,self.settings)
 
     def manage_tags(self):
         self.tags_dialog = TagsDialog()
         self.tags_dialog.exec_()
+        self.init_tag_checkboxes()
+        self.update_tag_checkboxes()
 
     def open(self):
         index = self.ui.treeView.currentIndex()
@@ -247,9 +315,8 @@ class TaggerWindow(QMainWindow):
             self.model.setRootPath(normpath(file_path)) # TBD reuse this in a function
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path)))
             self.ui.pathEdit.setText(file_path)
-            settings = load_settings()
-            settings['current_folder'] = file_path
-            save_settings(SETTINGS_FILE,settings)
+            self.settings['current_folder'] = file_path
+            save_settings(SETTINGS_FILE,self.settings)
         elif os.path.isfile(file_path):
             os.startfile(file_path)
 
@@ -289,7 +356,7 @@ class TaggerWindow(QMainWindow):
 
     def set_tags(self, state):
         sender = self.sender()
-        #print("clicked",state)
+        # print("clicked",state)
         # index = self.ui.treeView.currentIndex()
         # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
         
@@ -303,6 +370,8 @@ class TaggerWindow(QMainWindow):
             elif state == 0: #unchecked
                 remove_tag(file_path,sender.text())
 
+        self.update_tag_checkboxes()
+
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent = QModelIndex()):
         return super(TagFSModel, self).columnCount()+1
@@ -314,6 +383,9 @@ class TagFSModel(QFileSystemModel):
             return super(TagFSModel, self).headerData(section, orientation, role)        
 
     def data(self, index, role):
+        # if index.column() == 0: #displays full path instead of the name
+        #     if role == Qt.DisplayRole:
+        #         return self.filePath(index)
         if index.column() == self.columnCount() - 1:
             if role == Qt.DisplayRole:
                 #return self.fileName(index)
@@ -366,7 +438,7 @@ class SortingModel(QSortFilterProxyModel):
         self.tagged_paths = []
 
     def recalc_tagged_paths(self, tree=False):
-        print('tagged_paths called')
+        # print('tagged_paths called')
         all_paths=[]
         for t in self.filter_tags:
             all_paths = list(set(all_paths + get_files_by_tag(t)))
@@ -381,7 +453,9 @@ class SortingModel(QSortFilterProxyModel):
 
     def lessThan(self, source_left: QModelIndex, source_right: QModelIndex):
         file_info1 = self.sourceModel().fileInfo(source_left)
-        file_info2 = self.sourceModel().fileInfo(source_right)       
+        file_info2 = self.sourceModel().fileInfo(source_right)
+
+        #print(self.sourceModel() )
         
         if file_info1.fileName() == "..":
             return self.sortOrder() == Qt.SortOrder.AscendingOrder
