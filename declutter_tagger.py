@@ -97,8 +97,10 @@ class TaggerWindow(QMainWindow):
 
     def init_tag_checkboxes(self):
         for t in self.tag_checkboxes:
-            self.tag_checkboxes[t].destroy()
-            self.tag_checkboxes[t].setVisible(False)
+            self.ui.tagsLayout.takeAt(self.ui.tagsLayout.indexOf(self.tag_checkboxes[t]))
+            self.tag_checkboxes[t].deleteLater()
+            # self.tag_checkboxes[t].hide()
+            # self.tag_checkboxes[t].destroy()
         
         self.tag_checkboxes = {}
         for t in get_all_tags():
@@ -146,9 +148,11 @@ class TaggerWindow(QMainWindow):
             self.ui.treeView.expandAll()
 
     def update_filter_tags(self):
+        # print(self.filter_tags)
+        # print(self.filter_tags_checkboxes)
         for t in self.filter_tags_checkboxes:
-            self.filter_tags_checkboxes[t].destroy()
-            self.filter_tags_checkboxes[t].setVisible(False)
+            self.ui.horizontalLayout.takeAt(self.ui.horizontalLayout.indexOf(self.filter_tags_checkboxes[t]))    
+            self.filter_tags_checkboxes[t].deleteLater()
         self.filter_tags_checkboxes = {}
         self.filter_tags.reverse()
         for t in self.filter_tags:            
@@ -209,10 +213,13 @@ class TaggerWindow(QMainWindow):
         self.ui.selectTagsButton.setVisible(mode in ('Folder & tags', 'Tag(s)'))
         self.ui.pathEdit.setEnabled(mode in ('Folder', 'Folder & tags'))
         self.ui.browseButton.setEnabled(mode in ('Folder', 'Folder & tags'))
-        if mode == 'Folder':
+        if mode in ('Folder', 'Folder & tags'):
             for t in self.filter_tags_checkboxes:
-                self.filter_tags_checkboxes[t].destroy()
-                self.filter_tags_checkboxes[t].setVisible(False)
+                self.ui.horizontalLayout.takeAt(self.ui.horizontalLayout.indexOf(self.filter_tags_checkboxes[t]))    
+                self.filter_tags_checkboxes[t].deleteLater()                
+                # self.filter_tags_checkboxes[t].hide()
+                # self.filter_tags_checkboxes[t].destroy()
+                # self.filter_tags_checkboxes[t].setVisible(False)
             self.filter_tags = {}
         self.update_treeview()
 
@@ -262,6 +269,9 @@ class TaggerWindow(QMainWindow):
             self.sorting_model.mode = mode            
             self.sorting_model.filter_tags = all_tags
             self.sorting_model.recalc_tagged_paths()
+            # print(self.sorting_model.filter_tags)
+            # print(self.sorting_model.tagged_paths)
+
             self.sorting_model.setSourceModel(self.model)
             self.ui.treeView.setModel(self.sorting_model)            
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))            
@@ -440,10 +450,14 @@ class SortingModel(QSortFilterProxyModel):
     def recalc_tagged_paths(self, tree=False):
         # print('tagged_paths called')
         all_paths=[]
+        # print('here')
+        # print(self.filter_tags)
         for t in self.filter_tags:
             all_paths = list(set(all_paths + get_files_by_tag(t)))
+        # print(all_paths)
         if not tree:
-            return all_paths
+            self.tagged_paths = all_paths
+            return
         for t in all_paths:
             if str(Path(t).parent).lower() not in all_paths:
                 all_paths.append(str(Path(t).parent).lower())
@@ -481,7 +495,7 @@ class SortingModel(QSortFilterProxyModel):
             source_model = self.sourceModel()
             index = source_model.index(source_row, 0, source_parent)
             path = index.data(QFileSystemModel.FilePathRole)
-            # print(normpath(path))
+            # print(normpath(path).lower())
             # if normpath(path).lower() in self.tagged_paths():
             #     # print(normpath(path))
             #     return True

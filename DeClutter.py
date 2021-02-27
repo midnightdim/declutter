@@ -243,19 +243,21 @@ class RulesWindow(QMainWindow):
         #r = self.ui.rulesTable.currentRow()
         #print(r)
         del_indexes = [r.row() for r in self.ui.rulesTable.selectedIndexes()]
-        del_names = [r['name'] for r in self.settings['rules'] if self.settings['rules'].index(r) in del_indexes]
 
-        reply = QMessageBox.question(self, "Warning",
-        "Are you sure you want to delete selected rules:\n"+"\n".join(del_names)+"\n?",
-        QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            for ind in sorted(del_indexes, reverse=True):
-                #print("removing",r.row())
-                #print(self.settings['rules'][r.row()]['name'])
-                del self.settings['rules'][ind]            
-                self.ui.rulesTable.removeRow(ind)
+        if del_indexes:
+            del_names = [r['name'] for r in self.settings['rules'] if self.settings['rules'].index(r) in del_indexes]
 
-            self.ui.rulesTable.setRangeSelected(QTableWidgetSelectionRange(0,0,self.ui.rulesTable.rowCount()-1,self.ui.rulesTable.columnCount()-1), False)
+            reply = QMessageBox.question(self, "Warning",
+            "Are you sure you want to delete selected rules:\n"+"\n".join(del_names)+"\n?",
+            QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                for ind in sorted(del_indexes, reverse=True):
+                    #print("removing",r.row())
+                    #print(self.settings['rules'][r.row()]['name'])
+                    del self.settings['rules'][ind]            
+                    self.ui.rulesTable.removeRow(ind)
+
+                self.ui.rulesTable.setRangeSelected(QTableWidgetSelectionRange(0,0,self.ui.rulesTable.rowCount()-1,self.ui.rulesTable.columnCount()-1), False)
 
     def apply_rule(self):
         rule = deepcopy(self.settings['rules'][self.ui.rulesTable.selectedIndexes()[0].row()])

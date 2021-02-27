@@ -7,7 +7,7 @@
 [Setup]
 AppName=DeClutter
 AppPublisher=Dmitry Beloglazov
-AppVersion=1.00
+AppVersion=1.04
 WizardStyle=modern
 DefaultDirName={autopf}\DeClutter
 ; Since no icons will be created in "{group}", we don't need the wizard
@@ -26,7 +26,7 @@ Source: "DeClutter.exe"; DestDir: "{app}"
 Source: "python38.dll"; DestDir: "{app}"
 Source: "DeClutter.ico"; DestDir: "{app}"
 Source: "lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
-Source: "icons\*"; DestDir: "{app}\icons"; Flags: recursesubdirs
+; Source: "icons\*"; DestDir: "{app}\icons"; Flags: recursesubdirs
 ; Source: "MyProg.chm"; DestDir: "{app}"
 ; Source: "Readme.txt"; DestDir: "{app}"; Flags: isreadme
 
@@ -43,7 +43,7 @@ Name: StartMenuEntry; Description: "Start DeClutter service when Windows starts"
 ;Name: StartAfterInstall; Description: Run application after install
 
 [Run]
-Filename: {app}\{cm:AppName}_gui.exe; Description: {cm:LaunchProgram,{cm:AppName}}; Flags: nowait postinstall skipifsilent
+Filename: {app}\{cm:AppName}.exe; Description: {cm:LaunchProgram,{cm:AppName}}; Flags: nowait postinstall skipifsilent
 
 [CustomMessages]
 AppName=DeClutter
