@@ -625,10 +625,12 @@ def migrate_db():
             c.execute("PRAGMA user_version = 1")
             logging.info("Database updated to version 1")
             pragma = 1
+            # conn.commit()
         except Exception as e:
             logging.exception(e)
 
-    elif pragma == 1:
+    if pragma == 1:
+        print('pragma 1')
         try:
             logging.info("Migration from 1 to 2")
             logging.info("Adding color column")
@@ -640,7 +642,7 @@ def migrate_db():
 
             c.execute("PRAGMA user_version = 2")
             logging.info("Database updated to version 2")
-            pragma = 1
+            pragma = 2
         except Exception as e:
             logging.exception(e)        
        

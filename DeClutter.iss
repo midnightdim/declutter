@@ -24,6 +24,7 @@ OutputBaseFilename=DeClutter.latest
 [Files]
 Source: "DeClutter.exe"; DestDir: "{app}"
 Source: "python38.dll"; DestDir: "{app}"
+Source: "python3.dll"; DestDir: "{app}"
 Source: "DeClutter.ico"; DestDir: "{app}"
 Source: "lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
 ; Source: "icons\*"; DestDir: "{app}\icons"; Flags: recursesubdirs
