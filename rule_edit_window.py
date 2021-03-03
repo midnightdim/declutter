@@ -1,8 +1,8 @@
 import sys
-from PySide6.QtUiTools import loadUiType
-from PySide6.QtGui import QIcon, QColor
-from PySide6.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
-from PySide6.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtUiTools import loadUiType
+from PySide2.QtGui import QIcon, QColor
+from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
+from PySide2.QtCore import (Qt, QAbstractItemModel)
 from ui_rule_edit_window import Ui_RuleEditWindow
 from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color
 from condition_dialog import ConditionDialog

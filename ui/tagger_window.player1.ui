@@ -292,7 +292,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QDial" name="mediaVolumeDial">
+          <widget class="QDial" name="volumeDial">
            <property name="maximumSize">
             <size>
              <width>30</width>

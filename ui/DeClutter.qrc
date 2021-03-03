@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="images">
+    <file>icons/media-pause.svg</file>
     <file>icons/media-play.svg</file>
     <file>icons/tags.svg</file>
     <file>icons/brush.svg</file>

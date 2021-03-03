@@ -3,14 +3,14 @@
 ################################################################################
 ## Form generated from reading UI file 'tagger_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.0.1
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
 import DeClutter_rc
 
@@ -18,7 +18,7 @@ class Ui_taggerWindow(object):
     def setupUi(self, taggerWindow):
         if not taggerWindow.objectName():
             taggerWindow.setObjectName(u"taggerWindow")
-        taggerWindow.resize(1047, 600)
+        taggerWindow.resize(1047, 690)
         icon = QIcon()
         icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
         taggerWindow.setWindowIcon(icon)
@@ -135,7 +135,7 @@ class Ui_taggerWindow(object):
         self.tagsScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 180, 537))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 180, 351))
         sizePolicy1.setHeightForWidth(self.scrollAreaWidgetContents.sizePolicy().hasHeightForWidth())
         self.scrollAreaWidgetContents.setSizePolicy(sizePolicy1)
         self.gridLayout_3 = QGridLayout(self.scrollAreaWidgetContents)
@@ -155,6 +155,55 @@ class Ui_taggerWindow(object):
 
         self.tagsDockWidget.setWidget(self.dockWidgetContents)
         taggerWindow.addDockWidget(Qt.LeftDockWidgetArea, self.tagsDockWidget)
+        self.mediaDockWidget = QDockWidget(taggerWindow)
+        self.mediaDockWidget.setObjectName(u"mediaDockWidget")
+        self.mediaDockWidgetContent = QWidget()
+        self.mediaDockWidgetContent.setObjectName(u"mediaDockWidgetContent")
+        self.mediaDockWidgetContent.setMinimumSize(QSize(0, 250))
+        self.gridLayout_5 = QGridLayout(self.mediaDockWidgetContent)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_4 = QGridLayout()
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.mediaPlayButton = QPushButton(self.mediaDockWidgetContent)
+        self.mediaPlayButton.setObjectName(u"mediaPlayButton")
+        icon1 = QIcon()
+        icon1.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.mediaPlayButton.setIcon(icon1)
+
+        self.horizontalLayout_2.addWidget(self.mediaPlayButton)
+
+        self.mediaPositionSlider = QSlider(self.mediaDockWidgetContent)
+        self.mediaPositionSlider.setObjectName(u"mediaPositionSlider")
+        self.mediaPositionSlider.setOrientation(Qt.Horizontal)
+
+        self.horizontalLayout_2.addWidget(self.mediaPositionSlider)
+
+        self.mediaVolumeDial = QDial(self.mediaDockWidgetContent)
+        self.mediaVolumeDial.setObjectName(u"mediaVolumeDial")
+        self.mediaVolumeDial.setMaximumSize(QSize(30, 30))
+        self.mediaVolumeDial.setMaximum(100)
+        self.mediaVolumeDial.setValue(100)
+
+        self.horizontalLayout_2.addWidget(self.mediaVolumeDial)
+
+
+        self.gridLayout_4.addLayout(self.horizontalLayout_2, 1, 0, 1, 1)
+
+        self.playerLayout = QGridLayout()
+        self.playerLayout.setObjectName(u"playerLayout")
+
+        self.gridLayout_4.addLayout(self.playerLayout, 0, 0, 1, 1)
+
+        self.gridLayout_4.setRowStretch(0, 30)
+        self.gridLayout_4.setRowStretch(1, 1)
+        self.gridLayout_4.setRowStretch(2, 1)
+
+        self.gridLayout_5.addLayout(self.gridLayout_4, 0, 0, 1, 1)
+
+        self.mediaDockWidget.setWidget(self.mediaDockWidgetContent)
+        taggerWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mediaDockWidget)
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuOptions.menuAction())
@@ -181,5 +230,9 @@ class Ui_taggerWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("taggerWindow", u"File", None))
         self.recent_menu.setTitle(QCoreApplication.translate("taggerWindow", u"Recent folders", None))
         self.tagsDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Tags", None))
+#if QT_CONFIG(tooltip)
+        self.mediaPlayButton.setToolTip(QCoreApplication.translate("taggerWindow", u"Play", None))
+#endif // QT_CONFIG(tooltip)
+        self.mediaPlayButton.setText("")
     # retranslateUi
 

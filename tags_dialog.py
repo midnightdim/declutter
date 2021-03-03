@@ -1,9 +1,9 @@
 import sys
-from PySide6.QtUiTools import loadUiType
+from PySide2.QtUiTools import loadUiType
 
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog
-from PySide6.QtCore import (Qt, QAbstractItemModel)
-from PySide6.QtGui import QPalette, QColor
+from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog
+from PySide2.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtGui import QPalette, QColor
 from ui_tags_dialog import Ui_tagsDialog
 from declutter_lib import *
 import logging

@@ -1,7 +1,8 @@
 import sys
-from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
-from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
+from PySide2.QtGui import QIcon
+from PySide2.QtWidgets import (QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, 
+    QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QStyle)
+from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
 from ui_list_dialog import Ui_listDialog
@@ -297,7 +298,7 @@ class RulesWindow(QMainWindow):
             newItem = QTableWidgetItem(rule['action'])
             self.ui.rulesTable.setItem(i,2,newItem)
             newItem = QTableWidgetItem(','.join(rule['folders']))
-            self.ui.rulesTable.setItem(i,3,newItem)            
+            self.ui.rulesTable.setItem(i,3,newItem)
             i+=1
         self.ui.rulesTable.setColumnWidth(0,200)
         self.ui.rulesTable.setColumnWidth(1,80)
@@ -326,7 +327,7 @@ class RulesWindow(QMainWindow):
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-        self.trayIcon.setIcon(QIcon('DeClutter.ico'))        
+        self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))        
         self.trayIcon.setVisible(True)
         self.trayIcon.show()
 
@@ -384,7 +385,8 @@ def main():
     QApplication.setQuitOnLastWindowClosed(False)
 
     logging.info("DeClutter started")
-    app.setWindowIcon(QIcon('DeClutter.ico'))
+    # app.setWindowIcon(QIcon('DeClutter.ico'))
+    app.setWindowIcon(QIcon.fromTheme("edit-undo"))
 
     window = RulesWindow()
     window.show()

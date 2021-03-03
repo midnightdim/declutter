@@ -1,8 +1,8 @@
 import sys
-from PySide6.QtUiTools import loadUiType
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox
-from PySide6.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtUiTools import loadUiType
+from PySide2.QtGui import QColor
+from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox
+from PySide2.QtCore import (Qt, QAbstractItemModel)
 from ui_condition_dialog import Ui_Condition
 from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color
 

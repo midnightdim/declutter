@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1047</width>
-    <height>690</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -221,7 +221,7 @@
           <x>0</x>
           <y>0</y>
           <width>180</width>
-          <height>351</height>
+          <height>537</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -250,69 +250,6 @@
         </layout>
        </widget>
       </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="mediaDockWidget">
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="mediaDockWidgetContent">
-    <property name="minimumSize">
-     <size>
-      <width>0</width>
-      <height>250</height>
-     </size>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_5">
-     <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout_4" rowstretch="30,1,1,0">
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QPushButton" name="mediaPlayButton">
-           <property name="toolTip">
-            <string>Play</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="DeClutter.qrc">
-             <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSlider" name="mediaPositionSlider">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDial" name="mediaVolumeDial">
-           <property name="maximumSize">
-            <size>
-             <width>30</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximum">
-            <number>100</number>
-           </property>
-           <property name="value">
-            <number>100</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="playerLayout" rowminimumheight="0"/>
-       </item>
-      </layout>
      </item>
     </layout>
    </widget>
