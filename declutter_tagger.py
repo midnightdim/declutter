@@ -1,8 +1,8 @@
 import sys
 from PySide2.QtGui import QIcon, QColor, QCursor
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction
-from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem
-from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize
+from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
+from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
@@ -20,6 +20,7 @@ class TaggerWindow(QMainWindow):
         # media played init
         self.playlist = QMediaPlaylist()
         self.player = QMediaPlayer()
+        # self.player.setNotifyInterval(500)
         self.videoWidget = QVideoWidget()
         self.ui.playerLayout.addWidget(self.videoWidget)
         self.player.setVideoOutput(self.videoWidget)
@@ -30,7 +31,12 @@ class TaggerWindow(QMainWindow):
         self.player.durationChanged.connect(self.change_duration)
         self.player.positionChanged.connect(self.change_position)
         self.player.stateChanged.connect(self.media_update_play_button)
-        self.ui.mediaPositionSlider.sliderMoved.connect(self.video_position)        
+        
+        self.ui.mediaPositionSlider.actionTriggered.connect(self.action_trig)
+
+        self.ui.mediaDockWidget.installEventFilter(self)
+
+        # self.ui.mediaPositionSlider.valueChanged.connect(self.val_changed)
 
         self.ui.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.treeView.customContextMenuRequested.connect(self.context_menu)
@@ -39,6 +45,30 @@ class TaggerWindow(QMainWindow):
         self.prev_indexes = []
 
         self.populate() # TBD can't it be just a part of init()?
+
+    # volume knob controlled by mouse wheel if the playback is on, TBD may be not very efficient
+    # def wheelEvent(self,event):
+    #     if event.delta() and self.player.state() == QMediaPlayer.State.PlayingState:
+    #         self.ui.mediaVolumeDial.triggerAction(QAbstractSlider.SliderAction.SliderPageStepAdd if event.delta()>0 else QAbstractSlider.SliderAction.SliderPageStepSub)
+
+    def eventFilter(self, source, event):
+        # print(event)
+        if event.type() == QEvent.Wheel:
+            if event.delta(): #and self.player.state() == QMediaPlayer.State.PlayingState:
+                    self.ui.mediaVolumeDial.triggerAction(QAbstractSlider.SliderAction.SliderPageStepAdd if event.delta()>0 else QAbstractSlider.SliderAction.SliderPageStepSub)            
+                    return False
+        return super(TaggerWindow, self).eventFilter(source, event)
+
+    def action_trig(self, action):
+        # self.player.pause()
+        # print(action)
+        # print(self.ui.mediaPositionSlider.sliderPosition())
+        # print(self.ui.mediaPositionSlider.value())
+        # if action == 0:
+        #     self.ui.mediaPositionSlider.value_changed_by_user = False
+        
+        if action == 1:
+            self.seek_position(self.ui.mediaPositionSlider.value())
 
     def media_update_play_button(self,state):
         icon1 = QIcon()
@@ -69,13 +99,36 @@ class TaggerWindow(QMainWindow):
     #     self.player.pause()
 
     def change_position(self, position):
+        # print('change_pos',self.ui.mediaPositionSlider.value_changed_by_user)
+        # if self.ui.mediaPositionSlider.value_changed_by_user:
+        #     # print('not changing pos')
+        #     pass
+        #     # self.player.setPosition(self.ui.mediaPositionSlider.value())
+        #     # self.ui.mediaPositionSlider.value_changed_by_user = False
+        # else:
+        #     # print('changing pos')
         self.ui.mediaPositionSlider.setValue(position)
 
-    def change_duration(self, duration):
-        self.ui.mediaPositionSlider.setRange(0, duration)
 
-    def video_position(self, position):
-        self.player.setPosition(position)        
+    def seek_position(self,position):
+        # sender = self.sender()
+        # print('slider moved', position)
+        # if isinstance(sender, QSlider):
+        #     print('setting value')
+        self.player.setPosition(position)
+        # self.ui.mediaPositionSlider.value_changed_by_user = False
+
+    def change_duration(self, duration):
+        print(duration)
+        self.ui.mediaPositionSlider.setRange(0, duration)
+        self.ui.mediaPositionSlider.setPageStep(int(duration/20))
+
+    # def video_position(self, position):
+    #     print('slider moved')
+    #     # self.player.setPosition(position)
+    #     self.player.setPosition(position)
+    #     self.ui.mediaPositionSlider.value_changed_by_user = False
+    #     print(self.ui.mediaPositionSlider.value_changed_by_user)
 
     def populate(self):
         #path = r"D:\DIM\WinFiles\Downloads"
@@ -341,19 +394,18 @@ class TaggerWindow(QMainWindow):
         indexes = self.ui.treeView.selectedIndexes()
         indexes.sort()
         self.prev_indexes.sort()
-        if indexes == self.prev_indexes:
-            print('selection hasnt changed')
-        else:
+        if indexes != self.prev_indexes:
             # print('selection changed')
             self.player.stop()
-            file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
-            file_ext = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))[-3:]
-            if file_ext == "mp3":
-                self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
-            self.playlist.clear()
-            self.playlist.addMedia(file_url)
-            self.player.play()
-            self.player.pause()
+            if os.path.isfile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))):
+                file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
+                file_ext = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))[-3:]
+                if file_ext in ("mp3", "wav"): # TBD change this to audio file type
+                    self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
+                self.playlist.clear()
+                self.playlist.addMedia(file_url)
+                self.player.play()
+                self.player.pause()
         # print('indexes',indexes)        
         # print(self.ui.treeView.selectedIndexes())
         num_selected = int(len(self.ui.treeView.selectedIndexes())/5)

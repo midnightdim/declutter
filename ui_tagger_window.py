@@ -196,6 +196,12 @@ class Ui_taggerWindow(object):
 
         self.gridLayout_4.addLayout(self.playerLayout, 0, 0, 1, 1)
 
+        self.mediaDurationLabel = QLabel(self.mediaDockWidgetContent)
+        self.mediaDurationLabel.setObjectName(u"mediaDurationLabel")
+        self.mediaDurationLabel.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.mediaDurationLabel, 2, 0, 1, 1)
+
         self.gridLayout_4.setRowStretch(0, 30)
         self.gridLayout_4.setRowStretch(1, 1)
         self.gridLayout_4.setRowStretch(2, 1)
@@ -212,6 +218,7 @@ class Ui_taggerWindow(object):
         self.recent_menu.addAction(self.actionNone)
 
         self.retranslateUi(taggerWindow)
+        self.mediaPositionSlider.sliderMoved.connect(taggerWindow.seek_position)
 
         QMetaObject.connectSlotsByName(taggerWindow)
     # setupUi
@@ -234,5 +241,6 @@ class Ui_taggerWindow(object):
         self.mediaPlayButton.setToolTip(QCoreApplication.translate("taggerWindow", u"Play", None))
 #endif // QT_CONFIG(tooltip)
         self.mediaPlayButton.setText("")
+        self.mediaDurationLabel.setText(QCoreApplication.translate("taggerWindow", u"0:00 / 0:00", None))
     # retranslateUi
 

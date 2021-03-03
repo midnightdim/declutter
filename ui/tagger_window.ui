@@ -312,6 +312,16 @@
        <item row="0" column="0">
         <layout class="QGridLayout" name="playerLayout" rowminimumheight="0"/>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="mediaDurationLabel">
+         <property name="text">
+          <string>0:00 / 0:00</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
@@ -334,5 +344,25 @@
  <resources>
   <include location="DeClutter.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>mediaPositionSlider</sender>
+   <signal>sliderMoved(int)</signal>
+   <receiver>taggerWindow</receiver>
+   <slot>seek_position()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>88</x>
+     <y>637</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>523</x>
+     <y>344</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>seek_position()</slot>
+ </slots>
 </ui>

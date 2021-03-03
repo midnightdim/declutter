@@ -1,7 +1,6 @@
 import sys
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, 
-    QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QStyle)
+from PySide2.QtWidgets import QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
 from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
@@ -327,7 +326,7 @@ class RulesWindow(QMainWindow):
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-        self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))        
+        self.trayIcon.setIcon(QIcon('DeClutter.ico'))        
         self.trayIcon.setVisible(True)
         self.trayIcon.show()
 
@@ -385,8 +384,7 @@ def main():
     QApplication.setQuitOnLastWindowClosed(False)
 
     logging.info("DeClutter started")
-    # app.setWindowIcon(QIcon('DeClutter.ico'))
-    app.setWindowIcon(QIcon.fromTheme("edit-undo"))
+    app.setWindowIcon(QIcon('DeClutter.ico'))
 
     window = RulesWindow()
     window.show()
