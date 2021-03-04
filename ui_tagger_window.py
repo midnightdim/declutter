@@ -12,6 +12,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
+from slider import Slider
+
 import DeClutter_rc
 
 class Ui_taggerWindow(object):
@@ -174,7 +176,7 @@ class Ui_taggerWindow(object):
 
         self.horizontalLayout_2.addWidget(self.mediaPlayButton)
 
-        self.mediaPositionSlider = QSlider(self.mediaDockWidgetContent)
+        self.mediaPositionSlider = Slider(self.mediaDockWidgetContent)
         self.mediaPositionSlider.setObjectName(u"mediaPositionSlider")
         self.mediaPositionSlider.setOrientation(Qt.Horizontal)
 
@@ -237,6 +239,7 @@ class Ui_taggerWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("taggerWindow", u"File", None))
         self.recent_menu.setTitle(QCoreApplication.translate("taggerWindow", u"Recent folders", None))
         self.tagsDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Tags", None))
+        self.mediaDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Media Preview", None))
 #if QT_CONFIG(tooltip)
         self.mediaPlayButton.setToolTip(QCoreApplication.translate("taggerWindow", u"Play", None))
 #endif // QT_CONFIG(tooltip)

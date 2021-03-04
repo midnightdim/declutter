@@ -587,9 +587,9 @@ def get_nonexistent_path(src, dst):
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''CREATE TABLE files (id INTEGER PRIMARY KEY, filepath VARCHAR NOT NULL UNIQUE)''')
-    c.execute('''CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)''')
-    c.execute('''CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)''')
+    c.execute("CREATE TABLE files (id INTEGER PRIMARY KEY, filepath VARCHAR NOT NULL UNIQUE)")
+    c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)")
+    c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)")
     conn.commit()
     conn.close()    
 
@@ -630,7 +630,6 @@ def migrate_db():
             logging.exception(e)
 
     if pragma == 1:
-        print('pragma 1')
         try:
             logging.info("Migration from 1 to 2")
             logging.info("Adding color column")
@@ -644,8 +643,23 @@ def migrate_db():
             logging.info("Database updated to version 2")
             pragma = 2
         except Exception as e:
-            logging.exception(e)        
-       
+            logging.exception(e)
+    
+    if pragma == 2:
+        try:
+            logging.info("Migration from 2 to 3")
+            logging.info("Adding groups table")
+            c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
+            c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 1)")
+            c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER")  
+            for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
+                c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
+            c.execute("PRAGMA user_version = 3")
+            logging.info("Database updated to version 3")
+            pragma = 3
+        except Exception as e:
+            logging.exception(e)       
+
     conn.commit()
     conn.close()        
 
@@ -859,6 +873,25 @@ def delete_tag(tag): # Removes tag from the database
     conn.commit()
     conn.close()
 
+def get_tags_and_groups():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    groups = c.execute("SELECT id, name, list_order, widget_type, name_shown FROM tag_groups")
+    tree = {}
+    for g in groups.fetchall():
+        # print(g)
+        tree[g[1]] = {'id':g[0],'list_order':g[2],'widget_type':g[3],'name_shown':g[4],'type':'group'}
+        tags = c.execute("SELECT id, name, list_order FROM tags WHERE group_id=?", (g[0],))
+        tree[g[1]]['tags'] = []
+        for t in tags.fetchall():
+            tree[g[1]]['tags'].append({'type':'tag','id':t[0],'name':t[1],'list_order':t[2]})
+        # print(tags.fetchall())
+    # print(tree)
+    # c.execute("DELETE FROM tags WHERE name = ?", (tag,))
+    # conn.commit()
+    conn.close()    
+    return tree
+
 def check_files(): # TBD need to check if files still exist and if not remove them
     settings = load_settings(SETTINGS_FILE)
     tags = get_all_tags_from_db()
@@ -979,3 +1012,5 @@ else:
 # save_settings(SETTINGS_FILE, settings)
 # path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
 # advanced_move(path,path)
+# check_files()
+get_tags_and_groups()
