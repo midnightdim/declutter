@@ -20,7 +20,7 @@ class Ui_taggerWindow(object):
     def setupUi(self, taggerWindow):
         if not taggerWindow.objectName():
             taggerWindow.setObjectName(u"taggerWindow")
-        taggerWindow.resize(1047, 690)
+        taggerWindow.resize(1047, 776)
         icon = QIcon()
         icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
         taggerWindow.setWindowIcon(icon)
@@ -137,7 +137,7 @@ class Ui_taggerWindow(object):
         self.tagsScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 180, 351))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 180, 400))
         sizePolicy1.setHeightForWidth(self.scrollAreaWidgetContents.sizePolicy().hasHeightForWidth())
         self.scrollAreaWidgetContents.setSizePolicy(sizePolicy1)
         self.gridLayout_3 = QGridLayout(self.scrollAreaWidgetContents)
@@ -187,6 +187,9 @@ class Ui_taggerWindow(object):
         self.mediaVolumeDial.setMaximumSize(QSize(30, 30))
         self.mediaVolumeDial.setMaximum(100)
         self.mediaVolumeDial.setValue(100)
+        self.mediaVolumeDial.setWrapping(False)
+        self.mediaVolumeDial.setNotchTarget(10.000000000000000)
+        self.mediaVolumeDial.setNotchesVisible(True)
 
         self.horizontalLayout_2.addWidget(self.mediaVolumeDial)
 

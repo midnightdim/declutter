@@ -1,6 +1,6 @@
 import sys
-from PySide2.QtGui import QIcon, QColor, QCursor
-from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction
+from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
+from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
 from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
@@ -68,6 +68,7 @@ class TaggerWindow(QMainWindow):
         if action == 1:
             self.seek_position(self.ui.mediaPositionSlider.value())
 
+##### Begin Media Player section
     def media_update_play_button(self,state):
         icon1 = QIcon()
         icon1.addFile(u":/images/icons/media-pause.svg" if state == QMediaPlayer.State.PlayingState else u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
@@ -95,12 +96,15 @@ class TaggerWindow(QMainWindow):
         self.ui.mediaDurationLabel.setText("0:00 / "+millis_to_str(duration))
         self.ui.mediaPositionSlider.setRange(0, duration)
         self.ui.mediaPositionSlider.setPageStep(int(duration/20))
+##### End Media Player section
 
     def populate(self):
         #path = r"D:\DIM\WinFiles\Downloads"
         self.settings = load_settings()
         self.checkAction = {}  # checkboxes in context menu
         self.tag_checkboxes = {} # checkboxes in the dock widget
+        self.tag_model = QStandardItemModel()
+        generate_tag_model(self.tag_model, get_tags_and_groups())
 
         self.ui.actionNone1 = QAction(self)
         #self.ui.actionNone1.setObjectName(u"actionNone1")
@@ -178,21 +182,42 @@ class TaggerWindow(QMainWindow):
             self.manage_tags()
 
     def init_tag_checkboxes(self):
-        for t in self.tag_checkboxes:
-            self.ui.tagsLayout.takeAt(self.ui.tagsLayout.indexOf(self.tag_checkboxes[t]))
-            self.tag_checkboxes[t].deleteLater()
-            # self.tag_checkboxes[t].hide()
-            # self.tag_checkboxes[t].destroy()
         
-        self.tag_checkboxes = {}
-        for t in get_all_tags():
-            self.tag_checkboxes[t] = QCheckBox(t)
-            self.ui.tagsLayout.addWidget(self.tag_checkboxes[t])
-            self.tag_checkboxes[t].stateChanged.connect(self.set_tags)
+        while True:
+            if self.ui.tagsLayout.itemAt(0):
+                self.ui.tagsLayout.itemAt(0).widget().deleteLater()       
+            if not self.ui.tagsLayout.takeAt(0):
+                break
 
-            if tag_get_color(t):
-                self.tag_checkboxes[t].setPalette(QColor(tag_get_color(t)))
-                self.tag_checkboxes[t].setAutoFillBackground(True)  
+        for i in range(0,self.tag_model.rowCount()):
+        # i = 0
+        # for group in data.keys():
+            group = self.tag_model.item(i).data(Qt.UserRole)
+            if group['name_shown']:
+                self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
+            for k in range(0,self.tag_model.item(i).rowCount()):
+                tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
+                self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
+                self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
+                self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
+                if tag['color']:
+                    self.tag_checkboxes[tag['name']].setPalette(QColor(tag['color']))
+                    self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
+
+            # if data[group]['name_shown']:
+            #     self.ui.tagsLayout.addWidget(QLabel('<b>'+group+'</b>'))
+            # if 'tags' in data[group].keys():
+            #     for tag in data[group]['tags']:
+            #         self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
+            #         self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
+            #         self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
+            #         if tag['color']:
+            #             self.tag_checkboxes[tag['name']].setPalette(QColor(tag['color']))
+            #             self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
+
+            # i+=1
+            # if i<len(data):
+            #     self.ui.tagsLayout.addWidget(QHLine())
 
     def update_tag_checkboxes(self):
         indexes = self.ui.treeView.selectedIndexes()
@@ -415,7 +440,8 @@ class TaggerWindow(QMainWindow):
             save_settings(SETTINGS_FILE,self.settings)
 
     def manage_tags(self):
-        self.tags_dialog = TagsDialog()
+        self.tags_dialog = TagsDialog(self.tag_model)
+        # self.tags_dialog.model = self.tag_model
         self.tags_dialog.exec_()
         self.init_tag_checkboxes()
         self.update_tag_checkboxes()
@@ -608,6 +634,28 @@ class SortingModel(QSortFilterProxyModel):
             return normpath(path).lower() in self.tagged_paths
         else:
             return True
+
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
+def generate_tag_model(model, data):
+    for group in data.keys():
+        item = QStandardItem(group)
+        item.setData(group,Qt.DisplayRole)
+        item.setData(data[group], Qt.UserRole)
+        model.appendRow(item)
+        if 'tags' in data[group].keys():
+            for tag in data[group]['tags']:
+                tag_item = QStandardItem(tag['name'])
+                tag_item.setData(tag['name'], Qt.DisplayRole)
+                tag_item.setData(tag, Qt.UserRole)
+                if tag['color']:
+                    tag_item.setData(QColor(tag['color']),Qt.BackgroundRole)
+                tag_item.setDropEnabled(False)
+                item.appendRow(tag_item)
 
 def millis_to_str(duration):
     millis = int(duration)

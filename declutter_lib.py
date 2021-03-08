@@ -591,76 +591,6 @@ def init_db():
     c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)")
     c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)")
     conn.commit()
-    conn.close()    
-
-def migrate_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("PRAGMA user_version")
-    pragma = c.fetchone()[0]
-    #logging.info("Database version:" + str(pragma))
-    if (not pragma) or (pragma == 0):
-        try:
-            logging.info("Migration from 0 to 1")
-            tags = load_settings(SETTINGS_FILE)['tags']
-            db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
-            logging.info("Adding missing tags from settings file")
-            for t in [t for t in tags if t not in db_tags]:
-                logging.info("Adding "+t)
-                c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-                #create_tag(t)
-
-            settings = load_settings()
-            settings['tags'] = []
-            save_settings(SETTINGS_FILE, settings)
-
-            c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")        
-            i=1
-            for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-                c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
-                i+=1
-            #c.execute("DROP TABLE tags")
-            #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
-
-            c.execute("PRAGMA user_version = 1")
-            logging.info("Database updated to version 1")
-            pragma = 1
-            # conn.commit()
-        except Exception as e:
-            logging.exception(e)
-
-    if pragma == 1:
-        try:
-            logging.info("Migration from 1 to 2")
-            logging.info("Adding color column")
-            c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")        
-            # i=1
-            # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-            #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
-            #     i+=1
-
-            c.execute("PRAGMA user_version = 2")
-            logging.info("Database updated to version 2")
-            pragma = 2
-        except Exception as e:
-            logging.exception(e)
-    
-    if pragma == 2:
-        try:
-            logging.info("Migration from 2 to 3")
-            logging.info("Adding groups table")
-            c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
-            c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 1)")
-            c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER")  
-            for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
-                c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
-            c.execute("PRAGMA user_version = 3")
-            logging.info("Database updated to version 3")
-            pragma = 3
-        except Exception as e:
-            logging.exception(e)       
-
-    conn.commit()
     conn.close()        
 
 def tag_set_color(tag, color):
@@ -682,20 +612,13 @@ def create_tag(tag):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
     c.execute("SELECT max(list_order) from tags")
-    # print(c.fetchone())
-    # print(c.fetchone() is None)
-    # print(type(c.fetchone()))
     row = c.fetchone()[0]
-    # print(row)
-    # print(type(row))
-    # print(row is None)
     if row is None:
         count = 1
     else:
         count = row+1
-        
-    #print(row)
-    c.execute("INSERT INTO tags VALUES (null, ?, ?, null)", (tag,count))
+
+    c.execute("INSERT INTO tags VALUES (null, ?, ?, null, 1)", (tag,count)) # TBD replace 1 here
     tag_id = c.lastrowid
     conn.commit()
     conn.close()
@@ -873,24 +796,107 @@ def delete_tag(tag): # Removes tag from the database
     conn.commit()
     conn.close()
 
+def delete_group(group_id, keep_tags):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    c.execute("DELETE FROM tag_groups WHERE id = ?", (group_id,))
+    if keep_tags:
+        # print('moving tags to default group')
+        c.execute("UPDATE tags set group_id = 1 WHERE group_id = ?", (group_id,))
+    else:
+        # print('deleting tags and tagged files')
+        c.execute("DELETE FROM file_tags WHERE file_tags.tag_id IN (SELECT id from tags WHERE group_id = ?)", (group_id,))
+        c.execute("DELETE FROM tags WHERE group_id = ?", (group_id,))
+    conn.commit()
+    conn.close()    
+
 def get_tags_and_groups():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
-    groups = c.execute("SELECT id, name, list_order, widget_type, name_shown FROM tag_groups")
+    groups = c.execute("SELECT id, name, list_order, widget_type, name_shown FROM tag_groups ORDER BY list_order")
     tree = {}
     for g in groups.fetchall():
         # print(g)
-        tree[g[1]] = {'id':g[0],'list_order':g[2],'widget_type':g[3],'name_shown':g[4],'type':'group'}
-        tags = c.execute("SELECT id, name, list_order FROM tags WHERE group_id=?", (g[0],))
+        tree[g[1]] = {'id':g[0],'list_order':g[2],'widget_type':g[3],'name_shown':g[4],'type':'group', 'name':g[1]}
+        tags = c.execute("SELECT id, name, list_order, color FROM tags WHERE group_id=? ORDER BY list_order", (g[0],))
         tree[g[1]]['tags'] = []
         for t in tags.fetchall():
-            tree[g[1]]['tags'].append({'type':'tag','id':t[0],'name':t[1],'list_order':t[2]})
+            tree[g[1]]['tags'].append({'type':'tag','id':t[0],'name':t[1],'list_order':t[2],'color':t[3],'group_id':g[0]})
         # print(tags.fetchall())
     # print(tree)
     # c.execute("DELETE FROM tags WHERE name = ?", (tag,))
     # conn.commit()
     conn.close()    
     return tree
+
+def create_group(name, widget_type=0, name_shown=1):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()    
+    c.execute("SELECT max(list_order) from tag_groups")
+    row = c.fetchone()[0]
+    if row is None:
+        count = 1
+    else:
+        count = row+1
+
+    c.execute("INSERT INTO tag_groups VALUES (null, ?, ?, ?, ?)", (name,count,widget_type,name_shown))
+    group_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    return group_id
+
+def move_tag_to_group(tag_id,group_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT max(list_order) from tags where group_id=?", (group_id,))
+    row = c.fetchone()[0]
+    if row is None:
+        count = 1
+    else:
+        count = row+1    
+    c.execute("UPDATE tags set (group_id, list_order) = (?,?) WHERE id = ?", (group_id,count,tag_id))
+    conn.commit()
+    conn.close()
+
+def move_tag_to_tag(tag1, tag2, position): # tags are in format {'name':name,'id':id,'list_order':list_order,'group_id':group_id}
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    # print(tag1,tag2)
+    c.execute("SELECT list_order,group_id from tags WHERE id = ?", (tag2['id'],))
+    row = c.fetchone()
+    new_list_order = row[0] if int(position)==1 else row[0]+1
+    group = row[1]
+    # print('group',group)    
+    # print('new_list_order',new_list_order)
+    # if tag1['group_id'] != tag2['group_id']:
+    #     # print('different group, moving')
+    #     c.execute("UPDATE tags set group_id = ? WHERE id = ?", (tag2['group_id'], tag1['id']))
+    #     conn.commit()
+    c.execute("SELECT id from tags WHERE (group_id,list_order) = (?,?)", (group,new_list_order))
+    row = c.fetchone()
+    if row is not None:
+        # print('incrementing list_order')
+        c.execute("UPDATE tags set list_order = list_order+1 WHERE group_id = ? and list_order >= ?", (group,new_list_order))
+    c.execute("UPDATE tags set (list_order,group_id) = (?,?) WHERE id = ?", (new_list_order, group, tag1['id']))
+    conn.commit()
+    conn.close() 
+
+def move_group_to_group(group1,group2,position):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT list_order from tag_groups WHERE id = ?", (group2['id'],))
+    row = c.fetchone()
+    new_list_order = row[0] if int(position)==1 else row[0]+1
+    # print(new_list_order)
+    c.execute("SELECT id from tag_groups WHERE list_order = ?", (new_list_order,))
+    row = c.fetchone()
+    if row is not None:
+        # print(row[0])
+        # print('incrementing list_order')
+        c.execute("UPDATE tag_groups set list_order = list_order+1 WHERE list_order >= ?", (new_list_order,))
+    c.execute("UPDATE tag_groups set list_order = ? WHERE id = ?", (new_list_order, group1['id']))
+    conn.commit()
+    conn.close()    
 
 def check_files(): # TBD need to check if files still exist and if not remove them
     settings = load_settings(SETTINGS_FILE)
@@ -973,6 +979,76 @@ def import_tags(dirname, tagsfile):
     else:
         logging.error(str(dirname) + ' is not a valid folder')
 
+def migrate_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("PRAGMA user_version")
+    pragma = c.fetchone()[0]
+    #logging.info("Database version:" + str(pragma))
+    if (not pragma) or (pragma == 0):
+        try:
+            logging.info("Migration from 0 to 1")
+            tags = load_settings(SETTINGS_FILE)['tags']
+            db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
+            logging.info("Adding missing tags from settings file")
+            for t in [t for t in tags if t not in db_tags]:
+                logging.info("Adding "+t)
+                c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
+                #create_tag(t)
+
+            settings = load_settings()
+            settings['tags'] = []
+            save_settings(SETTINGS_FILE, settings)
+
+            c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")        
+            i=1
+            for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+                c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
+                i+=1
+            #c.execute("DROP TABLE tags")
+            #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
+
+            c.execute("PRAGMA user_version = 1")
+            logging.info("Database updated to version 1")
+            pragma = 1
+            # conn.commit()
+        except Exception as e:
+            logging.exception(e)
+
+    if pragma == 1:
+        try:
+            logging.info("Migration from 1 to 2")
+            logging.info("Adding color column")
+            c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")        
+            # i=1
+            # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+            #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
+            #     i+=1
+
+            c.execute("PRAGMA user_version = 2")
+            logging.info("Database updated to version 2")
+            pragma = 2
+        except Exception as e:
+            logging.exception(e)
+    
+    if pragma == 2:
+        try:
+            logging.info("Migration from 2 to 3")
+            logging.info("Adding groups table")
+            c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
+            c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 0)")
+            c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER NOT NULL DEFAULT 1")  
+            for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
+                c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
+            c.execute("PRAGMA user_version = 3")
+            logging.info("Database updated to version 3")
+            pragma = 3
+        except Exception as e:
+            logging.exception(e)       
+
+    conn.commit()
+    conn.close()   
+
 if not Path(APP_FOLDER).is_dir():
     Path(APP_FOLDER).mkdir()
 
@@ -988,6 +1064,8 @@ else:
         migrate_db()
     except Exception as e:
         logging.exception(e)
+
+
 
 
 #migrate_to_db()
@@ -1013,4 +1091,4 @@ else:
 # path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
 # advanced_move(path,path)
 # check_files()
-get_tags_and_groups()
+# create_group('Rating')

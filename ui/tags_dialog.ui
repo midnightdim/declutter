@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>264</width>
-    <height>300</height>
+    <width>291</width>
+    <height>486</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,23 +21,56 @@
     <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QPushButton" name="addButton">
+         <property name="toolTip">
+          <string>Add Tag</string>
+         </property>
          <property name="text">
           <string/>
          </property>
          <property name="icon">
           <iconset resource="DeClutter.qrc">
-           <normaloff>:/images/icons/document-new.svg</normaloff>:/images/icons/document-new.svg</iconset>
+           <normaloff>:/images/icons/tag.svg</normaloff>:/images/icons/tag.svg</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="addGroupButton">
+         <property name="toolTip">
+          <string>Add Group</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="DeClutter.qrc">
+           <normaloff>:/images/icons/folder.svg</normaloff>:/images/icons/folder.svg</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="removeButton">
+         <property name="toolTip">
+          <string>Delete</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -48,29 +81,10 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="moveUpButton">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="DeClutter.qrc">
-           <normaloff>:/images/icons/arrow-thin-up.svg</normaloff>:/images/icons/arrow-thin-up.svg</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="moveDownButton">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="DeClutter.qrc">
-           <normaloff>:/images/icons/arrow-thin-down.svg</normaloff>:/images/icons/arrow-thin-down.svg</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="colorButton">
+         <property name="toolTip">
+          <string>Select Color</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -96,25 +110,19 @@
       </layout>
      </item>
      <item>
-      <widget class="QListWidget" name="tagsList"/>
+      <widget class="TreeView" name="treeView"/>
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TreeView</class>
+   <extends>QTreeView</extends>
+   <header>tag_groups</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="DeClutter.qrc"/>
  </resources>
