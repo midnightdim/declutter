@@ -14,7 +14,7 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 
-VERSION = '1.04'
+VERSION = '1.05'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -649,6 +649,13 @@ def move_tag(tag, direction): # Moves tag up or down in lists
 
     conn.commit()
     conn.close()    
+
+def rename_group(old_group, new_group):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("UPDATE tag_groups set name = ? WHERE name = ?", (new_group,old_group))
+    conn.commit()
+    conn.close()     
 
 def rename_tag(old_tag, new_tag):
     tagged_files = get_files_by_tag(old_tag)

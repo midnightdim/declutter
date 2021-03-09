@@ -3,34 +3,24 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from declutter_lib import *
 
-ICON_LVL_CLIENT = "img/icons8-bank-16.png" #TBD add icons
-
-# DATA = {'group1':{'type':'group','id':1,'list_order':1,'tags':[{'name':'tag1','type':'tag','id':1,'list_order':1},{'name':'tag2','type':'tag','id':2,'list_order':2},{'name':'tag3','type':'tag','id':3,'list_order':3}]}}
-# print(DATA)
-# DATA = get_tags_and_groups()
-
 def create_tree_data(tree):
     model = QStandardItemModel()
     generate_tag_model(model, get_tags_and_groups())
     tree.setModel(model)
 
-def generate_tag_model(model, data):
-    for group in data.keys():
-        item = QStandardItem(group)
-        item.setData(data[group], Qt.UserRole)
-        # print(item.data())
-        model.appendRow(item)
-        if 'tags' in data[group].keys():
-            for tag in data[group]['tags']:
-                tag_item = QStandardItem(tag['name'])
-                # tag_item.setCheckable(True)
-                # tag_item.setEditable(False)
-                tag_item.setData(tag, Qt.UserRole)
-                if tag['color']:
-                    tag_item.setData(QColor(tag['color']),Qt.BackgroundRole)
-                # print(tag_item.data())
-                tag_item.setDropEnabled(False)
-                item.appendRow(tag_item)
+# def generate_tag_model(model, data):  # moved to tags_dialog
+#     for group in data.keys():
+#         item = QStandardItem(group)
+#         item.setData(data[group], Qt.UserRole)
+#         model.appendRow(item)
+#         if 'tags' in data[group].keys():
+#             for tag in data[group]['tags']:
+#                 tag_item = QStandardItem(tag['name'])
+#                 tag_item.setData(tag, Qt.UserRole)
+#                 if tag['color']:
+#                     tag_item.setData(QColor(tag['color']),Qt.BackgroundRole)
+#                 tag_item.setDropEnabled(False)
+#                 item.appendRow(tag_item)
 
 def get_tree_selection_level(index):
     level = 0
@@ -40,7 +30,7 @@ def get_tree_selection_level(index):
 
     return level
 
-class TreeView(QTreeView):
+class TagTree(QTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.initUI()

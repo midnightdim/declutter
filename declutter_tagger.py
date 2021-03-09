@@ -1,12 +1,12 @@
 import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame
+from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
 from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
-from tags_dialog import TagsDialog
+from tags_dialog import TagsDialog, generate_tag_model
 from declutter_lib import *
 from os.path import normpath
 from pathlib import Path
@@ -67,6 +67,16 @@ class TaggerWindow(QMainWindow):
     def action_trig(self, action):    
         if action == 1:
             self.seek_position(self.ui.mediaPositionSlider.value())
+
+    # def print_model(self):
+    #     for i in range(0,self.tag_model.rowCount()):
+    #     # i = 0
+    #     # for group in data.keys():
+    #         group = self.tag_model.item(i).data(Qt.UserRole)
+    #         print('group:',group['name'])
+    #         for k in range(0,self.tag_model.item(i).rowCount()):
+    #             tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
+    #             print('tag:',tag['name'])
 
 ##### Begin Media Player section
     def media_update_play_button(self,state):
@@ -149,11 +159,6 @@ class TaggerWindow(QMainWindow):
         # self.ui.treeView.setItemsExpandable(False)        
                 
         self.ui.treeView.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        
-        #self.ui.treeView.resizeColumnToContents(0)  # doesn't work for some reason
-        # self.ui.treeView.clicked.connect(self.update_status)
-        # self.ui.treeView.clicked.connect(self.update_status)
-
         self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
 
         self.ui.treeView.doubleClicked.connect(self.open)
@@ -201,23 +206,13 @@ class TaggerWindow(QMainWindow):
                 self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
                 self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
                 if tag['color']:
-                    self.tag_checkboxes[tag['name']].setPalette(QColor(tag['color']))
+                    color = QColor()
+                    color.setRgba(tag['color'])
+                    # color.setAlpha(100)
+                    self.tag_checkboxes[tag['name']].setPalette(color)
                     self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
-
-            # if data[group]['name_shown']:
-            #     self.ui.tagsLayout.addWidget(QLabel('<b>'+group+'</b>'))
-            # if 'tags' in data[group].keys():
-            #     for tag in data[group]['tags']:
-            #         self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
-            #         self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
-            #         self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
-            #         if tag['color']:
-            #             self.tag_checkboxes[tag['name']].setPalette(QColor(tag['color']))
-            #             self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
-
-            # i+=1
-            # if i<len(data):
-            #     self.ui.tagsLayout.addWidget(QHLine())
+            if i<self.tag_model.rowCount()-1:
+                self.ui.tagsLayout.addWidget(QHLine())
 
     def update_tag_checkboxes(self):
         indexes = self.ui.treeView.selectedIndexes()
@@ -245,9 +240,13 @@ class TaggerWindow(QMainWindow):
             recent_action.setData(foldername)
 
     def open_file_from_recent(self, action):
+        print('opening from')
         #self.open_file(action.data())
         self.ui.pathEdit.setText(normpath(action.data()))
         self.change_path()
+        self.ui.sourceComboBox.setCurrentText("Folder")
+        # self.sorting_model.mode = "Folder"
+        self.update_ui()
 
     def dir_loaded(self):
         #print("dir loaded")
@@ -265,7 +264,9 @@ class TaggerWindow(QMainWindow):
         for t in self.filter_tags:            
             self.filter_tags_checkboxes[t] = QCheckBox(t)
             if tag_get_color(t):
-                self.filter_tags_checkboxes[t].setPalette(QColor(tag_get_color(t)))
+                color = QColor()
+                color.setRgba(tag_get_color(t))                
+                self.filter_tags_checkboxes[t].setPalette(color)
                 self.filter_tags_checkboxes[t].setAutoFillBackground(True)            
             self.filter_tags_checkboxes[t].setChecked(True)
             self.filter_tags_checkboxes[t].stateChanged.connect(self.update_treeview)
@@ -284,17 +285,15 @@ class TaggerWindow(QMainWindow):
     def select_tags(self):
         tags_dialog = QDialog()
         tags_dialog.setWindowTitle("Select Tags")
-        listWidget = QListWidget(tags_dialog)
-        #listWidget.addItems(get_all_tags())
-        for t in get_all_tags():
-            listWidget.addItem(t)
-            color = tag_get_color(t)
-            if color:
-                listWidget.item(listWidget.count()-1).setBackground(QColor(color))
+        tags_dialog.setMinimumHeight(400)
+        treeView = QTreeView(tags_dialog)
+        treeView.setModel(self.tag_model)
 
-        listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        treeView.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        treeView.setHeaderHidden(True)
+        treeView.expandAll()
         layout = QVBoxLayout(tags_dialog)
-        layout.addWidget(listWidget)        
+        layout.addWidget(treeView)        
         buttonBox = QDialogButtonBox(tags_dialog)
         buttonBox.setObjectName(u"buttonBox")
         buttonBox.setOrientation(Qt.Horizontal)
@@ -305,12 +304,12 @@ class TaggerWindow(QMainWindow):
         layout.addWidget(buttonBox)
 
         tags_dialog.setLayout(layout)
-        tags_dialog.listWidget = listWidget
+        tags_dialog.treeView = treeView
+        
         tags_dialog.setWindowIcon(QIcon('DeClutter.ico'))
-        #print(tags_dialog.layout().listWidget)
         
         if tags_dialog.exec_():
-            self.filter_tags = [tags_dialog.listWidget.item(row).text() for row in range(0,tags_dialog.listWidget.count()) if tags_dialog.listWidget.item(row).isSelected()]
+            self.filter_tags = [t.data() for t in tags_dialog.treeView.selectedIndexes()]
             self.update_filter_tags()
 
     def update_ui(self):
@@ -328,6 +327,7 @@ class TaggerWindow(QMainWindow):
                 # self.filter_tags_checkboxes[t].destroy()
                 # self.filter_tags_checkboxes[t].setVisible(False)
             self.filter_tags = {}
+            self.filter_tags_checkboxes = [] # TBD this is inefficient
         self.update_treeview()
 
     def update_treeview(self):
@@ -362,8 +362,9 @@ class TaggerWindow(QMainWindow):
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)                        
             self.ui.treeView.setItemsExpandable(True)
             self.ui.treeView.setRootIsDecorated(True)            
+            self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
             self.ui.treeView.expandAll()
-            self.model.directoryLoaded.connect(self.dir_loaded)
+            self.model.directoryLoaded.connect(self.dir_loaded)            
             #self.ui.treeView.expand(self.sorting_model.mapFromSource(self.model.index(path)))
         else:
             #print('not tags')
@@ -496,6 +497,7 @@ class TaggerWindow(QMainWindow):
 
     def set_tags(self, state):
         sender = self.sender()
+        # print(sender)
         # print("clicked",state)
         # index = self.ui.treeView.currentIndex()
         # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
@@ -535,7 +537,9 @@ class TagFSModel(QFileSystemModel):
                 return Qt.AlignLeft
         if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))) and tag_get_color(get_tags(normpath(self.filePath(index)))[0]):
             #return QColor("#ccffff")
-            return QColor(tag_get_color(get_tags(normpath(self.filePath(index)))[0]))
+            color = QColor()
+            color.setRgba(tag_get_color(get_tags(normpath(self.filePath(index)))[0]))
+            return color
 
         return super(TagFSModel, self).data(index, role)
 
@@ -640,22 +644,6 @@ class QHLine(QFrame):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
-
-def generate_tag_model(model, data):
-    for group in data.keys():
-        item = QStandardItem(group)
-        item.setData(group,Qt.DisplayRole)
-        item.setData(data[group], Qt.UserRole)
-        model.appendRow(item)
-        if 'tags' in data[group].keys():
-            for tag in data[group]['tags']:
-                tag_item = QStandardItem(tag['name'])
-                tag_item.setData(tag['name'], Qt.DisplayRole)
-                tag_item.setData(tag, Qt.UserRole)
-                if tag['color']:
-                    tag_item.setData(QColor(tag['color']),Qt.BackgroundRole)
-                tag_item.setDropEnabled(False)
-                item.appendRow(tag_item)
 
 def millis_to_str(duration):
     millis = int(duration)

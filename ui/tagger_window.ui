@@ -146,7 +146,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="tagsDockWidget">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+    <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -154,7 +154,7 @@
    <property name="minimumSize">
     <size>
      <width>180</width>
-     <height>200</height>
+     <height>500</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -221,7 +221,7 @@
           <x>0</x>
           <y>0</y>
           <width>180</width>
-          <height>400</height>
+          <height>478</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -270,7 +270,7 @@
     </property>
     <layout class="QGridLayout" name="gridLayout_5">
      <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout_4" rowstretch="30,1,1,0">
+      <layout class="QGridLayout" name="gridLayout_4" rowstretch="30,1,1">
        <item row="1" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>

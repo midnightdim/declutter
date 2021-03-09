@@ -311,7 +311,7 @@ class RulesWindow(QMainWindow):
         self.showTaggerWindow.triggered.connect(self.show_tagger)
 
         self.showSettingsWindow = QAction("Settings", self)
-        self.showSettingsWindow.triggered.connect(self.showSettings)
+        self.showSettingsWindow.triggered.connect(self.show_settings)
 
         self.quitAction = QAction("Quit", self)
         self.quitAction.triggered.connect(QApplication.quit)
@@ -339,9 +339,6 @@ class RulesWindow(QMainWindow):
     def show_tagger(self):        
         self.tagger.show()
         self.tagger.activateWindow()
-
-    def showSettings(self):
-        print("Showing settings")
 
     @Slot(str, list)
     def show_tray_message(self,message,details):
