@@ -35,6 +35,7 @@ class TaggerWindow(QMainWindow):
         self.ui.mediaPositionSlider.actionTriggered.connect(self.action_trig)
 
         self.ui.mediaDockWidget.installEventFilter(self)
+        self.player_geometry = self.ui.playerLayout.geometry()
 
         # self.ui.mediaPositionSlider.valueChanged.connect(self.val_changed)
 
@@ -178,8 +179,8 @@ class TaggerWindow(QMainWindow):
         self.init_tag_checkboxes()
         self.update_ui()
 
-    def test(self):
-        print('test')
+    # def test(self):
+    #     print('test')
 
     def mouseDoubleClickEvent(self, event):  # TBD maybe remove this
         widget = self.childAt(event.pos())
@@ -398,16 +399,34 @@ class TaggerWindow(QMainWindow):
         if indexes != self.prev_indexes:
             # print('selection changed')
             self.player.stop()
-            if os.path.isfile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))):
+            path = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))
+            ftype = get_file_type(path)
+            if os.path.isfile(path) and ftype in ('Audio','Video','Image'):
                 # print(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
                 file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
-                file_ext = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))[-3:]
-                if file_ext in ("mp3", "wav"): # TBD change this to audio file type
+                # file_ext = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))[-3:]
+                if ftype == 'Audio': # TBD change this to audio file type
                     self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
+                if ftype == 'Image':
+                    self.ui.playerLayout.setGeometry(self.player_geometry)
+                #     self.ui.playerLayout.setGeometry(QRect(QPoint(0,0),self.ui.playerLayout.maximumSize()))
                 self.playlist.clear()
                 self.playlist.addMedia(file_url)
                 self.player.play()
                 self.player.pause()
+                self.ui.mediaPlayButton.setVisible(ftype in ('Video','Audio'))
+                self.ui.mediaPositionSlider.setVisible(ftype in ('Video','Audio'))
+                self.ui.mediaVolumeDial.setVisible(ftype in ('Video','Audio'))
+                self.ui.mediaDurationLabel.setVisible(ftype in ('Video','Audio'))
+            else:
+                # print('other file type')
+                self.player_geometry = self.ui.playerLayout.geometry()
+                self.playlist.clear()
+                self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
+                self.ui.mediaPlayButton.setVisible(False)
+                self.ui.mediaPositionSlider.setVisible(False)
+                self.ui.mediaVolumeDial.setVisible(False)
+                self.ui.mediaDurationLabel.setVisible(False)                
         # print('indexes',indexes)        
         # print(self.ui.treeView.selectedIndexes())
         num_selected = int(len(self.ui.treeView.selectedIndexes())/5)

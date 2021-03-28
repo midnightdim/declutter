@@ -18,32 +18,32 @@ class Ui_settingsDialog(object):
         if not settingsDialog.objectName():
             settingsDialog.setObjectName(u"settingsDialog")
         settingsDialog.setWindowModality(Qt.ApplicationModal)
-        settingsDialog.resize(400, 300)
+        settingsDialog.resize(490, 300)
         self.gridLayout = QGridLayout(settingsDialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.tabWidget = QTabWidget(settingsDialog)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tab = QWidget()
-        self.tab.setObjectName(u"tab")
-        self.gridLayout_4 = QGridLayout(self.tab)
+        self.mainTab = QWidget()
+        self.mainTab.setObjectName(u"mainTab")
+        self.gridLayout_4 = QGridLayout(self.mainTab)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label_2 = QLabel(self.tab)
+        self.label_2 = QLabel(self.mainTab)
         self.label_2.setObjectName(u"label_2")
 
         self.horizontalLayout.addWidget(self.label_2)
 
-        self.ruleExecIntervalEdit = QLineEdit(self.tab)
+        self.ruleExecIntervalEdit = QLineEdit(self.mainTab)
         self.ruleExecIntervalEdit.setObjectName(u"ruleExecIntervalEdit")
         self.ruleExecIntervalEdit.setMaximumSize(QSize(50, 16777215))
         self.ruleExecIntervalEdit.setMaxLength(8)
 
         self.horizontalLayout.addWidget(self.ruleExecIntervalEdit)
 
-        self.label_3 = QLabel(self.tab)
+        self.label_3 = QLabel(self.mainTab)
         self.label_3.setObjectName(u"label_3")
 
         self.horizontalLayout.addWidget(self.label_3)
@@ -57,12 +57,12 @@ class Ui_settingsDialog(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.label_4 = QLabel(self.tab)
+        self.label_4 = QLabel(self.mainTab)
         self.label_4.setObjectName(u"label_4")
 
         self.horizontalLayout_2.addWidget(self.label_4)
 
-        self.styleComboBox = QComboBox(self.tab)
+        self.styleComboBox = QComboBox(self.mainTab)
         self.styleComboBox.setObjectName(u"styleComboBox")
         self.styleComboBox.setMinimumSize(QSize(100, 0))
 
@@ -82,12 +82,12 @@ class Ui_settingsDialog(object):
 
         self.gridLayout_4.addLayout(self.verticalLayout_2, 0, 0, 1, 1)
 
-        self.tabWidget.addTab(self.tab, "")
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName(u"tab_2")
-        self.gridLayout_2 = QGridLayout(self.tab_2)
+        self.tabWidget.addTab(self.mainTab, "")
+        self.dateTab = QWidget()
+        self.dateTab.setObjectName(u"dateTab")
+        self.gridLayout_2 = QGridLayout(self.dateTab)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.dateDefGroupBox = QGroupBox(self.tab_2)
+        self.dateDefGroupBox = QGroupBox(self.dateTab)
         self.dateDefGroupBox.setObjectName(u"dateDefGroupBox")
         self.gridLayout_3 = QGridLayout(self.dateDefGroupBox)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -133,7 +133,17 @@ class Ui_settingsDialog(object):
 
         self.gridLayout_2.addWidget(self.dateDefGroupBox, 0, 0, 1, 1)
 
-        self.tabWidget.addTab(self.tab_2, "")
+        self.tabWidget.addTab(self.dateTab, "")
+        self.fileTypesTab = QWidget()
+        self.fileTypesTab.setObjectName(u"fileTypesTab")
+        self.gridLayout_6 = QGridLayout(self.fileTypesTab)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.fileTypesGridLayout = QGridLayout()
+        self.fileTypesGridLayout.setObjectName(u"fileTypesGridLayout")
+
+        self.gridLayout_6.addLayout(self.fileTypesGridLayout, 0, 0, 1, 1)
+
+        self.tabWidget.addTab(self.fileTypesTab, "")
 
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
@@ -149,7 +159,7 @@ class Ui_settingsDialog(object):
         self.buttonBox.accepted.connect(settingsDialog.accept)
         self.buttonBox.rejected.connect(settingsDialog.reject)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(settingsDialog)
@@ -160,7 +170,7 @@ class Ui_settingsDialog(object):
         self.label_2.setText(QCoreApplication.translate("settingsDialog", u"Process rules every", None))
         self.label_3.setText(QCoreApplication.translate("settingsDialog", u"minutes", None))
         self.label_4.setText(QCoreApplication.translate("settingsDialog", u"Style", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("settingsDialog", u"Main", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.mainTab), QCoreApplication.translate("settingsDialog", u"Main", None))
         self.dateDefGroupBox.setTitle(QCoreApplication.translate("settingsDialog", u"Date definition", None))
         self.label.setText(QCoreApplication.translate("settingsDialog", u"Which date (from file metadata) should be used in rule conditions?", None))
         self.radioButton.setText(QCoreApplication.translate("settingsDialog", u"earliest of modified & created (default)", None))
@@ -168,6 +178,7 @@ class Ui_settingsDialog(object):
         self.radioButton_3.setText(QCoreApplication.translate("settingsDialog", u"created", None))
         self.radioButton_4.setText(QCoreApplication.translate("settingsDialog", u"latest of modified & created", None))
         self.radioButton_5.setText(QCoreApplication.translate("settingsDialog", u"last access", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("settingsDialog", u"Date", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.dateTab), QCoreApplication.translate("settingsDialog", u"Date", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.fileTypesTab), QCoreApplication.translate("settingsDialog", u"File Types", None))
     # retranslateUi
 

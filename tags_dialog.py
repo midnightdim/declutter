@@ -98,7 +98,7 @@ class TagsDialog(QDialog):
             if ok and newtag != '' and newtag != cur_tag:
                 # try:
                 merge = False
-                if newtag in get_all_tags():
+                if newtag in get_all_tags(): # TBD use model data instead?
                     merge = QMessageBox.question(self, "Warning",
                         "This tag already exists, files tagged with '" + cur_tag + "' will be tagged with '" + newtag + "'.\nAre you sure you want to proceed?",
                         QMessageBox.Yes | QMessageBox.No)
@@ -168,9 +168,11 @@ class TagsDialog(QDialog):
         group, ok = QInputDialog.getText(self, "Add new group",
         "Enter group name:", QLineEdit.Normal)
         if ok and group != '':
-            create_group(group)
+            id = create_group(group)
             #print("creating", tag)
-        self.model.appendRow(QStandardItem(group))
+        gr_item = QStandardItem(group)
+        gr_item.setData({'name':group,'name_shown':group,'type':'group','id':id}, Qt.UserRole)
+        self.model.appendRow(gr_item)
         # self.reload_model()
 
     def remove(self):
@@ -181,8 +183,8 @@ class TagsDialog(QDialog):
             QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
                 delete_tag(tag)
-                self.model.removeRow()
-                self.reload_model()  # TBD can probably be implemented better via the model change
+                item = self.model.itemFromIndex(self.ui.treeView.currentIndex())
+                self.model.removeRow(item.row(), self.model.indexFromItem(item.parent()))
         else:
             group = self.ui.treeView.currentIndex().data(Qt.UserRole)
             if group['id'] == 1:
@@ -208,6 +210,7 @@ class TagsDialog(QDialog):
         # self.ui.treeView.setModel(self.model)
         self.ui.treeView.expandAll()
 
+# generates the model used in tagger dock widget, tags selection for filtering and tags manager
 def generate_tag_model(model, data):
     for group in data.keys():
         item = QStandardItem(group)

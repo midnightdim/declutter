@@ -62,6 +62,10 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
         settings['date_type'] = settings['date_type'] if 'date_type' in settings.keys() else 0
         settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
+        default_formats = {'Audio':'*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma', \
+            'Video':'*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv', \
+            'Image':'*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
+        settings['file_types'] = settings['file_types'] if 'file_types' in settings.keys() else default_formats
     return settings
 
 
@@ -140,7 +144,8 @@ def apply_rule(rule, dryrun = False):
                 msg = ""
                 p = Path(f)
                 if rule['action'] == 'Copy':
-                    target = Path(rule['target_folder']) / str(p).replace(':','') if ('keep_folder_structure' in rule.keys() and rule['keep_folder_structure']) else Path(rule['target_folder']) / p.name
+                    target_folder = resolve_path(rule['target_folder'])
+                    target = Path(target_folder) / str(p).replace(':','') if ('keep_folder_structure' in rule.keys() and rule['keep_folder_structure']) else Path(target_folder) / p.name
                     try:                        
                         if p.is_dir():
                             if target.is_dir():
@@ -184,9 +189,12 @@ def apply_rule(rule, dryrun = False):
                     except Exception as e:
                         logging.exception(f'exception {e}')
                 elif rule['action'] == 'Move':                    
-                    if not dryrun:                    
+                    if not dryrun:
                         tags = get_tags(f)
-                        target = Path(rule['target_folder']) / str(p).replace(':','') if ('keep_folder_structure' in rule.keys() and rule['keep_folder_structure']) else Path(rule['target_folder']) / p.name 
+                        target_folder = resolve_path(rule['target_folder'],p)
+                        # print(p)
+                        # print(target_folder)
+                        target = Path(target_folder) / str(p).replace(':','') if ('keep_folder_structure' in rule.keys() and rule['keep_folder_structure']) else Path(target_folder) / p.name 
                         try:
                             # if not Path(target.parent).is_dir():
                             #     os.makedirs(target.parent)
@@ -204,12 +212,12 @@ def apply_rule(rule, dryrun = False):
                         except Exception as e:
                             logging.exception(f'exception {e}')
                     else:
-                        msg = "Moved " + f + " to " + rule['target_folder']
+                        msg = "Moved " + f + " to " + target_folder
                 elif rule['action'] == 'Rename':
                     if 'name_pattern' in rule.keys() and rule['name_pattern']:
                         newname = rule['name_pattern'].replace('<filename>', p.name)
                         newname = newname.replace('<folder>', p.parent.name)
-                        rep = re.findall("<replace:(.*):(.*)>", newname)
+                        rep = re.findall("<replace:(.*):(.*)>", newname)  # TBD what if there are multiple replace tokens?
                         newname = re.sub("<replace(.*?)>", '', newname)
                         #print(rep)
                         for r in rep:
@@ -245,17 +253,18 @@ def apply_rule(rule, dryrun = False):
                         msg = 'Error: name pattern is missing for rule ' + rule['name']
                         logging.error("Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
-                    if p.parent.name != rule['target_subfolder']: # check if we're not already in the subfolder
-                        #target = Path(rule['target_subfolder']) / p.name                        
+                    target_subfolder = resolve_path(rule['target_subfolder'])
+                    if p.parent.name != target_subfolder: # check if we're not already in the subfolder
+                        #target = Path(rule['target_subfolder']) / p.name
                         if not dryrun:
-                            target = advanced_move(f, p.parent / Path(rule['target_subfolder']) / p.name, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
+                            target = advanced_move(f, p.parent / Path(target_subfolder) / p.name, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                             if target:
                                 remove_all_tags(f)
                                 report['moved to subfolder'] += 1
-                                msg = "Moved " + f + " to subfolder: " + str(rule['target_subfolder'])
+                                msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
                             #print("going to copy" + f + " to " + rule['target_folder'])
                         else:
-                            msg = "Moved " + f + " to subfolder: " + str(rule['target_subfolder'])
+                            msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
                 elif rule['action'] == 'Delete':
                     msg = "Deleted " + f
                     if not dryrun:
@@ -293,9 +302,40 @@ def apply_rule(rule, dryrun = False):
                 if msg:
                     details.append(msg)
                     logging.debug(msg)
-    else:
-        logging.debug("Rule "+rule['name'] + " disabled, skipping.")
+    # else:
+    #     logging.debug("Rule "+rule['name'] + " disabled, skipping.")
     return report, details
+
+# resolves patterns in taget_folder name 
+# <group:group_name> replaced with the first tag that path is tagged with; if path has no tags in this group, replaced with None
+# <type> replaced with the type of path (uses types from settings), if the type can't be resolved, replaced with None
+# TBD: replacing with None should be optional
+
+def resolve_path(target_folder, path):
+    final_path = target_folder.replace('<type>', get_file_type(path))
+    # final_path = re.sub("<group:(.*)>", get_file_tag_by_group('\1'), target_folder)
+    # final_path = re.sub("<group:(.*)>", '\\1', target_folder)
+    rep = re.findall("(<group:(.*?)>)", target_folder)
+    for r in rep:
+        group_tags = get_file_tags_by_group(r[1],path)
+        # print(group_tags)
+        final_path = final_path.replace(r[0],group_tags[0] if group_tags else 'None')
+    
+    return final_path
+    
+    # rep = re.findall("<replace:(.*):(.*)>", newname)
+    # newname = re.sub("<replace(.*?)>", '', newname)
+    # for r in rep:
+    #     newname = newname.replace(r[0], r[1])
+
+# returns file type based on settings, returns "Other" if type is not identified
+def get_file_type(path):
+    settings = load_settings()
+    for ft in settings['file_types']:
+        for p in settings['file_types'][ft].split(','):
+            if fnmatch(path,p.strip()):
+                return ft
+    return 'Other'
 
 def apply_all_rules(settings):
     report = {}
@@ -817,6 +857,7 @@ def delete_group(group_id, keep_tags):
     conn.commit()
     conn.close()    
 
+# returns all tags and groups with metadata - used for tag model generation
 def get_tags_and_groups():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
@@ -904,6 +945,29 @@ def move_group_to_group(group1,group2,position):
     c.execute("UPDATE tag_groups set list_order = ? WHERE id = ?", (new_list_order, group1['id']))
     conn.commit()
     conn.close()    
+
+def get_file_tags_by_group(group, filename):
+    filename = str(filename).lower()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT id FROM tag_groups WHERE name = ?", (group,))
+    row = c.fetchone()
+    tags = []
+    if row is not None:
+        group_id = row[0]
+        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (str(filename),group_id))]
+    conn.close()
+    return tags
+
+#print(get_file_tag_by_group('Default','D:\\DIM\\WinFiles\\Downloads\\1.png'))
+# print(get_file_tags_by_group('Project','D:\\DIM\\WinFiles\\Downloads\\1.png'))
+# print(resolve_path("abc/<type>/<group:Rating>/sdf/345", "D:\\DIM\\WinFiles\\Downloads\\1.png"))
+
+# import unicodedata
+# title = u"⭐️⭐️"
+# path = unicodedata.normalize('NFKD', title).encode('utf8')
+# os.mkdir(path)
+# encode('ascii', 'replace'))
 
 def check_files(): # TBD need to check if files still exist and if not remove them
     settings = load_settings(SETTINGS_FILE)

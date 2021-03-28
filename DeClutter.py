@@ -1,6 +1,7 @@
 import sys
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
+from PySide2.QtWidgets import (QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, \
+    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QLabel, QLineEdit, QSizePolicy, QSpacerItem)
 from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
 from rule_edit_window import RuleEditWindow
 from ui_rules_window import Ui_rulesWindow
@@ -149,6 +150,15 @@ class RulesWindow(QMainWindow):
         settings_window = QDialog(self)
         settings_window.ui = Ui_settingsDialog()
         settings_window.ui.setupUi(settings_window)
+        i=0
+        format_fields={}
+        for f in self.settings['file_types']:
+            settings_window.ui.fileTypesGridLayout.addWidget(QLabel(f),i,0)
+            format_fields[f] = QLineEdit(self.settings['file_types'][f])
+            settings_window.ui.fileTypesGridLayout.addWidget(format_fields[f],i,1)
+            i+=1
+        verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        settings_window.ui.fileTypesGridLayout.addItem(verticalSpacer,i,0)
 
         default_style_name = QApplication.style().objectName().lower()
         result = []
@@ -172,6 +182,10 @@ class RulesWindow(QMainWindow):
             self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")            
             self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
             self.settings['style'] = settings_window.ui.styleComboBox.currentText()
+
+            for f in format_fields:
+                self.settings['file_types'][f] = format_fields[f].text() #TBD add validation
+
             save_settings(SETTINGS_FILE, self.settings)
 
     def change_style(self, style_name):

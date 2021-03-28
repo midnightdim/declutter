@@ -12,7 +12,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from tag_groups import TreeView
+from tag_tree import TagTree
 
 import DeClutter_rc
 
@@ -78,7 +78,7 @@ class Ui_tagsDialog(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.treeView = TreeView(tagsDialog)
+        self.treeView = TagTree(tagsDialog)
         self.treeView.setObjectName(u"treeView")
 
         self.verticalLayout.addWidget(self.treeView)
