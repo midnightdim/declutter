@@ -144,7 +144,7 @@ def apply_rule(rule, dryrun = False):
                 msg = ""
                 p = Path(f)
                 if rule['action'] == 'Copy':
-                    target_folder = resolve_path(rule['target_folder'])
+                    target_folder = resolve_path(rule['target_folder'],p)
                     target = Path(target_folder) / str(p).replace(':','') if ('keep_folder_structure' in rule.keys() and rule['keep_folder_structure']) else Path(target_folder) / p.name
                     try:                        
                         if p.is_dir():
@@ -253,7 +253,7 @@ def apply_rule(rule, dryrun = False):
                         msg = 'Error: name pattern is missing for rule ' + rule['name']
                         logging.error("Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
-                    target_subfolder = resolve_path(rule['target_subfolder'])
+                    target_subfolder = resolve_path(rule['target_subfolder'],p)
                     if p.parent.name != target_subfolder: # check if we're not already in the subfolder
                         #target = Path(rule['target_subfolder']) / p.name
                         if not dryrun:
@@ -648,17 +648,17 @@ def tag_get_color(tag):
     conn.close()
     return row
 
-def create_tag(tag):
+def create_tag(tag, group_id = 1):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
-    c.execute("SELECT max(list_order) from tags")
+    c.execute("SELECT max(list_order) from tags WHERE tags.group_id=?",(group_id,))
     row = c.fetchone()[0]
     if row is None:
         count = 1
     else:
         count = row+1
 
-    c.execute("INSERT INTO tags VALUES (null, ?, ?, null, 1)", (tag,count)) # TBD replace 1 here
+    c.execute("INSERT INTO tags VALUES (null, ?, ?, null, ?)", (tag,count,group_id)) # TBD replace 1 here
     tag_id = c.lastrowid
     conn.commit()
     conn.close()

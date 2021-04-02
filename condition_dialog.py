@@ -110,7 +110,7 @@ class ConditionDialog(QDialog):
         if error:
             QMessageBox.critical(self,"Error",error,QMessageBox.Ok)
         else:
-            self.close()
+            super(ConditionDialog, self).accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

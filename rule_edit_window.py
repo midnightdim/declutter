@@ -158,7 +158,7 @@ class RuleEditWindow(QDialog):
             #self.setResult(QDialog.DialogCode.Accepted)  # TBD vN doesn't work for some reason, we shouldn't use a special variable self.updated at all
             #self.setResult(1)
             #print(self.result())
-            self.close()
+            super(RuleEditWindow, self).accept()
 
     def test_rule(self):
         #msgBox = QMessageBox.information(self,"Some title","Files and folders affected by this rule:")

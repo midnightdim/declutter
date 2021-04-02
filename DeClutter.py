@@ -1,12 +1,12 @@
 import sys
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import (QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, \
-    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QLabel, QLineEdit, QSizePolicy, QSpacerItem)
+    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QLabel, QLineEdit, QSizePolicy, QSpacerItem, QPushButton)
 from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
 from rule_edit_window import RuleEditWindow
+from settings_dialog import SettingsDialog
 from ui_rules_window import Ui_rulesWindow
 from ui_list_dialog import Ui_listDialog
-from ui_settings_dialog import Ui_settingsDialog
 from declutter_lib import *
 from declutter_tagger import TaggerWindow
 from copy import deepcopy
@@ -143,50 +143,14 @@ class RulesWindow(QMainWindow):
             self.ui.rulesTable.selectRow(rule_idx+1)
 
     def show_about(self):
-        msgbox = QMessageBox.about(self,"About DeClutter", "DeClutter version "+str(VERSION)+"\nhttps://declutter.top\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
+        QMessageBox.about(self,"About DeClutter", "DeClutter version "+str(VERSION)+"\nhttps://declutter.top\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
 
     def show_settings(self):
-        self.settings = load_settings()
-        settings_window = QDialog(self)
-        settings_window.ui = Ui_settingsDialog()
-        settings_window.ui.setupUi(settings_window)
-        i=0
-        format_fields={}
-        for f in self.settings['file_types']:
-            settings_window.ui.fileTypesGridLayout.addWidget(QLabel(f),i,0)
-            format_fields[f] = QLineEdit(self.settings['file_types'][f])
-            settings_window.ui.fileTypesGridLayout.addWidget(format_fields[f],i,1)
-            i+=1
-        verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        settings_window.ui.fileTypesGridLayout.addItem(verticalSpacer,i,0)
-
-        default_style_name = QApplication.style().objectName().lower()
-        result = []
-        for style in QStyleFactory.keys():
-            if style.lower() == default_style_name:
-                result.insert(0, style)
-            else:
-                result.append(style)
-
-        settings_window.ui.styleComboBox.addItems(result)
-        settings_window.ui.styleComboBox.textActivated.connect(self.change_style)
-
-        rbs = [c for c in settings_window.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))] # TBD vN this is not very safe
-        rbs[self.settings['date_type']].setChecked(True)
-        settings_window.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
+        settings_window = SettingsDialog()
         if settings_window.exec_():
-            for c in rbs:
-                if c.isChecked():
-                    self.settings['date_type'] = rbs.index(c)
-            self.settings['rule_exec_interval']=float(settings_window.ui.ruleExecIntervalEdit.text())*60
-            self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")            
-            self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
-            self.settings['style'] = settings_window.ui.styleComboBox.currentText()
-
-            for f in format_fields:
-                self.settings['file_types'][f] = format_fields[f].text() #TBD add validation
-
-            save_settings(SETTINGS_FILE, self.settings)
+            settings = load_settings()
+            self.trayIcon.setToolTip("DeClutter runs every " + str(float(settings['rule_exec_interval']/60)) + " minute(s)")
+            self.timer.setInterval(int(settings['rule_exec_interval']*1000))
 
     def change_style(self, style_name):
         QApplication.setStyle(QStyleFactory.create(style_name))
@@ -231,8 +195,7 @@ class RulesWindow(QMainWindow):
     def add_rule(self):
         #print("Opening rule window")
         self.rule_window = RuleEditWindow()
-        self.rule_window.exec_()
-        if self.rule_window.updated:
+        if self.rule_window.exec_():
             rule = self.rule_window.rule
             rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1
             self.settings['rules'].append(rule)

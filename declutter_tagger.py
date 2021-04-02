@@ -2,7 +2,7 @@ import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
-from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent
+from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
@@ -35,7 +35,6 @@ class TaggerWindow(QMainWindow):
         self.ui.mediaPositionSlider.actionTriggered.connect(self.action_trig)
 
         self.ui.mediaDockWidget.installEventFilter(self)
-        self.player_geometry = self.ui.playerLayout.geometry()
 
         # self.ui.mediaPositionSlider.valueChanged.connect(self.val_changed)
 
@@ -46,6 +45,11 @@ class TaggerWindow(QMainWindow):
         self.prev_indexes = []
 
         self.populate() # TBD can't it be just a part of init()?
+
+    def closeEvent(self, event):
+        self.player.stop()
+        self.playlist.clear()
+        # print(event)
 
     # volume knob controlled by mouse wheel if the playback is on, click on media dock widget controls play/pause
     def eventFilter(self, source, event):       
@@ -133,8 +137,8 @@ class TaggerWindow(QMainWindow):
         
         self.model = TagFSModel()
         # self.model = QFileSystemModel()
-        
         self.model.setRootPath(path)
+        self.model.setReadOnly(False)
         self.model.setFilter(QDir.NoDot | QDir.AllEntries | QDir.Hidden)
         self.model.sort(0,Qt.SortOrder.AscendingOrder)
 
@@ -143,11 +147,11 @@ class TaggerWindow(QMainWindow):
         #self.sorting_model.filter_paths = []
         self.sorting_model.setSourceModel(self.model)
 
-        self.ui.treeView.setModel(self.sorting_model)
-        # self.ui.treeView.setModel(self.model)
+        # self.ui.treeView.setModel(self.sorting_model)
+        self.ui.treeView.setModel(self.model)
 
-        self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
-        # self.ui.treeView.setRootIndex(self.model.index(path))
+        # self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
+        self.ui.treeView.setRootIndex(self.model.index(path))
 
         self.model.setIconProvider(QFileIconProvider())
               
@@ -179,8 +183,14 @@ class TaggerWindow(QMainWindow):
         self.init_tag_checkboxes()
         self.update_ui()
 
-    # def test(self):
-    #     print('test')
+    def test(self, state):
+        print('test')
+        print(self.sender().checkState())
+        print(state)
+
+    def test2(self):
+        print('test2')
+        print(self.sender().checkState())
 
     def mouseDoubleClickEvent(self, event):  # TBD maybe remove this
         widget = self.childAt(event.pos())
@@ -205,7 +215,10 @@ class TaggerWindow(QMainWindow):
                 tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                 self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
                 self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
-                self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
+                # self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
+                # self.tag_checkboxes[tag['name']].stateChanged.connect(self.test)
+                self.tag_checkboxes[tag['name']].clicked.connect(self.set_tags)
+                # self.tag_checkboxes[tag['name']].toggled.connect(self.test2)
                 if tag['color']:
                     color = QColor()
                     color.setRgba(tag['color'])
@@ -216,22 +229,27 @@ class TaggerWindow(QMainWindow):
                 self.ui.tagsLayout.addWidget(QHLine())
 
     def update_tag_checkboxes(self):
+        # print('update_tag_checkboxes called')
         indexes = self.ui.treeView.selectedIndexes()
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]       
 
         all_files_tags = []
         for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
             all_files_tags.extend(get_tags(f))
       
         for t in get_all_tags():
+            # blocker = QSignalBlocker(self.tag_checkboxes[t])
             if t not in all_files_tags:
                 self.tag_checkboxes[t].setTristate(False)
-                self.tag_checkboxes[t].setChecked(False)
+                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
+                    self.tag_checkboxes[t].setChecked(False)
             elif all_files_tags.count(t) < len(cur_selection):
                 self.tag_checkboxes[t].setTristate(True)
-                self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
+                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
+                    self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
             else:
-                self.tag_checkboxes[t].setChecked(True)
+                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
+                    self.tag_checkboxes[t].setChecked(True)
 
     def update_recent_menu(self):
         self.ui.recent_menu.clear()
@@ -241,7 +259,7 @@ class TaggerWindow(QMainWindow):
             recent_action.setData(foldername)
 
     def open_file_from_recent(self, action):
-        print('opening from')
+        # print('opening from')
         #self.open_file(action.data())
         self.ui.pathEdit.setText(normpath(action.data()))
         self.change_path()
@@ -392,8 +410,6 @@ class TaggerWindow(QMainWindow):
     def update_status(self):
         # print('update status')
         indexes = self.ui.treeView.selectedIndexes()
-        # print(indexes)
-        # print(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
         indexes.sort()
         self.prev_indexes.sort()
         if indexes != self.prev_indexes:
@@ -408,8 +424,7 @@ class TaggerWindow(QMainWindow):
                 if ftype == 'Audio': # TBD change this to audio file type
                     self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
                 if ftype == 'Image':
-                    self.ui.playerLayout.setGeometry(self.player_geometry)
-                #     self.ui.playerLayout.setGeometry(QRect(QPoint(0,0),self.ui.playerLayout.maximumSize()))
+                    self.ui.playerLayout.update()
                 self.playlist.clear()
                 self.playlist.addMedia(file_url)
                 self.player.play()
@@ -420,17 +435,14 @@ class TaggerWindow(QMainWindow):
                 self.ui.mediaDurationLabel.setVisible(ftype in ('Video','Audio'))
             else:
                 # print('other file type')
-                self.player_geometry = self.ui.playerLayout.geometry()
                 self.playlist.clear()
                 self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
                 self.ui.mediaPlayButton.setVisible(False)
                 self.ui.mediaPositionSlider.setVisible(False)
                 self.ui.mediaVolumeDial.setVisible(False)
                 self.ui.mediaDurationLabel.setVisible(False)                
-        # print('indexes',indexes)        
-        # print(self.ui.treeView.selectedIndexes())
-        num_selected = int(len(self.ui.treeView.selectedIndexes())/5)
         self.prev_indexes = indexes
+        num_selected = int(len(self.ui.treeView.selectedIndexes())/5)  # TBD I don't like this /5
         self.ui.statusbar.showMessage(str(num_selected)+" item(s) selected")
         self.update_tag_checkboxes()
 
@@ -444,6 +456,8 @@ class TaggerWindow(QMainWindow):
             self.change_path()
 
     def change_path(self):
+        self.player.stop()
+        self.playlist.clear()
         file_path = self.ui.pathEdit.text()
         if os.path.isdir(file_path):
             self.ui.statusbar.clearMessage()
@@ -492,29 +506,58 @@ class TaggerWindow(QMainWindow):
         menu = QMenu()
         
         self.checkAction = {}
-        for t in get_all_tags():
-            self.checkAction[t] = CheckBoxAction(self,t)           
-            self.checkAction[t].checkbox.stateChanged.connect(self.set_tags)
-            #print(t)
-            # if t in file_tags:
-            #     self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
-            #     self.checkAction[t].checkbox.setChecked(True)
-            if t not in all_files_tags:
-                pass
-                #window[r].update(text = CHAR_UNCHECKED + " " + r)
-            elif all_files_tags.count(t) < len(cur_selection):
-                self.checkAction[t].checkbox.setTristate(True)
-                self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
-            else:
-                self.checkAction[t].checkbox.setChecked(True)
+
+        for i in range(0,self.tag_model.rowCount()):
+            group = self.tag_model.item(i).data(Qt.UserRole)
+            if group['name_shown']:
+                menu.addAction(group['name'])
+                # self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
+            for k in range(0,self.tag_model.item(i).rowCount()):
+                tag = self.tag_model.item(i).child(k).data(Qt.UserRole)  
+                t = tag['name']              
+                self.checkAction[t] = CheckBoxAction(self,t)
+                self.checkAction[t].checkbox.clicked.connect(self.set_tags)
+                if t not in all_files_tags:
+                    pass
+                    #window[r].update(text = CHAR_UNCHECKED + " " + r)
+                elif all_files_tags.count(t) < len(cur_selection):
+                    self.checkAction[t].checkbox.setTristate(True)
+                    if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.PartiallyChecked:
+                        self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
+                else:
+                    if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.Checked:
+                        self.checkAction[t].checkbox.setChecked(True)
+
+                menu.addAction(self.checkAction[t])
+                # self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
+                # self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
+
+        # for t in get_all_tags():
+        #     self.checkAction[t] = CheckBoxAction(self,t)           
+        #     self.checkAction[t].checkbox.stateChanged.connect(self.set_tags)
+        #     #print(t)
+        #     # if t in file_tags:
+        #     #     self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
+        #     #     self.checkAction[t].checkbox.setChecked(True)
+        #     if t not in all_files_tags:
+        #         pass
+        #         #window[r].update(text = CHAR_UNCHECKED + " " + r)
+        #     elif all_files_tags.count(t) < len(cur_selection):
+        #         self.checkAction[t].checkbox.setTristate(True)
+        #         if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.PartiallyChecked:
+        #             self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
+        #     else:
+        #         if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.Checked:
+        #             self.checkAction[t].checkbox.setChecked(True)
 
 
-            menu.addAction(self.checkAction[t])
+        #     menu.addAction(self.checkAction[t])
 
         cursor = QCursor()
         menu.exec_(cursor.pos())
 
     def set_tags(self, state):
+        # print('set_tags called')
         sender = self.sender()
         # print(sender)
         # print("clicked",state)
@@ -522,17 +565,24 @@ class TaggerWindow(QMainWindow):
         # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
         
         indexes = self.ui.treeView.selectedIndexes()
+
+        # for index in indexes:
+        #     print(index)
+
         # print(indexes)
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes if index.column() == 0] # TBD not very optimal
+        # print(cur_selection)
 
         for file_path in cur_selection:
-            if state == 2: #checked
-                #print("tagged",file_path,"with",sender.text())
+            # print(file_path)
+            if state: #checked - it was 2 when used with stateChanged
+                print('calling add_tag')
                 add_tag(file_path,sender.text())
-            elif state == 0: #unchecked
+            elif not state: #unchecked - it was 0 when used with stateChanged
                 remove_tag(file_path,sender.text())
-
-        self.update_tag_checkboxes()
+        # print('tags set, updating checkboxes')
+        # self.update_tag_checkboxes()
+        # print('done')
 
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent = QModelIndex()):

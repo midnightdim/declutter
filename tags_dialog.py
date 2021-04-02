@@ -157,12 +157,15 @@ class TagsDialog(QDialog):
                 self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(tag_data,Qt.UserRole)
 
     def add_tag(self):
+        group_id = 1
+        if self.ui.treeView.currentIndex().data() and self.ui.treeView.currentIndex().data(Qt.UserRole)['type'] == 'group':
+            group_id = self.ui.treeView.currentIndex().data(Qt.UserRole)['id']
         tag, ok = QInputDialog.getText(self, "Add new tag",
         "Enter tag name:", QLineEdit.Normal)
         if ok and tag != '':
-            create_tag(tag)
+            create_tag(tag,group_id)
             #print("creating", tag)
-        self.reload_model()
+        self.reload_model() # TBD can do this without reloading model
 
     def add_group(self):
         group, ok = QInputDialog.getText(self, "Add new group",
@@ -170,9 +173,9 @@ class TagsDialog(QDialog):
         if ok and group != '':
             id = create_group(group)
             #print("creating", tag)
-        gr_item = QStandardItem(group)
-        gr_item.setData({'name':group,'name_shown':group,'type':'group','id':id}, Qt.UserRole)
-        self.model.appendRow(gr_item)
+            gr_item = QStandardItem(group)
+            gr_item.setData({'name':group,'name_shown':group,'type':'group','id':id}, Qt.UserRole)
+            self.model.appendRow(gr_item)
         # self.reload_model()
 
     def remove(self):

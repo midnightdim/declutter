@@ -138,10 +138,38 @@ class Ui_settingsDialog(object):
         self.fileTypesTab.setObjectName(u"fileTypesTab")
         self.gridLayout_6 = QGridLayout(self.fileTypesTab)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.fileTypesGridLayout = QGridLayout()
-        self.fileTypesGridLayout.setObjectName(u"fileTypesGridLayout")
+        self.fileTypesTable = QTableWidget(self.fileTypesTab)
+        if (self.fileTypesTable.columnCount() < 2):
+            self.fileTypesTable.setColumnCount(2)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.fileTypesTable.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.fileTypesTable.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        self.fileTypesTable.setObjectName(u"fileTypesTable")
+        self.fileTypesTable.setColumnCount(2)
+        self.fileTypesTable.horizontalHeader().setStretchLastSection(True)
+        self.fileTypesTable.verticalHeader().setVisible(False)
 
-        self.gridLayout_6.addLayout(self.fileTypesGridLayout, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.fileTypesTable, 0, 0, 1, 1)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.addFileTypeButton = QPushButton(self.fileTypesTab)
+        self.addFileTypeButton.setObjectName(u"addFileTypeButton")
+
+        self.horizontalLayout_3.addWidget(self.addFileTypeButton)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
+
+        self.label_5 = QLabel(self.fileTypesTab)
+        self.label_5.setObjectName(u"label_5")
+
+        self.horizontalLayout_3.addWidget(self.label_5)
+
+
+        self.gridLayout_6.addLayout(self.horizontalLayout_3, 1, 0, 1, 1)
 
         self.tabWidget.addTab(self.fileTypesTab, "")
 
@@ -159,7 +187,7 @@ class Ui_settingsDialog(object):
         self.buttonBox.accepted.connect(settingsDialog.accept)
         self.buttonBox.rejected.connect(settingsDialog.reject)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(settingsDialog)
@@ -179,6 +207,12 @@ class Ui_settingsDialog(object):
         self.radioButton_4.setText(QCoreApplication.translate("settingsDialog", u"latest of modified & created", None))
         self.radioButton_5.setText(QCoreApplication.translate("settingsDialog", u"last access", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.dateTab), QCoreApplication.translate("settingsDialog", u"Date", None))
+        ___qtablewidgetitem = self.fileTypesTable.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("settingsDialog", u"Name", None));
+        ___qtablewidgetitem1 = self.fileTypesTable.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("settingsDialog", u"Filemask", None));
+        self.addFileTypeButton.setText(QCoreApplication.translate("settingsDialog", u"Add New", None))
+        self.label_5.setText(QCoreApplication.translate("settingsDialog", u"To remove a format leave its name empty", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fileTypesTab), QCoreApplication.translate("settingsDialog", u"File Types", None))
     # retranslateUi
 
