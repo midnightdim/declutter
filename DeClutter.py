@@ -326,7 +326,9 @@ class RulesWindow(QMainWindow):
                 QSystemTrayIcon.Information,
                 15000,
             )
-        self.service_run_details = details
+        # logging.debug("Details"+str(details))
+        # print(details)
+        self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
 
 class service_signals(QObject):

@@ -2,7 +2,7 @@ import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
-from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker
+from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
@@ -10,6 +10,7 @@ from tags_dialog import TagsDialog, generate_tag_model
 from declutter_lib import *
 from os.path import normpath
 from pathlib import Path
+from send2trash import send2trash
 
 class TaggerWindow(QMainWindow):
     def __init__(self):
@@ -35,9 +36,12 @@ class TaggerWindow(QMainWindow):
         self.ui.mediaPositionSlider.actionTriggered.connect(self.action_trig)
 
         self.ui.mediaDockWidget.installEventFilter(self)
+        self.ui.treeView.installEventFilter(self)
 
         # self.ui.mediaPositionSlider.valueChanged.connect(self.val_changed)
-
+        self.ui.treeView.setDragDropMode(QAbstractItemView.DragDrop)
+        self.ui.treeView.setAcceptDrops(True)
+        self.ui.treeView.setDefaultDropAction(Qt.MoveAction)
         self.ui.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.treeView.customContextMenuRequested.connect(self.context_menu)
         self.filter_tags = []
@@ -51,13 +55,74 @@ class TaggerWindow(QMainWindow):
         self.playlist.clear()
         # print(event)
 
+    # def dropEvent(self, event):
+    #     print('dropevent')
+    #     # lines = []
+    #     for url in event.mimeData().urls():
+    #         print(url.toLocalFile())
+            # lines.append('dropped: %r' % url.toLocalFile())
+        # print('\n'.join(lines))
+
     # volume knob controlled by mouse wheel if the playback is on, click on media dock widget controls play/pause
-    def eventFilter(self, source, event):       
+    def eventFilter(self, source, event):
+        # print(source,event,event.type())
         if source == self.ui.treeView:
-            print('test')
             if event.type() == QEvent.KeyPress:
-                self.update_status()
+                if event.key() == Qt.Key_Delete:
+                    # print(self.ui.treeView.selectionModel().selectedRows())
+                    # indexes = self.ui.treeView.selectedIndexes()
+                    indexes = self.ui.treeView.selectionModel().selectedRows()                    
+                    # print(indexes)
+                    if event.modifiers() == Qt.ShiftModifier:
+                        for index in indexes:
+                            self.model.remove(self.sorting_model.mapToSource(index))
+                        self.ui.statusbar.showMessage(str(len(indexes))+" item(s) deleted")
+                    else:
+                        for index in indexes:
+                            send2trash(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
+                        self.ui.statusbar.showMessage(str(len(indexes))+" item(s) sent to trash")                
+                elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+                    indexes = self.ui.treeView.selectionModel().selectedRows()
+                    urls = [QUrl(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+                    print(urls)
+                    # clipboard = QApplication.clipboard()
+                    # clipboard.setMimeData()
+                    mime_data = QMimeData()
+                    mime_data.setUrls(urls)
+                    clipboard = QApplication.clipboard()
+                    clipboard.setMimeData(mime_data)
+                    # print(QApplication.clipboard().mimeData().urls())
+                    print(clipboard.mimeData().urls())
+                elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
+                    # print(self.clipboard().mimeData().urls())
+                    # print(QApplication.clipboard().text())
+                    # print(QApplication.clipboard().mimeData().urls())
+                    clipboard = QApplication.clipboard()
+                    html = clipboard.mimeData().html()
+                    print(clipboard.mimeData().urls())
+                    print(clipboard.mimeData().text())
+                    # print(html)
+                    # mime_data = QApplication.clipboard().mimeData()
+                    # print(mime_data)
+                    for url in clipboard.mimeData().urls():
+                        # self.model
+                        print(url.toLocalFile())
+                    # print('enter')
+                    # print(QApplication.clipboard().text())
+                    #  if index.column() == 0
+                    # for index in indexes:
+                    #     os.remove(self.model.filePath(self.sorting_model.mapToSource(index)))
+                    # this works with errors for some reason
+                    # for index in indexes:
+                    #     self.model.remove(self.sorting_model.mapToSource(index))         
+                         
+
+                # self.update_status()
                 return False
+            if event.type() == QEvent.Drop:
+                print('drop')
+                for url in event.mimeData().urls():
+                    print(url.toLocalFile())
         else: 
             if event.type() == QEvent.MouseButtonPress:
                 self.play_media()
@@ -147,11 +212,11 @@ class TaggerWindow(QMainWindow):
         #self.sorting_model.filter_paths = []
         self.sorting_model.setSourceModel(self.model)
 
-        # self.ui.treeView.setModel(self.sorting_model)
-        self.ui.treeView.setModel(self.model)
+        self.ui.treeView.setModel(self.sorting_model)
+        # self.ui.treeView.setModel(self.model)
 
-        # self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
-        self.ui.treeView.setRootIndex(self.model.index(path))
+        self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
+        # self.ui.treeView.setRootIndex(self.model.index(path))
 
         self.model.setIconProvider(QFileIconProvider())
               
@@ -183,14 +248,14 @@ class TaggerWindow(QMainWindow):
         self.init_tag_checkboxes()
         self.update_ui()
 
-    def test(self, state):
-        print('test')
-        print(self.sender().checkState())
-        print(state)
+    # def test(self, state):
+    #     print('test')
+    #     print(self.sender().checkState())
+    #     print(state)
 
-    def test2(self):
-        print('test2')
-        print(self.sender().checkState())
+    # def test2(self):
+    #     print('test2')
+    #     print(self.sender().checkState())
 
     def mouseDoubleClickEvent(self, event):  # TBD maybe remove this
         widget = self.childAt(event.pos())
@@ -230,7 +295,7 @@ class TaggerWindow(QMainWindow):
 
     def update_tag_checkboxes(self):
         # print('update_tag_checkboxes called')
-        indexes = self.ui.treeView.selectedIndexes()
+        indexes = self.ui.treeView.selectionModel().selectedRows()
         cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]       
 
         all_files_tags = []
@@ -360,7 +425,7 @@ class TaggerWindow(QMainWindow):
         mode = self.ui.sourceComboBox.currentText()
         # self.sorting_model.mode = mode
         if mode == 'Tag(s)': # TBD simplify this
-            #print('tags')
+            # print('tags')
             self.model = TagFSModel()
             path = "."
             self.model.setRootPath(path)
@@ -386,8 +451,10 @@ class TaggerWindow(QMainWindow):
             self.model.directoryLoaded.connect(self.dir_loaded)            
             #self.ui.treeView.expand(self.sorting_model.mapFromSource(self.model.index(path)))
         else:
-            #print('not tags')
-            self.model = TagFSModel()          
+            # print('not tags')
+            self.model = TagFSModel()
+            # self.model = QFileSystemModel()
+            self.model.setReadOnly(False)
             path = load_settings()['current_folder']            
             self.model.setRootPath(path)
             self.model.setFilter(QDir.NoDot | QDir.AllEntries | QDir.Hidden)
@@ -399,17 +466,23 @@ class TaggerWindow(QMainWindow):
             # print(self.sorting_model.filter_tags)
             # print(self.sorting_model.tagged_paths)
             self.sorting_model.setSourceModel(self.model)                     
-            self.ui.treeView.setModel(self.sorting_model)                       
+            self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
             self.model.setIconProvider(QFileIconProvider())
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
             self.ui.treeView.setItemsExpandable(False)
             self.ui.treeView.setRootIsDecorated(False)
             self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
+            self.ui.treeView.setDragDropMode(QAbstractItemView.DragDrop) # TBD this is duplicated in __init__, not good
+            self.ui.treeView.setAcceptDrops(True)
+            self.ui.treeView.setDefaultDropAction(Qt.MoveAction)
+            # print('drop action set to',self.ui.treeView.defaultDropAction())
+            # print(self.ui.treeView.acceptDrops())
 
     def update_status(self):
         # print('update status')
-        indexes = self.ui.treeView.selectedIndexes()
+        indexes = self.ui.treeView.selectionModel().selectedRows()
+        # indexes = self.ui.treeView.selectedIndexes()
         indexes.sort()
         self.prev_indexes.sort()
         if indexes != self.prev_indexes:
@@ -442,7 +515,7 @@ class TaggerWindow(QMainWindow):
                 self.ui.mediaVolumeDial.setVisible(False)
                 self.ui.mediaDurationLabel.setVisible(False)                
         self.prev_indexes = indexes
-        num_selected = int(len(self.ui.treeView.selectedIndexes())/5)  # TBD I don't like this /5
+        num_selected = len(self.ui.treeView.selectionModel().selectedRows())  # TBD I don't like this /5
         self.ui.statusbar.showMessage(str(num_selected)+" item(s) selected")
         self.update_tag_checkboxes()
 
@@ -496,7 +569,7 @@ class TaggerWindow(QMainWindow):
 
     def context_menu(self, position):
         #index = self.ui.treeView.currentIndex()
-        indexes = self.ui.treeView.selectedIndexes()
+        indexes = self.ui.treeView.selectionModel().selectedRows()
         cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
 
         all_files_tags = []
@@ -564,19 +637,18 @@ class TaggerWindow(QMainWindow):
         # index = self.ui.treeView.currentIndex()
         # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      
         
-        indexes = self.ui.treeView.selectedIndexes()
+        indexes = self.ui.treeView.selectionModel().selectedRows()
 
         # for index in indexes:
         #     print(index)
 
         # print(indexes)
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes if index.column() == 0] # TBD not very optimal
+        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes] # TBD not very optimal
         # print(cur_selection)
 
         for file_path in cur_selection:
             # print(file_path)
             if state: #checked - it was 2 when used with stateChanged
-                print('calling add_tag')
                 add_tag(file_path,sender.text())
             elif not state: #unchecked - it was 0 when used with stateChanged
                 remove_tag(file_path,sender.text())
@@ -587,7 +659,15 @@ class TaggerWindow(QMainWindow):
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent = QModelIndex()):
         return super(TagFSModel, self).columnCount()+1
+
+    # def supportedDropActions(self) -> Qt.DropActions:
+    #     # print("supportedDropActions")
+    #     return Qt.MoveAction  | super(TagFSModel, self).supportedDropActions()
     
+    def supportedDragActions(self) -> Qt.DropActions:
+        # print("supportedDragActions")
+        return Qt.MoveAction # | super(TagFSModel, self).supportedDropActions()         
+
     def headerData(self, section, orientation, role):
         if section == 4 and role == Qt.DisplayRole:
             return "Tag(s)"
@@ -611,6 +691,10 @@ class TagFSModel(QFileSystemModel):
             return color
 
         return super(TagFSModel, self).data(index, role)
+
+    # def dropMimeData(self, data: QMimeData, action: Qt.DropAction,
+    #                 row: int, column: int, parent: QModelIndex) -> bool:
+    #     print(row,column)
 
     # def sort(self, index, order):
     #     return super(TagFSModel, self).sort(index, order)

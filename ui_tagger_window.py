@@ -13,6 +13,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from slider import Slider
+from file_tree import FileTree
 
 import DeClutter_rc
 
@@ -20,7 +21,7 @@ class Ui_taggerWindow(object):
     def setupUi(self, taggerWindow):
         if not taggerWindow.objectName():
             taggerWindow.setObjectName(u"taggerWindow")
-        taggerWindow.resize(1047, 776)
+        taggerWindow.resize(1047, 815)
         icon = QIcon()
         icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
         taggerWindow.setWindowIcon(icon)
@@ -38,6 +39,7 @@ class Ui_taggerWindow(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.sourceComboBox = QComboBox(self.centralwidget)
+        self.sourceComboBox.addItem("")
         self.sourceComboBox.addItem("")
         self.sourceComboBox.addItem("")
         self.sourceComboBox.addItem("")
@@ -72,7 +74,7 @@ class Ui_taggerWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.treeView = QTreeView(self.centralwidget)
+        self.treeView = FileTree(self.centralwidget)
         self.treeView.setObjectName(u"treeView")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -236,8 +238,9 @@ class Ui_taggerWindow(object):
         self.actionManage_Tags.setText(QCoreApplication.translate("taggerWindow", u"Manage Tags", None))
         self.actionNone.setText(QCoreApplication.translate("taggerWindow", u"None", None))
         self.sourceComboBox.setItemText(0, QCoreApplication.translate("taggerWindow", u"Folder", None))
-        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
+        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Folder (untagged)", None))
         self.sourceComboBox.setItemText(2, QCoreApplication.translate("taggerWindow", u"Folder & tags", None))
+        self.sourceComboBox.setItemText(3, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
 
         self.browseButton.setText(QCoreApplication.translate("taggerWindow", u"Browse...", None))
         self.selectTagsButton.setText(QCoreApplication.translate("taggerWindow", u"Select tags...", None))

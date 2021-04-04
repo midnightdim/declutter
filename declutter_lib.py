@@ -14,7 +14,7 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 
-VERSION = '1.05'
+VERSION = '1.06'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
