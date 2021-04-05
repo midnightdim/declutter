@@ -33,7 +33,7 @@ class SettingsDialog(QDialog):
             # self.format_fields[f] = QLineEdit(self.settings['file_types'][f])
             # self.ui.fileTypesGridLayout.addWidget(self.format_fields[f],i,1)
             i+=1
-
+        
         # self.ui.fileFormatsTable.horizontalHeader().setSectionResizeMode()
 
         # verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -44,6 +44,8 @@ class SettingsDialog(QDialog):
 
         # self.ui.fileTypesTable.cellDoubleClicked.connect(self.table_dblclicked)
         self.ui.addFileTypeButton.clicked.connect(self.add_new_file_type)
+        self.ui.fileTypesTable.cellActivated.connect(self.cell_entered)
+        self.ui.fileTypesTable.cellChanged.connect(self.cell_changed)
 
         default_style_name = QApplication.style().objectName().lower()
         result = []
@@ -59,6 +61,46 @@ class SettingsDialog(QDialog):
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))] # TBD vN this is not very safe
         rbs[self.settings['date_type']].setChecked(True)
         self.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
+
+    def cell_entered(self,x,y):
+        print('entered',x,y)
+
+    def cell_changed(self,row,col):
+        if col == 0:
+            settings = load_settings()
+            new_value = self.ui.fileTypesTable.item(row,0).text()
+            if row < len(settings['file_types']): #it's not a new format
+                prev_value = list(settings['file_types'].keys())[row]  # TBD this is unsafe and will cause bugs on non-Win systems        
+                if new_value != prev_value and new_value:
+                    # print('updating settings and rules')
+                    settings['file_types'][new_value]=settings['file_types'][prev_value]
+                    del settings['file_types'][prev_value]
+                    for i in range(0,len(settings['rules'])):
+                        for k in range (0,len(settings['rules'][i]['conditions'])):
+                            c = settings['rules'][i]['conditions'][k]
+                            if c['type'] == 'type' and c['file_type'] == prev_value:
+                                settings['rules'][i]['conditions'][k]['file_type'] = new_value
+                    save_settings(SETTINGS_FILE,settings)
+
+                if new_value == "":
+                    count = 0
+                    for i in range(0,len(settings['rules'])):
+                        for k in range (0,len(settings['rules'][i]['conditions'])):
+                            c = settings['rules'][i]['conditions'][k]
+                            if c['type'] == 'type' and c['file_type'] == prev_value:
+                                count+=1
+                    used_in_rules = "\nIt's used in "+str(count)+" condition(s) (which won't be removed)." if count>0 else ""
+                    # TBD remove orphaned conditions
+                    reply = QMessageBox.question(self, "Warning",
+                        "This will delete the format. Are you sure?"+used_in_rules,
+                        QMessageBox.Yes | QMessageBox.No)
+                    if reply == QMessageBox.Yes:
+                        del settings['file_types'][prev_value]
+                        save_settings(SETTINGS_FILE,settings)
+                        self.ui.fileTypesTable.removeRow(row)
+                    else:
+                        self.ui.fileTypesTable.item(row,0).setText(prev_value)
+
 
     # def table_dblclicked(self,row,col):
     #     print(row,col)

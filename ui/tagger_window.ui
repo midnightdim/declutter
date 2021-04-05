@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1047</width>
-    <height>776</height>
+    <height>815</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,12 +32,17 @@
           </item>
           <item>
            <property name="text">
-            <string>Tag(s)</string>
+            <string>Folder (untagged)</string>
            </property>
           </item>
           <item>
            <property name="text">
             <string>Folder &amp; tags</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Tag(s)</string>
            </property>
           </item>
          </widget>
@@ -79,7 +84,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QTreeView" name="treeView">
+       <widget class="FileTree" name="treeView">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -358,6 +363,11 @@
    <class>Slider</class>
    <extends>QSlider</extends>
    <header>slider</header>
+  </customwidget>
+  <customwidget>
+   <class>FileTree</class>
+   <extends>QTreeView</extends>
+   <header>file_tree</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -12,6 +12,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
+from tag_tree import TagTree
+
 import DeClutter_rc
 
 class Ui_Condition(object):
@@ -46,6 +48,7 @@ class Ui_Condition(object):
         self.horizontalLayout_4.addWidget(self.label)
 
         self.conditionCombo = QComboBox(Condition)
+        self.conditionCombo.addItem("")
         self.conditionCombo.addItem("")
         self.conditionCombo.addItem("")
         self.conditionCombo.addItem("")
@@ -190,7 +193,7 @@ class Ui_Condition(object):
 
         self.horizontalLayout_7.addWidget(self.tagLabel2)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_3)
 
@@ -199,18 +202,51 @@ class Ui_Condition(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.tagsList = QListWidget(Condition)
-        self.tagsList.setObjectName(u"tagsList")
-        self.tagsList.setStyleSheet(u"")
+        self.tagsView = TagTree(Condition)
+        self.tagsView.setObjectName(u"tagsView")
+        self.tagsView.setStyleSheet(u"")
 
-        self.horizontalLayout_8.addWidget(self.tagsList)
+        self.horizontalLayout_8.addWidget(self.tagsView)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_4)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
+
+        self.selectedTagsLabel = QLabel(Condition)
+        self.selectedTagsLabel.setObjectName(u"selectedTagsLabel")
+
+        self.verticalLayout.addWidget(self.selectedTagsLabel)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.typeLabel = QLabel(Condition)
+        self.typeLabel.setObjectName(u"typeLabel")
+
+        self.horizontalLayout_2.addWidget(self.typeLabel)
+
+        self.typeSwitchCombo = QComboBox(Condition)
+        self.typeSwitchCombo.addItem("")
+        self.typeSwitchCombo.addItem("")
+        self.typeSwitchCombo.setObjectName(u"typeSwitchCombo")
+        self.typeSwitchCombo.setMaximumSize(QSize(50, 16777215))
+        self.typeSwitchCombo.setBaseSize(QSize(0, 0))
+
+        self.horizontalLayout_2.addWidget(self.typeSwitchCombo)
+
+        self.typeCombo = QComboBox(Condition)
+        self.typeCombo.setObjectName(u"typeCombo")
+
+        self.horizontalLayout_2.addWidget(self.typeCombo)
+
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_5)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
 
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -223,7 +259,7 @@ class Ui_Condition(object):
 
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.verticalLayout.setStretch(8, 2)
+        self.verticalLayout.setStretch(10, 2)
 
         self.horizontalLayout.addLayout(self.verticalLayout)
 
@@ -242,6 +278,7 @@ class Ui_Condition(object):
         self.conditionCombo.setItemText(1, QCoreApplication.translate("Condition", u"date", None))
         self.conditionCombo.setItemText(2, QCoreApplication.translate("Condition", u"size", None))
         self.conditionCombo.setItemText(3, QCoreApplication.translate("Condition", u"tags", None))
+        self.conditionCombo.setItemText(4, QCoreApplication.translate("Condition", u"type", None))
 
         self.nameLabel.setText(QCoreApplication.translate("Condition", u"File name", None))
         self.nameCombo.setItemText(0, QCoreApplication.translate("Condition", u"matches", None))
@@ -276,5 +313,10 @@ class Ui_Condition(object):
         self.tagsCombo.setItemText(3, QCoreApplication.translate("Condition", u"no tags", None))
 
         self.tagLabel2.setText(QCoreApplication.translate("Condition", u"of selected tags:", None))
+        self.selectedTagsLabel.setText(QCoreApplication.translate("Condition", u"Selected tags:", None))
+        self.typeLabel.setText(QCoreApplication.translate("Condition", u"File type ", None))
+        self.typeSwitchCombo.setItemText(0, QCoreApplication.translate("Condition", u"is", None))
+        self.typeSwitchCombo.setItemText(1, QCoreApplication.translate("Condition", u"is not", None))
+
     # retranslateUi
 

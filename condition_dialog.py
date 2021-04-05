@@ -1,11 +1,11 @@
 import sys
 from PySide2.QtUiTools import loadUiType
-from PySide2.QtGui import QColor
+from PySide2.QtGui import QColor, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox
-from PySide2.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtCore import (Qt, QAbstractItemModel, QItemSelectionModel)
 from ui_condition_dialog import Ui_Condition
-from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color
-
+from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color, get_tags_and_groups
+from tags_dialog import generate_tag_model
 #from PySide6.QtGui import 
 
 class ConditionDialog(QDialog):
@@ -14,18 +14,29 @@ class ConditionDialog(QDialog):
         self.ui = Ui_Condition()
         self.ui.setupUi(self)
         self.condition = {}
-        self.ui.tagsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.tag_model = QStandardItemModel()
+        generate_tag_model(self.tag_model,get_tags_and_groups(),False)
+        self.ui.tagsView.setModel(self.tag_model)
+        self.ui.tagsView.expandAll()
+        self.ui.tagsView.clicked.connect(self.tags_selection_changed)
         #self.ui.tagsList.addItems(get_all_tags())
-        for t in get_all_tags():
-            self.ui.tagsList.addItem(t)
-            color = tag_get_color(t)
-            if color:
-                self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
+
+        # for t in get_all_tags():
+        #     self.ui.tagsList.addItem(t)
+        #     color = tag_get_color(t)
+        #     if color:
+        #         self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
 
         #self.loadCondition()
+        self.ui.typeCombo.insertItems(0,load_settings()['file_types'].keys())
         self.update_visibility()        
         self.ui.conditionCombo.currentIndexChanged.connect(self.update_visibility)
         self.ui.tagsCombo.currentIndexChanged.connect(self.update_tags_visibility)
+
+    def tags_selection_changed(self):
+        selected_tags = [self.ui.tagsView.model().itemFromIndex(index).text() for index in self.ui.tagsView.selectedIndexes()]
+        self.ui.selectedTagsLabel.setText('Selected tags: '+', '.join(selected_tags))
 
     def update_visibility(self):
         state = self.ui.conditionCombo.currentText()
@@ -46,12 +57,17 @@ class ConditionDialog(QDialog):
         self.ui.tagLabel.setVisible(state == "tags")
         self.ui.tagsCombo.setVisible(state == "tags")
         self.ui.tagLabel2.setVisible(state == "tags")
-        self.ui.tagsList.setVisible(state == "tags")
+        self.ui.tagsView.setVisible(state == "tags")
+        self.ui.selectedTagsLabel.setVisible(state == "tags")
+        self.ui.typeCombo.setVisible(state == "type")
+        self.ui.typeLabel.setVisible(state == "type")
+        self.ui.typeSwitchCombo.setVisible(state == "type")
 
     def update_tags_visibility(self):
         state = self.ui.tagsCombo.currentText()
         self.ui.tagLabel2.setVisible(state != "no tags")
-        self.ui.tagsList.setEnabled(state != "no tags")
+        self.ui.tagsView.setEnabled(state != "no tags")
+        self.ui.selectedTagsLabel.setVisible(state != "no tags")
 
     def loadCondition(self, cond={}):
         self.condition = cond
@@ -60,22 +76,33 @@ class ConditionDialog(QDialog):
             if cond['type'] == 'name':
                 self.ui.nameCombo.setCurrentIndex(self.ui.nameCombo.findText(cond['name_switch']))
                 self.ui.filemask.setText(cond['filemask'])
-            if cond['type'] == 'date':
+            elif cond['type'] == 'date':
                 self.ui.ageCombo.setCurrentIndex(self.ui.ageCombo.findText(cond['age_switch']))
                 self.ui.age.setText(cond['age'])
                 self.ui.ageUnitsCombo.setCurrentIndex(self.ui.ageUnitsCombo.findText(cond['age_units']))
-            if cond['type'] == 'size':
+            elif cond['type'] == 'size':
                 self.ui.sizeCombo.setCurrentIndex(self.ui.sizeCombo.findText(cond['size_switch']))
                 self.ui.size.setText(cond['size'])
                 self.ui.sizeUnitsCombo.setCurrentIndex(self.ui.sizeUnitsCombo.findText(cond['size_units']))            
-            if cond['type'] == 'tags':            
+            elif cond['type'] == 'tags':
                 self.ui.tagsCombo.setCurrentIndex(self.ui.tagsCombo.findText(cond['tag_switch']))
                 if cond['tag_switch'] == 'no tags':
                     self.ui.tagLabel2.setVisible(False)
-                    self.ui.tagsList.setEnabled(False)
-                for row in range(0,self.ui.tagsList.count()):
-                    if self.ui.tagsList.item(row).text() in cond['tags']:
-                        self.ui.tagsList.item(row).setSelected(True)
+                    self.ui.tagsView.setEnabled(False)
+
+                for i in range(0,self.ui.tagsView.model().rowCount()):
+                    for k in range(0,self.ui.tagsView.model().item(i).rowCount()):
+                        if self.ui.tagsView.model().item(i).child(k).text() in cond['tags']:
+                            # print(self.ui.tagsView.model().item(i).child(k).text())
+                            self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)
+                
+                self.ui.selectedTagsLabel.setText('Selected tags: '+','.join(cond['tags']))     
+            elif cond['type'] == 'type':
+                self.ui.typeSwitchCombo.setCurrentIndex(self.ui.typeSwitchCombo.findText(cond['file_type_switch']))
+                self.ui.typeCombo.setCurrentIndex(self.ui.typeCombo.findText(cond['file_type']))
+                # for row in range(0,self.ui.tagsList.count()):
+                #     if self.ui.tagsView.item(row).text() in cond['tags']:
+                #         self.ui.tagsView.item(row).setSelected(True)
 
                 # for tagItem in self.ui.tagsList.items():
                 #     print(tagItem.text())
@@ -103,9 +130,12 @@ class ConditionDialog(QDialog):
             self.condition['size_units']=self.ui.sizeUnitsCombo.currentText()            
         elif self.condition['type'] == 'tags':
             self.condition['tag_switch']=self.ui.tagsCombo.currentText()
-            self.condition['tags'] = [self.ui.tagsList.item(row).text() for row in range(0,self.ui.tagsList.count()) if self.ui.tagsList.item(row).isSelected()]
+            self.condition['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
             if not self.condition['tags']:
                 error = "You haven't selected any tags"
+        elif self.condition['type'] == 'type':      
+            self.condition['file_type_switch']=self.ui.typeSwitchCombo.currentText()
+            self.condition['file_type']=self.ui.typeCombo.currentText()
 
         if error:
             QMessageBox.critical(self,"Error",error,QMessageBox.Ok)

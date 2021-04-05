@@ -214,12 +214,13 @@ class TagsDialog(QDialog):
         self.ui.treeView.expandAll()
 
 # generates the model used in tagger dock widget, tags selection for filtering and tags manager
-def generate_tag_model(model, data):
+def generate_tag_model(model, data, groups_selectable = True):
     for group in data.keys():
         item = QStandardItem(group)
         item.setData(group,Qt.DisplayRole)
         item.setData(data[group], Qt.UserRole)
         item.setEditable(False)  # TBD can change this in the future to make in-place editing
+        item.setSelectable(groups_selectable)
         item.setIcon(QIcon(u":/images/icons/folder.svg"))
         model.appendRow(item)
         if 'tags' in data[group].keys():

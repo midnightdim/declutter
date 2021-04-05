@@ -401,8 +401,8 @@ class TaggerWindow(QMainWindow):
         #self.sorting_model.mode = mode
         # print('mode',self.sorting_model.mode)
         self.ui.selectTagsButton.setVisible(mode in ('Folder & tags', 'Tag(s)'))
-        self.ui.pathEdit.setEnabled(mode in ('Folder', 'Folder & tags'))
-        self.ui.browseButton.setEnabled(mode in ('Folder', 'Folder & tags'))
+        self.ui.pathEdit.setEnabled(mode in ('Folder', 'Folder & tags', 'Folder (untagged)'))
+        self.ui.browseButton.setEnabled(mode in ('Folder', 'Folder & tags','Folder (untagged)'))
         if mode in ('Folder', 'Folder & tags'):
             for t in self.filter_tags_checkboxes:
                 self.ui.horizontalLayout.takeAt(self.ui.horizontalLayout.indexOf(self.filter_tags_checkboxes[t]))    
@@ -460,7 +460,7 @@ class TaggerWindow(QMainWindow):
             self.model.setFilter(QDir.NoDot | QDir.AllEntries | QDir.Hidden)
             self.model.sort(0,Qt.SortOrder.AscendingOrder)          
             self.sorting_model = SortingModel()
-            self.sorting_model.mode = mode            
+            self.sorting_model.mode = mode
             self.sorting_model.filter_tags = all_tags
             self.sorting_model.recalc_tagged_paths()           
             # print(self.sorting_model.filter_tags)
@@ -783,12 +783,12 @@ class SortingModel(QSortFilterProxyModel):
             source_model = self.sourceModel()
             index = source_model.index(source_row, 0, source_parent)
             path = index.data(QFileSystemModel.FilePathRole)
-            # print(normpath(path).lower())
-            # if normpath(path).lower() in self.tagged_paths():
-            #     # print(normpath(path))
-            #     return True
-            # #print(self.tagged_paths())
             return normpath(path).lower() in self.tagged_paths
+        elif self.mode == "Folder (untagged)" and source_parent == source_model.index(source_model.rootPath()):
+            source_model = self.sourceModel()
+            index = source_model.index(source_row, 0, source_parent)
+            path = index.data(QFileSystemModel.FilePathRole)
+            return get_tags(normpath(path).lower()) == []
         else:
             return True
 

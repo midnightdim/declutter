@@ -381,8 +381,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                         elif c['age_switch'] == '<':
                             if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) < convert_to_days(float(c['age']), c['age_units']):
                                 condition_met = True
-                    elif c['type'] == 'newest N' and os.path.isfile(fullname): # TBD delete this!
-                        condition_met = True
+                    # elif c['type'] == 'newest N' and os.path.isfile(fullname): # TBD delete this!
+                    #     condition_met = True
                     elif c['type'] == 'size' and os.path.isfile(fullname):                
                         factor = {'B': 1, 'KB' : 1024 ** 1, 'MB' : 1024 ** 2, 'GB' : 1024 ** 3, 'TB' : 1024 ** 4}
                         fsize = os.stat(fullname).st_size
@@ -399,6 +399,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                             if condition_met:
                                 break
                         condition_met = condition_met == (c['name_switch'] == 'matches')
+                    elif c['type'] == 'type' and os.path.isfile(fullname):
+                        condition_met = (get_file_type(fullname) == c['file_type']) == (c['file_type_switch'] == 'is')
                     
                     #if condition_met:
                         #print(c['type'] + ' condition met for ' + fullname)

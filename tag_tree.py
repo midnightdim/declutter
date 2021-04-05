@@ -3,24 +3,10 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from declutter_lib import *
 
-def create_tree_data(tree):
-    model = QStandardItemModel()
-    generate_tag_model(model, get_tags_and_groups())
-    tree.setModel(model)
-
-# def generate_tag_model(model, data):  # moved to tags_dialog
-#     for group in data.keys():
-#         item = QStandardItem(group)
-#         item.setData(data[group], Qt.UserRole)
-#         model.appendRow(item)
-#         if 'tags' in data[group].keys():
-#             for tag in data[group]['tags']:
-#                 tag_item = QStandardItem(tag['name'])
-#                 tag_item.setData(tag, Qt.UserRole)
-#                 if tag['color']:
-#                     tag_item.setData(QColor(tag['color']),Qt.BackgroundRole)
-#                 tag_item.setDropEnabled(False)
-#                 item.appendRow(tag_item)
+# def create_tree_data(tree):
+#     model = QStandardItemModel()
+#     generate_tag_model(model, get_tags_and_groups())
+#     tree.setModel(model)
 
 def get_tree_selection_level(index):
     level = 0

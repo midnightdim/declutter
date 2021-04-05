@@ -1,13 +1,14 @@
 import sys
 from PySide2.QtUiTools import loadUiType
-from PySide2.QtGui import QIcon, QColor
+from PySide2.QtGui import QIcon, QColor, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
-from PySide2.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtCore import (Qt, QAbstractItemModel, QItemSelectionModel)
 from ui_rule_edit_window import Ui_RuleEditWindow
-from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color
+from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color, get_tags_and_groups
 from condition_dialog import ConditionDialog
 from ui_list_dialog import Ui_listDialog
 from os.path import normpath
+from tags_dialog import generate_tag_model
 #from PySide6.QtGui import 
 
 class RuleEditWindow(QDialog):
@@ -32,14 +33,18 @@ class RuleEditWindow(QDialog):
         self.ui.conditionAddButton.clicked.connect(self.add_condition)
         self.ui.conditionRemoveButton.clicked.connect(self.delete_condition)
         self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
-        self.ui.tagsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        #self.ui.tagsList.addItems(get_all_tags())
-
-        for t in get_all_tags():
-            self.ui.tagsList.addItem(t)
-            color = tag_get_color(t)
-            if color:
-                self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
+        self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        
+        self.tag_model = QStandardItemModel()
+        generate_tag_model(self.tag_model,get_tags_and_groups(),False)
+        self.ui.tagsView.setModel(self.tag_model)
+        self.ui.tagsView.expandAll()
+        self.ui.tagsView.clicked.connect(self.tags_selection_changed)
+        # for t in get_all_tags():
+        #     self.ui.tagsList.addItem(t)
+        #     color = tag_get_color(t)
+        #     if color:
+        #         self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
 
         self.ui.advancedButton.clicked.connect(self.show_advanced)
         # self.ui.buttonBox.clicked.connect(self.process)
@@ -54,6 +59,10 @@ class RuleEditWindow(QDialog):
         self.ui.conditionSaveButton.setVisible(False)
 
         self.action_change()
+
+    def tags_selection_changed(self):
+        selected_tags = [self.ui.tagsView.model().itemFromIndex(index).text() for index in self.ui.tagsView.selectedIndexes()]
+        self.ui.selectedTagsLabel.setText('Selected tags: '+', '.join(selected_tags))
 
     def show_advanced(self):
         self.ui.line.setVisible(True)
@@ -96,7 +105,7 @@ class RuleEditWindow(QDialog):
 
         for c in self.rule['conditions']:
             if c['type'] == 'tags':
-                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + str(c['tags']) if c['tag_switch']!='no tags' else ''))
+                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(c['tags']) if c['tag_switch']!='no tags' else ''))
             elif c['type'] == 'date':
                 conds.append('Age is ' + c['age_switch'] + ' ' + str(c['age']) + ' ' + c['age_units'])      
             elif c['type'] == 'name':
@@ -105,6 +114,8 @@ class RuleEditWindow(QDialog):
                 conds.append('Name ' + c['name_switch'] + ' ' + str(c['filemask']))
             elif c['type'] == 'size':
                 conds.append('File size is ' + c['size_switch'] + ' ' + str(c['size']) + c['size_units'] )
+            elif c['type'] == 'type':
+                conds.append('File type ' + c['file_type_switch'] + ' ' + c['file_type'])
 
         self.ui.conditionListWidget.clear()
         self.ui.conditionListWidget.addItems(conds)        
@@ -129,8 +140,10 @@ class RuleEditWindow(QDialog):
         self.rule['target_folder'] = self.ui.targetFolderEdit.text()
         self.rule['target_subfolder'] = self.ui.subfolderEdit.text()
         self.rule['name_pattern'] = self.ui.renameEdit.text()
-        self.rule['overwrite_switch'] = self.ui.overwriteComboBox.currentText()
-        self.rule['tags'] = [self.ui.tagsList.item(row).text() for row in range(0,self.ui.tagsList.count()) if self.ui.tagsList.item(row).isSelected()]
+        self.rule['overwrite_switch'] = self.ui.overwriteComboBox.currentText()        
+        # print([index.data() for index in self.ui.tagsView.selectedIndexes()])
+        self.rule['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
+        # self.rule['tags'] = [self.ui.tagsView.item(row).text() for row in range(0,self.ui.tagsView.count()) if self.ui.tagsView.item(row).isSelected()]
         self.rule['ignore_newest'] = self.ui.ignoreNewestCheckBox.isChecked()
         self.rule['ignore_N'] = self.ui.numberNewestEdit.text()
 
@@ -203,9 +216,17 @@ class RuleEditWindow(QDialog):
         if 'overwrite_switch' in rule.keys():
             self.ui.overwriteComboBox.setCurrentIndex(self.ui.overwriteComboBox.findText(rule['overwrite_switch']))
 
-        for row in range(0,self.ui.tagsList.count()):
-            if self.ui.tagsList.item(row).text() in rule['tags']:
-                self.ui.tagsList.item(row).setSelected(True)
+        for i in range(0,self.ui.tagsView.model().rowCount()):
+            for k in range(0,self.ui.tagsView.model().item(i).rowCount()):
+                if self.ui.tagsView.model().item(i).child(k).text() in rule['tags']:
+                    # print(self.ui.tagsView.model().item(i).child(k).text())
+                    self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)
+        
+        self.ui.selectedTagsLabel.setText('Selected tags: '+','.join(rule['tags']))
+
+        # for index in self.ui.tagsView.setSelection()
+        #     if self.ui.tagsView.item(row).text() in rule['tags']:
+        #         self.ui.tagsView.item(row).setSelected(True)
         self.action_change()
 
         self.ui.ignoreNewestCheckBox.setChecked(rule['ignore_newest'])
@@ -228,7 +249,8 @@ class RuleEditWindow(QDialog):
         self.ui.overwriteComboBox.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))
         self.ui.renameEdit.setVisible(state == "Rename")
         self.ui.subfolderEdit.setVisible(state == "Move to subfolder")
-        self.ui.tagsList.setVisible(state in ("Tag", "Remove tags"))
+        self.ui.tagsView.setVisible(state in ("Tag", "Remove tags"))
+        self.ui.selectedTagsLabel.setVisible(state in ("Tag", "Remove tags"))
 
     def add_folder(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly

@@ -12,6 +12,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
+from tag_tree import TagTree
+
 
 class Ui_RuleEditWindow(object):
     def setupUi(self, RuleEditWindow):
@@ -28,65 +30,32 @@ class Ui_RuleEditWindow(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
-        self.label_2 = QLabel(RuleEditWindow)
-        self.label_2.setObjectName(u"label_2")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.keepTagsCheckBox = QCheckBox(RuleEditWindow)
+        self.keepTagsCheckBox.setObjectName(u"keepTagsCheckBox")
 
-        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
+        self.horizontalLayout_6.addWidget(self.keepTagsCheckBox)
 
-        self.sourceListWidget = QListWidget(RuleEditWindow)
-        self.sourceListWidget.setObjectName(u"sourceListWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy1.setHorizontalStretch(200)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.sourceListWidget.sizePolicy().hasHeightForWidth())
-        self.sourceListWidget.setSizePolicy(sizePolicy1)
+        self.keepFolderStructureCheckBox = QCheckBox(RuleEditWindow)
+        self.keepFolderStructureCheckBox.setObjectName(u"keepFolderStructureCheckBox")
 
-        self.gridLayout.addWidget(self.sourceListWidget, 2, 0, 1, 1)
+        self.horizontalLayout_6.addWidget(self.keepFolderStructureCheckBox)
 
-        self.formLayout_3 = QFormLayout()
-        self.formLayout_3.setObjectName(u"formLayout_3")
-        self.folderAddButton = QPushButton(RuleEditWindow)
-        self.folderAddButton.setObjectName(u"folderAddButton")
+        self.horizontalLayout_6.setStretch(0, 1)
+        self.horizontalLayout_6.setStretch(1, 5)
 
-        self.formLayout_3.setWidget(0, QFormLayout.LabelRole, self.folderAddButton)
+        self.gridLayout.addLayout(self.horizontalLayout_6, 7, 0, 1, 1)
 
-        self.sourceRemoveButton = QPushButton(RuleEditWindow)
-        self.sourceRemoveButton.setObjectName(u"sourceRemoveButton")
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.folderBrowseButton = QPushButton(RuleEditWindow)
+        self.folderBrowseButton.setObjectName(u"folderBrowseButton")
 
-        self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.sourceRemoveButton)
-
-        self.tagAddButton = QPushButton(RuleEditWindow)
-        self.tagAddButton.setObjectName(u"tagAddButton")
-
-        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.tagAddButton)
+        self.horizontalLayout_5.addWidget(self.folderBrowseButton)
 
 
-        self.gridLayout.addLayout(self.formLayout_3, 2, 1, 1, 1)
-
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label = QLabel(RuleEditWindow)
-        self.label.setObjectName(u"label")
-
-        self.horizontalLayout.addWidget(self.label)
-
-        self.ruleNameEdit = QLineEdit(RuleEditWindow)
-        self.ruleNameEdit.setObjectName(u"ruleNameEdit")
-
-        self.horizontalLayout.addWidget(self.ruleNameEdit)
-
-        self.enabledCheckBox = QCheckBox(RuleEditWindow)
-        self.enabledCheckBox.setObjectName(u"enabledCheckBox")
-
-        self.horizontalLayout.addWidget(self.enabledCheckBox)
-
-        self.recursiveCheckBox = QCheckBox(RuleEditWindow)
-        self.recursiveCheckBox.setObjectName(u"recursiveCheckBox")
-
-        self.horizontalLayout.addWidget(self.recursiveCheckBox)
-
-
-        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)
+        self.gridLayout.addLayout(self.horizontalLayout_5, 6, 1, 1, 1)
 
         self.formLayout_5 = QFormLayout()
         self.formLayout_5.setObjectName(u"formLayout_5")
@@ -115,6 +84,74 @@ class Ui_RuleEditWindow(object):
 
 
         self.gridLayout.addLayout(self.formLayout_5, 3, 0, 1, 1)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.actionComboBox = QComboBox(RuleEditWindow)
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.addItem("")
+        self.actionComboBox.setObjectName(u"actionComboBox")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.actionComboBox.sizePolicy().hasHeightForWidth())
+        self.actionComboBox.setSizePolicy(sizePolicy1)
+        self.actionComboBox.setMinimumSize(QSize(0, 0))
+        self.actionComboBox.setMaximumSize(QSize(120, 20))
+        self.actionComboBox.setBaseSize(QSize(110, 0))
+        self.actionComboBox.setEditable(False)
+        self.actionComboBox.setDuplicatesEnabled(False)
+
+        self.horizontalLayout_2.addWidget(self.actionComboBox)
+
+        self.toFolderLabel = QLabel(RuleEditWindow)
+        self.toFolderLabel.setObjectName(u"toFolderLabel")
+
+        self.horizontalLayout_2.addWidget(self.toFolderLabel)
+
+        self.targetFolderEdit = QLineEdit(RuleEditWindow)
+        self.targetFolderEdit.setObjectName(u"targetFolderEdit")
+        sizePolicy2 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.targetFolderEdit.sizePolicy().hasHeightForWidth())
+        self.targetFolderEdit.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_2.addWidget(self.targetFolderEdit)
+
+        self.subfolderEdit = QLineEdit(RuleEditWindow)
+        self.subfolderEdit.setObjectName(u"subfolderEdit")
+        sizePolicy2.setHeightForWidth(self.subfolderEdit.sizePolicy().hasHeightForWidth())
+        self.subfolderEdit.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_2.addWidget(self.subfolderEdit)
+
+        self.renameEdit = QLineEdit(RuleEditWindow)
+        self.renameEdit.setObjectName(u"renameEdit")
+        self.renameEdit.setEnabled(True)
+        sizePolicy2.setHeightForWidth(self.renameEdit.sizePolicy().hasHeightForWidth())
+        self.renameEdit.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_2.addWidget(self.renameEdit)
+
+        self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
+
+        self.horizontalLayout_2.setStretch(0, 1)
+        self.horizontalLayout_2.setStretch(1, 1)
+        self.horizontalLayout_2.setStretch(2, 5)
+        self.horizontalLayout_2.setStretch(3, 5)
+        self.horizontalLayout_2.setStretch(4, 5)
+
+        self.gridLayout.addLayout(self.horizontalLayout_2, 6, 0, 1, 1)
 
         self.conditionListWidget = QListWidget(RuleEditWindow)
         self.conditionListWidget.setObjectName(u"conditionListWidget")
@@ -151,100 +188,75 @@ class Ui_RuleEditWindow(object):
 
         self.gridLayout.addWidget(self.label_5, 5, 0, 1, 1)
 
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.keepTagsCheckBox = QCheckBox(RuleEditWindow)
-        self.keepTagsCheckBox.setObjectName(u"keepTagsCheckBox")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label = QLabel(RuleEditWindow)
+        self.label.setObjectName(u"label")
 
-        self.horizontalLayout_6.addWidget(self.keepTagsCheckBox)
+        self.horizontalLayout.addWidget(self.label)
 
-        self.keepFolderStructureCheckBox = QCheckBox(RuleEditWindow)
-        self.keepFolderStructureCheckBox.setObjectName(u"keepFolderStructureCheckBox")
+        self.ruleNameEdit = QLineEdit(RuleEditWindow)
+        self.ruleNameEdit.setObjectName(u"ruleNameEdit")
 
-        self.horizontalLayout_6.addWidget(self.keepFolderStructureCheckBox)
+        self.horizontalLayout.addWidget(self.ruleNameEdit)
 
-        self.horizontalLayout_6.setStretch(0, 1)
-        self.horizontalLayout_6.setStretch(1, 5)
+        self.enabledCheckBox = QCheckBox(RuleEditWindow)
+        self.enabledCheckBox.setObjectName(u"enabledCheckBox")
 
-        self.gridLayout.addLayout(self.horizontalLayout_6, 7, 0, 1, 1)
+        self.horizontalLayout.addWidget(self.enabledCheckBox)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.folderBrowseButton = QPushButton(RuleEditWindow)
-        self.folderBrowseButton.setObjectName(u"folderBrowseButton")
+        self.recursiveCheckBox = QCheckBox(RuleEditWindow)
+        self.recursiveCheckBox.setObjectName(u"recursiveCheckBox")
 
-        self.horizontalLayout_5.addWidget(self.folderBrowseButton)
+        self.horizontalLayout.addWidget(self.recursiveCheckBox)
 
 
-        self.gridLayout.addLayout(self.horizontalLayout_5, 6, 1, 1, 1)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)
 
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.actionComboBox = QComboBox(RuleEditWindow)
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.addItem("")
-        self.actionComboBox.setObjectName(u"actionComboBox")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.actionComboBox.sizePolicy().hasHeightForWidth())
-        self.actionComboBox.setSizePolicy(sizePolicy2)
-        self.actionComboBox.setMinimumSize(QSize(0, 0))
-        self.actionComboBox.setMaximumSize(QSize(120, 20))
-        self.actionComboBox.setBaseSize(QSize(110, 0))
-        self.actionComboBox.setEditable(False)
-        self.actionComboBox.setDuplicatesEnabled(False)
-
-        self.horizontalLayout_2.addWidget(self.actionComboBox)
-
-        self.toFolderLabel = QLabel(RuleEditWindow)
-        self.toFolderLabel.setObjectName(u"toFolderLabel")
-
-        self.horizontalLayout_2.addWidget(self.toFolderLabel)
-
-        self.targetFolderEdit = QLineEdit(RuleEditWindow)
-        self.targetFolderEdit.setObjectName(u"targetFolderEdit")
-        sizePolicy3 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
+        self.sourceListWidget = QListWidget(RuleEditWindow)
+        self.sourceListWidget.setObjectName(u"sourceListWidget")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy3.setHorizontalStretch(200)
         sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.targetFolderEdit.sizePolicy().hasHeightForWidth())
-        self.targetFolderEdit.setSizePolicy(sizePolicy3)
+        sizePolicy3.setHeightForWidth(self.sourceListWidget.sizePolicy().hasHeightForWidth())
+        self.sourceListWidget.setSizePolicy(sizePolicy3)
 
-        self.horizontalLayout_2.addWidget(self.targetFolderEdit)
+        self.gridLayout.addWidget(self.sourceListWidget, 2, 0, 1, 1)
 
-        self.subfolderEdit = QLineEdit(RuleEditWindow)
-        self.subfolderEdit.setObjectName(u"subfolderEdit")
-        sizePolicy3.setHeightForWidth(self.subfolderEdit.sizePolicy().hasHeightForWidth())
-        self.subfolderEdit.setSizePolicy(sizePolicy3)
+        self.tagsView = TagTree(RuleEditWindow)
+        self.tagsView.setObjectName(u"tagsView")
+        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.tagsView.sizePolicy().hasHeightForWidth())
+        self.tagsView.setSizePolicy(sizePolicy4)
 
-        self.horizontalLayout_2.addWidget(self.subfolderEdit)
+        self.gridLayout.addWidget(self.tagsView, 11, 0, 1, 1)
 
-        self.renameEdit = QLineEdit(RuleEditWindow)
-        self.renameEdit.setObjectName(u"renameEdit")
-        self.renameEdit.setEnabled(True)
-        sizePolicy3.setHeightForWidth(self.renameEdit.sizePolicy().hasHeightForWidth())
-        self.renameEdit.setSizePolicy(sizePolicy3)
+        self.formLayout_3 = QFormLayout()
+        self.formLayout_3.setObjectName(u"formLayout_3")
+        self.folderAddButton = QPushButton(RuleEditWindow)
+        self.folderAddButton.setObjectName(u"folderAddButton")
 
-        self.horizontalLayout_2.addWidget(self.renameEdit)
+        self.formLayout_3.setWidget(0, QFormLayout.LabelRole, self.folderAddButton)
 
-        self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.sourceRemoveButton = QPushButton(RuleEditWindow)
+        self.sourceRemoveButton.setObjectName(u"sourceRemoveButton")
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
+        self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.sourceRemoveButton)
 
-        self.horizontalLayout_2.setStretch(0, 1)
-        self.horizontalLayout_2.setStretch(1, 1)
-        self.horizontalLayout_2.setStretch(2, 5)
-        self.horizontalLayout_2.setStretch(3, 5)
-        self.horizontalLayout_2.setStretch(4, 5)
+        self.tagAddButton = QPushButton(RuleEditWindow)
+        self.tagAddButton.setObjectName(u"tagAddButton")
 
-        self.gridLayout.addLayout(self.horizontalLayout_2, 6, 0, 1, 1)
+        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.tagAddButton)
+
+
+        self.gridLayout.addLayout(self.formLayout_3, 2, 1, 1, 1)
+
+        self.label_2 = QLabel(RuleEditWindow)
+        self.label_2.setObjectName(u"label_2")
+
+        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
@@ -267,15 +279,10 @@ class Ui_RuleEditWindow(object):
 
         self.gridLayout.addLayout(self.horizontalLayout_7, 10, 0, 1, 1)
 
-        self.tagsList = QListWidget(RuleEditWindow)
-        self.tagsList.setObjectName(u"tagsList")
-        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.tagsList.sizePolicy().hasHeightForWidth())
-        self.tagsList.setSizePolicy(sizePolicy4)
+        self.selectedTagsLabel = QLabel(RuleEditWindow)
+        self.selectedTagsLabel.setObjectName(u"selectedTagsLabel")
 
-        self.gridLayout.addWidget(self.tagsList, 11, 0, 1, 1)
+        self.gridLayout.addWidget(self.selectedTagsLabel, 12, 0, 1, 1)
 
 
         self.gridLayout_2.addLayout(self.gridLayout, 1, 0, 1, 1)
@@ -349,27 +356,15 @@ class Ui_RuleEditWindow(object):
 
     def retranslateUi(self, RuleEditWindow):
         RuleEditWindow.setWindowTitle(QCoreApplication.translate("RuleEditWindow", u"Add/Edit Rule", None))
-        self.label_2.setText(QCoreApplication.translate("RuleEditWindow", u"Tags/folders to process", None))
-        self.folderAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Folder", None))
-        self.sourceRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
-        self.tagAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Tag", None))
-        self.label.setText(QCoreApplication.translate("RuleEditWindow", u"Rule name", None))
-        self.enabledCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Enabled", None))
-        self.recursiveCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Recursive", None))
+        self.keepTagsCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep tags", None))
+        self.keepFolderStructureCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep folder structure", None))
+        self.folderBrowseButton.setText(QCoreApplication.translate("RuleEditWindow", u"Browse...", None))
         self.label_3.setText(QCoreApplication.translate("RuleEditWindow", u"If", None))
         self.conditionSwitchComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"any", None))
         self.conditionSwitchComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"all", None))
         self.conditionSwitchComboBox.setItemText(2, QCoreApplication.translate("RuleEditWindow", u"none", None))
 
         self.label_4.setText(QCoreApplication.translate("RuleEditWindow", u"of the conditions apply:", None))
-        self.conditionAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add", None))
-        self.conditionRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
-        self.conditionSaveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Save", None))
-        self.conditionLoadButton.setText(QCoreApplication.translate("RuleEditWindow", u"Load", None))
-        self.label_5.setText(QCoreApplication.translate("RuleEditWindow", u"Do the following:", None))
-        self.keepTagsCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep tags", None))
-        self.keepFolderStructureCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"keep folder structure", None))
-        self.folderBrowseButton.setText(QCoreApplication.translate("RuleEditWindow", u"Browse...", None))
         self.actionComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"Move", None))
         self.actionComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"Delete", None))
         self.actionComboBox.setItemText(2, QCoreApplication.translate("RuleEditWindow", u"Send to Trash", None))
@@ -382,10 +377,23 @@ class Ui_RuleEditWindow(object):
 
         self.toFolderLabel.setText(QCoreApplication.translate("RuleEditWindow", u"to folder", None))
         self.renameEdit.setText(QCoreApplication.translate("RuleEditWindow", u"<filename>", None))
+        self.conditionAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add", None))
+        self.conditionRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
+        self.conditionSaveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Save", None))
+        self.conditionLoadButton.setText(QCoreApplication.translate("RuleEditWindow", u"Load", None))
+        self.label_5.setText(QCoreApplication.translate("RuleEditWindow", u"Do the following:", None))
+        self.label.setText(QCoreApplication.translate("RuleEditWindow", u"Rule name", None))
+        self.enabledCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Enabled", None))
+        self.recursiveCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Recursive", None))
+        self.folderAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Folder", None))
+        self.sourceRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
+        self.tagAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Tag", None))
+        self.label_2.setText(QCoreApplication.translate("RuleEditWindow", u"Tags/folders to process", None))
         self.fileWithSameNameLabel.setText(QCoreApplication.translate("RuleEditWindow", u"If file with same name and different size exists:", None))
         self.overwriteComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"increment name", None))
         self.overwriteComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"overwrite", None))
 
+        self.selectedTagsLabel.setText(QCoreApplication.translate("RuleEditWindow", u"Selected tags:", None))
         self.advancedButton.setText(QCoreApplication.translate("RuleEditWindow", u"Advanced...", None))
         self.testButton.setText(QCoreApplication.translate("RuleEditWindow", u"Test", None))
         self.ignoreNewestCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Ignore", None))
