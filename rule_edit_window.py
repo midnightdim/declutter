@@ -105,7 +105,7 @@ class RuleEditWindow(QDialog):
 
         for c in self.rule['conditions']:
             if c['type'] == 'tags':
-                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(c['tags']) if c['tag_switch']!='no tags' else ''))
+                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(c['tags']) if c['tag_switch'] not in ('no tags','any tags') else ''))
             elif c['type'] == 'date':
                 conds.append('Age is ' + c['age_switch'] + ' ' + str(c['age']) + ' ' + c['age_units'])      
             elif c['type'] == 'name':

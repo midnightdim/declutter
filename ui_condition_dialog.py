@@ -21,7 +21,7 @@ class Ui_Condition(object):
         if not Condition.objectName():
             Condition.setObjectName(u"Condition")
         Condition.setWindowModality(Qt.ApplicationModal)
-        Condition.resize(417, 289)
+        Condition.resize(417, 334)
         sizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -184,6 +184,7 @@ class Ui_Condition(object):
         self.tagsCombo.addItem("")
         self.tagsCombo.addItem("")
         self.tagsCombo.addItem("")
+        self.tagsCombo.addItem("")
         self.tagsCombo.setObjectName(u"tagsCombo")
 
         self.horizontalLayout_7.addWidget(self.tagsCombo)
@@ -311,6 +312,7 @@ class Ui_Condition(object):
         self.tagsCombo.setItemText(1, QCoreApplication.translate("Condition", u"all", None))
         self.tagsCombo.setItemText(2, QCoreApplication.translate("Condition", u"none", None))
         self.tagsCombo.setItemText(3, QCoreApplication.translate("Condition", u"no tags", None))
+        self.tagsCombo.setItemText(4, QCoreApplication.translate("Condition", u"any tags", None))
 
         self.tagLabel2.setText(QCoreApplication.translate("Condition", u"of selected tags:", None))
         self.selectedTagsLabel.setText(QCoreApplication.translate("Condition", u"Selected tags:", None))

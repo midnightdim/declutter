@@ -43,8 +43,6 @@ class Ui_taggerWindow(object):
         self.sourceComboBox = QComboBox(self.centralwidget)
         self.sourceComboBox.addItem("")
         self.sourceComboBox.addItem("")
-        self.sourceComboBox.addItem("")
-        self.sourceComboBox.addItem("")
         self.sourceComboBox.setObjectName(u"sourceComboBox")
 
         self.horizontalLayout_3.addWidget(self.sourceComboBox)
@@ -61,20 +59,6 @@ class Ui_taggerWindow(object):
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
-
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.selectTagsButton = QPushButton(self.centralwidget)
-        self.selectTagsButton.setObjectName(u"selectTagsButton")
-
-        self.horizontalLayout.addWidget(self.selectTagsButton)
-
-        self.horizontalSpacer = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.treeView = FileTree(self.centralwidget)
         self.treeView.setObjectName(u"treeView")
@@ -152,6 +136,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_3 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.tagsLayout = QVBoxLayout()
+        self.tagsLayout.setSpacing(4)
         self.tagsLayout.setObjectName(u"tagsLayout")
 
         self.gridLayout_3.addLayout(self.tagsLayout, 0, 0, 1, 1)
@@ -239,6 +224,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_7.addItem(self.verticalSpacer_2, 2, 0, 1, 1)
 
         self.tagsFilterLayout = QGridLayout()
+        self.tagsFilterLayout.setSpacing(4)
         self.tagsFilterLayout.setObjectName(u"tagsFilterLayout")
 
         self.gridLayout_7.addLayout(self.tagsFilterLayout, 1, 0, 1, 1)
@@ -251,12 +237,18 @@ class Ui_taggerWindow(object):
         self.tagsFilterCombo.addItem("")
         self.tagsFilterCombo.addItem("")
         self.tagsFilterCombo.addItem("")
+        self.tagsFilterCombo.addItem("")
         self.tagsFilterCombo.setObjectName(u"tagsFilterCombo")
 
         self.horizontalLayout_4.addWidget(self.tagsFilterCombo)
 
         self.tagsFilterLabel = QLabel(self.dockWidgetContents_2)
         self.tagsFilterLabel.setObjectName(u"tagsFilterLabel")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.tagsFilterLabel.sizePolicy().hasHeightForWidth())
+        self.tagsFilterLabel.setSizePolicy(sizePolicy4)
 
         self.horizontalLayout_4.addWidget(self.tagsFilterLabel)
 
@@ -283,11 +275,11 @@ class Ui_taggerWindow(object):
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.nameLabel = QLabel(self.dockWidgetContents_3)
         self.nameLabel.setObjectName(u"nameLabel")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.nameLabel.sizePolicy().hasHeightForWidth())
-        self.nameLabel.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.nameLabel.sizePolicy().hasHeightForWidth())
+        self.nameLabel.setSizePolicy(sizePolicy5)
 
         self.horizontalLayout_6.addWidget(self.nameLabel)
 
@@ -295,11 +287,11 @@ class Ui_taggerWindow(object):
         self.nameCombo.addItem("")
         self.nameCombo.addItem("")
         self.nameCombo.setObjectName(u"nameCombo")
-        sizePolicy5 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.nameCombo.sizePolicy().hasHeightForWidth())
-        self.nameCombo.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.nameCombo.sizePolicy().hasHeightForWidth())
+        self.nameCombo.setSizePolicy(sizePolicy6)
         self.nameCombo.setMinimumSize(QSize(42, 0))
         self.nameCombo.setMaximumSize(QSize(42, 16777215))
 
@@ -307,8 +299,8 @@ class Ui_taggerWindow(object):
 
         self.filemask = QLineEdit(self.dockWidgetContents_3)
         self.filemask.setObjectName(u"filemask")
-        sizePolicy5.setHeightForWidth(self.filemask.sizePolicy().hasHeightForWidth())
-        self.filemask.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.filemask.sizePolicy().hasHeightForWidth())
+        self.filemask.setSizePolicy(sizePolicy6)
         self.filemask.setMinimumSize(QSize(60, 0))
 
         self.horizontalLayout_6.addWidget(self.filemask)
@@ -334,8 +326,8 @@ class Ui_taggerWindow(object):
 
         self.age = QLineEdit(self.dockWidgetContents_3)
         self.age.setObjectName(u"age")
-        sizePolicy5.setHeightForWidth(self.age.sizePolicy().hasHeightForWidth())
-        self.age.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.age.sizePolicy().hasHeightForWidth())
+        self.age.setSizePolicy(sizePolicy6)
         self.age.setMinimumSize(QSize(45, 0))
         self.age.setMaxLength(8)
 
@@ -372,8 +364,8 @@ class Ui_taggerWindow(object):
 
         self.size = QLineEdit(self.dockWidgetContents_3)
         self.size.setObjectName(u"size")
-        sizePolicy5.setHeightForWidth(self.size.sizePolicy().hasHeightForWidth())
-        self.size.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.size.sizePolicy().hasHeightForWidth())
+        self.size.setSizePolicy(sizePolicy6)
         self.size.setMinimumSize(QSize(45, 0))
         self.size.setMaxLength(10)
 
@@ -412,8 +404,8 @@ class Ui_taggerWindow(object):
 
         self.typeCombo = QComboBox(self.dockWidgetContents_3)
         self.typeCombo.setObjectName(u"typeCombo")
-        sizePolicy5.setHeightForWidth(self.typeCombo.sizePolicy().hasHeightForWidth())
-        self.typeCombo.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.typeCombo.sizePolicy().hasHeightForWidth())
+        self.typeCombo.setSizePolicy(sizePolicy6)
 
         self.horizontalLayout_9.addWidget(self.typeCombo)
 
@@ -455,12 +447,9 @@ class Ui_taggerWindow(object):
         self.actionNew_tagger_window.setShortcut(QCoreApplication.translate("taggerWindow", u"Ctrl+N", None))
 #endif // QT_CONFIG(shortcut)
         self.sourceComboBox.setItemText(0, QCoreApplication.translate("taggerWindow", u"Folder", None))
-        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Folder (untagged)", None))
-        self.sourceComboBox.setItemText(2, QCoreApplication.translate("taggerWindow", u"Folder & tags", None))
-        self.sourceComboBox.setItemText(3, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
+        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
 
         self.browseButton.setText(QCoreApplication.translate("taggerWindow", u"Browse...", None))
-        self.selectTagsButton.setText(QCoreApplication.translate("taggerWindow", u"Select tags...", None))
         self.menuOptions.setTitle(QCoreApplication.translate("taggerWindow", u"Options", None))
         self.menuFile.setTitle(QCoreApplication.translate("taggerWindow", u"File", None))
         self.recent_menu.setTitle(QCoreApplication.translate("taggerWindow", u"Recent folders", None))
@@ -473,13 +462,14 @@ class Ui_taggerWindow(object):
         self.mediaPlayButton.setText("")
         self.mediaDurationLabel.setText(QCoreApplication.translate("taggerWindow", u"0:00 / 0:00", None))
         self.tagsFilterDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Tags Filter", None))
-        self.tagsFilterCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"any tags", None))
-        self.tagsFilterCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"any of", None))
-        self.tagsFilterCombo.setItemText(2, QCoreApplication.translate("taggerWindow", u"all of", None))
-        self.tagsFilterCombo.setItemText(3, QCoreApplication.translate("taggerWindow", u"none of", None))
-        self.tagsFilterCombo.setItemText(4, QCoreApplication.translate("taggerWindow", u"no tags", None))
+        self.tagsFilterCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"-no filter-", None))
+        self.tagsFilterCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"any tags", None))
+        self.tagsFilterCombo.setItemText(2, QCoreApplication.translate("taggerWindow", u"any of", None))
+        self.tagsFilterCombo.setItemText(3, QCoreApplication.translate("taggerWindow", u"all of", None))
+        self.tagsFilterCombo.setItemText(4, QCoreApplication.translate("taggerWindow", u"none of", None))
+        self.tagsFilterCombo.setItemText(5, QCoreApplication.translate("taggerWindow", u"no tags", None))
 
-        self.tagsFilterLabel.setText(QCoreApplication.translate("taggerWindow", u"selected tags", None))
+        self.tagsFilterLabel.setText(QCoreApplication.translate("taggerWindow", u"selected:", None))
         self.otherFiltersDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Other Filters", None))
         self.nameLabel.setText(QCoreApplication.translate("taggerWindow", u"Name", None))
         self.nameCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"isn't", None))

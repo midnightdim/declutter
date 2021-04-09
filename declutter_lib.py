@@ -373,6 +373,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                             condition_met = common_tags == []
                         elif c['tag_switch'] == 'no tags':
                             condition_met = tags == []
+                        elif c['tag_switch'] == 'any tags':
+                            condition_met = len(tags)>0
                     elif c['type'] == 'date':
                         settings = load_settings(SETTINGS_FILE)
                         if c['age_switch'] == '>=':
@@ -827,12 +829,27 @@ def get_all_tags_from_db():
     conn.close()
     return tags
 
+def get_files_by_tags(tags : []):
+    if tags == []:
+        return []
+    all_files = get_files_by_tag(tags[0])
+    if all_files:
+        for i in range(1,len(tags)):
+            all_files = list(set(all_files).intersection(set(get_files_by_tag(tags[i]))))
+            if not all_files:
+                return []
+    else:
+        return []
+    return all_files
+
 def get_files_by_tag(tag):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     files = [f[0] for f in c.execute("SELECT files.filepath FROM file_tags JOIN files on file_id = files.id WHERE file_tags.tag_id = (SELECT id from tags WHERE name = ?)", (tag,))]
     conn.close()
     return files
+
+# print(get_files_by_tags(['concert','me']))
 
 def remove_tag(filename, tag):
     remove_tags(filename, [tag])

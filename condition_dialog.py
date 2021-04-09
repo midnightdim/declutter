@@ -65,9 +65,9 @@ class ConditionDialog(QDialog):
 
     def update_tags_visibility(self):
         state = self.ui.tagsCombo.currentText()
-        self.ui.tagLabel2.setVisible(state != "no tags")
-        self.ui.tagsView.setEnabled(state != "no tags")
-        self.ui.selectedTagsLabel.setVisible(state != "no tags")
+        self.ui.tagLabel2.setVisible(state not in ('no tags', 'any tags'))
+        self.ui.tagsView.setEnabled(state not in ('no tags', 'any tags'))
+        self.ui.selectedTagsLabel.setVisible(state not in ('no tags', 'any tags'))
 
     def loadCondition(self, cond={}):
         self.condition = cond
@@ -86,7 +86,7 @@ class ConditionDialog(QDialog):
                 self.ui.sizeUnitsCombo.setCurrentIndex(self.ui.sizeUnitsCombo.findText(cond['size_units']))            
             elif cond['type'] == 'tags':
                 self.ui.tagsCombo.setCurrentIndex(self.ui.tagsCombo.findText(cond['tag_switch']))
-                if cond['tag_switch'] == 'no tags':
+                if cond['tag_switch'] in ('no tags', 'any tags'):
                     self.ui.tagLabel2.setVisible(False)
                     self.ui.tagsView.setEnabled(False)
 
@@ -131,7 +131,7 @@ class ConditionDialog(QDialog):
         elif self.condition['type'] == 'tags':
             self.condition['tag_switch']=self.ui.tagsCombo.currentText()
             self.condition['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
-            if not self.condition['tags'] and not self.condition['tag_switch']=='no tags':
+            if not self.condition['tags'] and not self.condition['tag_switch'] in ('no tags', 'any tags'):
                 error = "You haven't selected any tags"
         elif self.condition['type'] == 'type':      
             self.condition['file_type_switch']=self.ui.typeSwitchCombo.currentText()

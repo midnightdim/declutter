@@ -32,16 +32,6 @@
           </item>
           <item>
            <property name="text">
-            <string>Folder (untagged)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Folder &amp; tags</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
             <string>Tag(s)</string>
            </property>
           </item>
@@ -56,30 +46,6 @@
            <string>Browse...</string>
           </property>
          </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPushButton" name="selectTagsButton">
-          <property name="text">
-           <string>Select tags...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
@@ -245,7 +211,11 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="0" column="0">
-          <layout class="QVBoxLayout" name="tagsLayout"/>
+          <layout class="QVBoxLayout" name="tagsLayout">
+           <property name="spacing">
+            <number>4</number>
+           </property>
+          </layout>
          </item>
          <item row="1" column="0">
           <spacer name="verticalSpacer">
@@ -390,12 +360,21 @@
       </spacer>
      </item>
      <item row="1" column="0">
-      <layout class="QGridLayout" name="tagsFilterLayout"/>
+      <layout class="QGridLayout" name="tagsFilterLayout">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+      </layout>
      </item>
      <item row="0" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
         <widget class="QComboBox" name="tagsFilterCombo">
+         <item>
+          <property name="text">
+           <string>-no filter-</string>
+          </property>
+         </item>
          <item>
           <property name="text">
            <string>any tags</string>
@@ -425,8 +404,14 @@
        </item>
        <item>
         <widget class="QLabel" name="tagsFilterLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
-          <string>selected tags</string>
+          <string>selected:</string>
          </property>
         </widget>
        </item>
