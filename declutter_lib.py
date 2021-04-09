@@ -402,8 +402,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                     elif c['type'] == 'type' and os.path.isfile(fullname):
                         condition_met = (get_file_type(fullname) == c['file_type']) == (c['file_type_switch'] == 'is')
                     
-                    #if condition_met:
-                        #print(c['type'] + ' condition met for ' + fullname)
+                    # if condition_met:
+                    #     print(c['type'] + ' condition met for ' + fullname)
 
                     if rule['condition_switch'] == 'any':
                         conditions_met = conditions_met or condition_met
@@ -416,7 +416,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                     elif rule['condition_switch'] == 'none':
                         conditions_met = conditions_met and not condition_met
                         if not conditions_met:                    
-                            break     
+                            break
 
             #print(fullname)
             #print(conditions_met)

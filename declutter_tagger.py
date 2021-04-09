@@ -2,7 +2,7 @@ import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
-from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl
+from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl, QDateTime, QMimeDatabase
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
@@ -48,6 +48,12 @@ class TaggerWindow(QMainWindow):
         self.filter_tags_checkboxes = {}
         self.prev_indexes = []
 
+        self.ui.menuView.addAction(self.ui.tagsDockWidget.toggleViewAction())
+        self.ui.menuView.addAction(self.ui.tagsFilterDockWidget.toggleViewAction())
+        self.ui.menuView.addAction(self.ui.mediaDockWidget.toggleViewAction())
+        self.ui.menuView.addAction(self.ui.otherFiltersDockWidget.toggleViewAction())
+        self.ui.otherFiltersDockWidget.hide()
+
         self.populate() # TBD can't it be just a part of init()?
 
     def closeEvent(self, event):
@@ -67,19 +73,28 @@ class TaggerWindow(QMainWindow):
     def eventFilter(self, source, event):
         # print(source,event,event.type())
         if source == self.ui.treeView:
+            # print(event,event.type())
             if event.type() == QEvent.KeyPress:
+                if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                    # self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.selectionModel().selectedRows()[0]))
+                    if self.ui.treeView.state() is not QAbstractItemView.EditingState:
+                        self.open()
                 if event.key() == Qt.Key_Delete:
                     # print(self.ui.treeView.selectionModel().selectedRows())
                     # indexes = self.ui.treeView.selectedIndexes()
-                    indexes = self.ui.treeView.selectionModel().selectedRows()                    
+                    indexes = self.ui.treeView.selectionModel().selectedRows()
                     # print(indexes)
+                    self.player.stop()
+                    self.playlist.clear()
                     if event.modifiers() == Qt.ShiftModifier:
-                        for index in indexes:
+                        for index in indexes: #TBD add try/except here
                             self.model.remove(self.sorting_model.mapToSource(index))
+                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
                         self.ui.statusbar.showMessage(str(len(indexes))+" item(s) deleted")
                     else:
-                        for index in indexes:
+                        for index in indexes: #TBD add try/except here
                             send2trash(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
+                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
                         self.ui.statusbar.showMessage(str(len(indexes))+" item(s) sent to trash")                
                 elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
                     indexes = self.ui.treeView.selectionModel().selectedRows()
@@ -435,7 +450,9 @@ class TaggerWindow(QMainWindow):
             #path = load_settings()['current_folder']            
             #print('path',path)
             self.sorting_model = SortingModel()
+            # self.sorting_model = QSortFilterProxyModel()
             self.sorting_model.setSourceModel(self.model)            
+            self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
             self.sorting_model.mode = mode
             self.sorting_model.filter_tags = all_tags
             self.sorting_model.recalc_tagged_paths(True)
@@ -459,15 +476,22 @@ class TaggerWindow(QMainWindow):
             self.model.setRootPath(path)
             self.model.setFilter(QDir.NoDot | QDir.AllEntries | QDir.Hidden)
             self.model.sort(0,Qt.SortOrder.AscendingOrder)          
-            self.sorting_model = SortingModel()
+            self.sorting_model = SortingModel(self)
             self.sorting_model.mode = mode
             self.sorting_model.filter_tags = all_tags
-            self.sorting_model.recalc_tagged_paths()           
+            self.sorting_model.recalc_tagged_paths()
             # print(self.sorting_model.filter_tags)
             # print(self.sorting_model.tagged_paths)
-            self.sorting_model.setSourceModel(self.model)                     
+            self.sorting_model.setSourceModel(self.model)   
+            self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+            self.sorting_model.setSortLocaleAware(True)           
+            
             self.ui.treeView.setModel(self.sorting_model)
+            # self.ui.treeView.setModel(self.model)
+            
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
+            # self.ui.treeView.setRootIndex(self.model.index(path))
+
             self.model.setIconProvider(QFileIconProvider())
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
             self.ui.treeView.setItemsExpandable(False)
@@ -555,6 +579,8 @@ class TaggerWindow(QMainWindow):
 
     def open(self):
         index = self.ui.treeView.currentIndex()
+        # print(index.data(Qt.UserRole))
+        # print(self.sorting_model.mapToSource(index).data())
         #file_path = normpath(self.model.filePath(index))
         file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
         if os.path.isdir(file_path):
@@ -678,6 +704,15 @@ class TagFSModel(QFileSystemModel):
         # if index.column() == 0: #displays full path instead of the name
         #     if role == Qt.DisplayRole:
         #         return self.filePath(index)
+        # if index.column() == 1 and role == Qt.DisplayRole:
+        #     return self.size(index)
+
+        # if index.column() == 3 and role == Qt.DisplayRole:
+        #     return QDateTime.toString(self.lastModified(index),"dd.MM.yyyy hh:mm")
+
+        if index.column() == 2 and role == Qt.DisplayRole:
+            return QMimeDatabase().mimeTypeForFile(self.filePath(index)).comment()
+
         if index.column() == self.columnCount() - 1:
             if role == Qt.DisplayRole:
                 #return self.fileName(index)
@@ -731,9 +766,24 @@ class CheckBoxAction(QWidgetAction):
 class SortingModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
+        # print(parent)
         self.mode = ""
         self.filter_tags = []
         self.tagged_paths = []
+
+    # def sort(self, column, order):
+    #     print('sort')
+    #     # super(SortingModel, self).sort(column, order)
+
+    #     if column not in (0,4):
+    #         print('here')
+    #         self.sourceModel().sort(column, order)
+    #         self.parent().sorting_model.setSourceModel(self.parent().model)
+    #         self.parent().ui.treeView.setModel(self.parent().sorting_model)            
+    #         # super(SortingModel, self).sort(column, order)
+    #     else:
+    #         super(SortingModel, self).sort(column, order)
+
 
     def recalc_tagged_paths(self, tree=False):
         # print('tagged_paths called')
@@ -754,8 +804,14 @@ class SortingModel(QSortFilterProxyModel):
         self.tagged_paths = all_paths
 
     def lessThan(self, source_left: QModelIndex, source_right: QModelIndex):
+        assert source_left.column() == source_right.column()
+        # if source_left.column() == 3:
+        #     print(QDateTime.fromString(source_left.data(),"dd.MM.yy hh:mm"))
+            # print(type(source_left.data()))
         file_info1 = self.sourceModel().fileInfo(source_left)
         file_info2 = self.sourceModel().fileInfo(source_right)
+
+        # return QFileSystemModel.lessThan(self.mapToSource(source_left), self.mapToSource(source_right))
 
         #print(self.sourceModel() )
         
@@ -764,7 +820,15 @@ class SortingModel(QSortFilterProxyModel):
 
         if file_info2.fileName() == "..":
             return self.sortOrder() == Qt.SortOrder.DescendingOrder
-                
+
+        # size
+        if source_left.column() == 1:
+            return self.sourceModel().size(source_left) < self.sourceModel().size(source_right)
+
+        # date
+        if source_left.column() == 3: # and source_right.column() == 3:
+            return self.sourceModel().lastModified(source_left).__le__(self.sourceModel().lastModified(source_right))
+
         if (file_info1.isDir() and file_info2.isDir()) or (file_info1.isFile() and file_info2.isFile()):
             return super().lessThan(source_left, source_right)
 

@@ -45,7 +45,7 @@ class SettingsDialog(QDialog):
         # self.ui.fileTypesTable.cellDoubleClicked.connect(self.table_dblclicked)
         self.ui.addFileTypeButton.clicked.connect(self.add_new_file_type)
         self.ui.fileTypesTable.cellActivated.connect(self.cell_entered)
-        self.ui.fileTypesTable.cellChanged.connect(self.cell_changed)
+        self.ui.fileTypesTable.cellChanged.connect(self.cell_changed, Qt.QueuedConnection)
 
         default_style_name = QApplication.style().objectName().lower()
         result = []
@@ -69,6 +69,10 @@ class SettingsDialog(QDialog):
         if col == 0:
             settings = load_settings()
             new_value = self.ui.fileTypesTable.item(row,0).text()
+            if new_value in settings['file_types'].keys(): 
+                QMessageBox.critical(self, "Error", "Duplicate format name, please change it")
+                self.ui.fileTypesTable.editItem(self.ui.fileTypesTable.item(row,0))
+                return False
             if row < len(settings['file_types']): #it's not a new format
                 prev_value = list(settings['file_types'].keys())[row]  # TBD this is unsafe and will cause bugs on non-Win systems        
                 if new_value != prev_value and new_value:
@@ -132,7 +136,7 @@ class SettingsDialog(QDialog):
         self.settings['file_types'] = {}
         # TBD add validation
         for i in range(0,self.ui.fileTypesTable.rowCount()):
-            if self.ui.fileTypesTable.item(i,0).text():
+            if self.ui.fileTypesTable.item(i,0) and self.ui.fileTypesTable.item(i,0).text():
                 self.settings['file_types'][self.ui.fileTypesTable.item(i,0).text()] = self.ui.fileTypesTable.item(i,1).text()
 
         save_settings(SETTINGS_FILE, self.settings)

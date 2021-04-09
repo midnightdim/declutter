@@ -131,7 +131,7 @@ class ConditionDialog(QDialog):
         elif self.condition['type'] == 'tags':
             self.condition['tag_switch']=self.ui.tagsCombo.currentText()
             self.condition['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
-            if not self.condition['tags']:
+            if not self.condition['tags'] and not self.condition['tag_switch']=='no tags':
                 error = "You haven't selected any tags"
         elif self.condition['type'] == 'type':      
             self.condition['file_type_switch']=self.ui.typeSwitchCombo.currentText()
