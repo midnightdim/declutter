@@ -88,6 +88,7 @@ class TaggerWindow(QMainWindow):
 
     # volume knob controlled by mouse wheel if the playback is on, click on media dock widget controls play/pause
     def eventFilter(self, source, event):
+        return super(TaggerWindow, self).eventFilter(source, event)
         # print(source,event,event.type())
         if source == self.ui.treeView:
             # print(event,event.type())
@@ -106,16 +107,16 @@ class TaggerWindow(QMainWindow):
                     if event.modifiers() == Qt.ShiftModifier:
                         for index in indexes: #TBD add try/except here
                             self.model.remove(self.sorting_model.mapToSource(index))
-                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
+                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index)) if self.sorting_model else self.model.filePath(index)))
                         self.ui.statusbar.showMessage(str(len(indexes))+" item(s) deleted")
                     else:
                         for index in indexes: #TBD add try/except here
-                            send2trash(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
-                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index))))
+                            send2trash(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index)) if self.sorting_model else self.model.filePath(index)))
+                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(index)) if self.sorting_model else self.model.filePath(index)))
                         self.ui.statusbar.showMessage(str(len(indexes))+" item(s) sent to trash")                
                 elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
                     indexes = self.ui.treeView.selectionModel().selectedRows()
-                    urls = [QUrl(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+                    urls = [QUrl(self.model.filePath(self.sorting_model.mapToSource(index)) if self.sorting_model else self.model.filePath(index)) for index in indexes]
                     print(urls)
                     # clipboard = QApplication.clipboard()
                     # clipboard.setMimeData()
@@ -177,7 +178,7 @@ class TaggerWindow(QMainWindow):
         self.ui.mediaPlayButton.setIcon(icon1)
 
     def play_media(self):
-        file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
+        file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))) if self.sorting_model else QUrl.fromLocalFile(self.model.filePath(self.ui.treeView.currentIndex()))
         if self.player.state() == QMediaPlayer.State.PlayingState and self.player.currentMedia().canonicalUrl() == file_url:
             self.player.pause()
         elif self.player.state() != QMediaPlayer.State.PausedState and self.player.currentMedia().canonicalUrl() != file_url:
@@ -348,7 +349,10 @@ class TaggerWindow(QMainWindow):
     def update_tag_checkboxes(self):
         # print('update_tag_checkboxes called')
         indexes = self.ui.treeView.selectionModel().selectedRows()
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes] 
+        if self.sorting_model:
+            cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes] 
+        else:
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]             
 
         all_files_tags = []
         for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
@@ -384,10 +388,10 @@ class TaggerWindow(QMainWindow):
         # self.sorting_model.mode = "Folder"
         self.update_ui()
 
-    def dir_loaded(self):
-        #print("dir loaded")
-        if self.ui.sourceComboBox.currentText() == "Tag(s)":
-            self.ui.treeView.expandAll()
+    # def dir_loaded(self):
+    #     print("dir loaded")
+    #     if self.ui.sourceComboBox.currentText() == "Tagged":
+    #         self.ui.treeView.expandAll()
 
     # def apply_filter_tags(self):
           
@@ -435,6 +439,11 @@ class TaggerWindow(QMainWindow):
         # self.ui.selectTagsButton.setVisible(mode in ('Folder & tags', 'Tag(s)'))
         self.ui.pathEdit.setEnabled(mode == 'Folder') # TBD update this to 'Folder'
         self.ui.browseButton.setEnabled(mode == 'Folder')
+        self.ui.tagsFilterCombo.clear()
+        if mode == 'Tagged':
+            self.ui.tagsFilterCombo.addItems(('any tags','any of', 'all of'))
+        elif mode == 'Folder':
+            self.ui.tagsFilterCombo.addItems(('-no filter','any tags','any of', 'all of','none of','no tags'))
         # if mode in ('Folder', 'Folder & tags'):
         #     for t in self.filter_tags_checkboxes:
         #         self.ui.horizontalLayout.takeAt(self.ui.horizontalLayout.indexOf(self.filter_tags_checkboxes[t]))    
@@ -457,37 +466,40 @@ class TaggerWindow(QMainWindow):
         # self.sorting_model.filter_mode = self.ui.tagsFilterCombo.currentText()
         mode = self.ui.sourceComboBox.currentText()
         # self.sorting_model.mode = mode
-        if mode == 'Tag(s)': # TBD simplify this
-            # print('tags')
-            self.model = TagFSModel()
-            path = "."
-            self.model.setRootPath(path)
-            self.model.setFilter(QDir.NoDotAndDotDot | QDir.AllEntries | QDir.Hidden)           
-            self.model.sort(0,Qt.SortOrder.AscendingOrder)
+        # self.player.stop()
+        # self.playlist.clear()
+        if mode == 'Tagged': 
+            all_paths = []  # TBD this could be a function (used here and in sortingmodel)
+            if self.ui.tagsFilterCombo.currentText() == 'any tags':
+                all_paths = get_all_files_from_db() # TBD rename these functions
+            elif self.ui.tagsFilterCombo.currentText() == 'any of':
+                for t in filter_tags:
+                    all_paths = list(set(all_paths + get_files_by_tag(t)))
+            elif self.ui.tagsFilterCombo.currentText() == 'all of':
+                all_paths = get_files_by_tags(filter_tags)                
 
-            #path = load_settings()['current_folder']            
-            #print('path',path)
-            self.sorting_model = SortingModel()
-            # self.sorting_model = QSortFilterProxyModel()
-            self.sorting_model.setSourceModel(self.model)            
-            self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
-            self.sorting_model.mode = mode
-            self.sorting_model.filter_tags = filter_tags
-            self.sorting_model.filter_mode = self.ui.tagsFilterCombo.currentText()
-            self.sorting_model.recalc_tagged_paths(True)
-            # self.ui.treeView.setRootIndex(self.model.index(path))
-            self.ui.treeView.setModel(self.sorting_model)
-            self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))           
-            self.model.setIconProvider(QFileIconProvider())
-            self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)                        
-            self.ui.treeView.setItemsExpandable(True)
-            self.ui.treeView.setRootIsDecorated(True)            
-            self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
+            # print(all_paths)
+            self.sorting_model = None
+            self.model = FileSystemModelLite(all_paths, self)
+
+            # self.ui.treeView.destroy()
+            # self.ui.treeView.setVisible(False)
+            # self.ui.treeView = QTreeView()
+            self.ui.treeView.setModel(self.model)
+
+            # self.ui.verticalLayout_2.takeAt(1)
+            # self.ui.verticalLayout_2.addWidget(self.ui.treeView)
+            # self.ui.treeView.header().resizeSection(0,350)
+
+            # self.model.data_loaded.connect(self.dir_loaded)
+            self.ui.treeView.setSortingEnabled(False)
             self.ui.treeView.expandAll()
-            self.model.directoryLoaded.connect(self.dir_loaded)            
-            #self.ui.treeView.expand(self.sorting_model.mapFromSource(self.model.index(path)))
+            self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)         
+            # print(self.ui.treeView.model())
+            # print('model set')
+
         else:
-            # print('not tags')
+            # print('not tags')        
             self.model = TagFSModel()
             # self.model = QFileSystemModel()
             self.model.setReadOnly(False)
@@ -513,6 +525,7 @@ class TaggerWindow(QMainWindow):
             # self.ui.treeView.header().resizeSection(0,350)
             self.model.setIconProvider(QFileIconProvider())
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
+            self.ui.treeView.setSortingEnabled(True)
             self.ui.treeView.setItemsExpandable(False)
             self.ui.treeView.setRootIsDecorated(False)
             self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
@@ -531,11 +544,11 @@ class TaggerWindow(QMainWindow):
         if indexes != self.prev_indexes:
             # print('selection changed')
             self.player.stop()
-            path = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))
+            path = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())) if self.sorting_model else self.model.filePath(self.ui.treeView.currentIndex())
             ftype = get_file_type(path)
             if os.path.isfile(path) and ftype in ('Audio','Video','Image'):
                 # print(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
-                file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex())))
+                file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))) if self.sorting_model else QUrl.fromLocalFile(self.model.filePath(self.ui.treeView.currentIndex()))
                 # file_ext = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex()))[-3:]
                 if ftype == 'Audio': # TBD change this to audio file type
                     self.ui.playerLayout.setGeometry(QRect(0,0,0,0))
@@ -602,11 +615,15 @@ class TaggerWindow(QMainWindow):
         # print(index.data(Qt.UserRole))
         # print(self.sorting_model.mapToSource(index).data())
         #file_path = normpath(self.model.filePath(index))
-        file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
+        if self.sorting_model:
+            file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
+        else:
+            file_path = normpath(self.model.filePath(index))
         if os.path.isdir(file_path):
             self.ui.statusbar.clearMessage()
             self.model.setRootPath(normpath(file_path)) # TBD reuse this in a function
-            self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path)))
+            if self.sorting_model:
+                self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path)))
             self.ui.pathEdit.setText(file_path)
             self.settings['current_folder'] = file_path
             save_settings(SETTINGS_FILE,self.settings)
@@ -689,7 +706,10 @@ class TaggerWindow(QMainWindow):
         #     print(index)
 
         # print(indexes)
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes] # TBD not very optimal
+        if self.sorting_model:
+            cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+        else:
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
         # print(cur_selection)
 
         for file_path in cur_selection:
@@ -806,7 +826,7 @@ class SortingModel(QSortFilterProxyModel):
     #         super(SortingModel, self).sort(column, order)
 
 
-    def recalc_tagged_paths(self, tree=False):
+    def recalc_tagged_paths(self):
         # print('tagged_paths called',datetime.now())
         all_paths=[]
         # print('here')
@@ -819,13 +839,12 @@ class SortingModel(QSortFilterProxyModel):
             all_paths = get_files_by_tags(self.filter_tags)
 
         # print(all_paths)
-        if not tree:
-            self.tagged_paths = all_paths
-            # print('tagged_paths done',datetime.now())
-            return
-        for t in all_paths:
-            if str(Path(t).parent).lower() not in all_paths:
-                all_paths.append(str(Path(t).parent).lower())
+        # if not tree:
+        #     self.tagged_paths = all_paths
+        #     return
+        # for t in all_paths:
+        #     if str(Path(t).parent).lower() not in all_paths:
+        #         all_paths.append(str(Path(t).parent).lower())
         # print(all_paths)
         #return all_paths
         self.tagged_paths = all_paths
@@ -867,36 +886,37 @@ class SortingModel(QSortFilterProxyModel):
         index = source_model.index(source_row, 0, source_parent)
         path = index.data(QFileSystemModel.FilePathRole)
 
-        if self.mode == "Tag(s)": # and source_parent == source_model.index(source_model.rootPath()):
+        if self.mode == "Tagged": # TBD this is obsolete
             # print(normpath(path))
             if self.filter_mode in ('any of','all of'):
-                return normpath(path).lower() in self.tagged_paths
+                return normpath(path) in self.tagged_paths
             elif self.filter_mode == 'any tags':
-                print(path)
-                return len(get_tags(normpath(path).lower()))>0
+                return len(get_tags(normpath(path)))>0
             else:
                 return False                
         elif self.mode == "Folder":
+            # print('here')
             if self.filter_mode in ('any of','all of') and source_parent == source_model.index(source_model.rootPath()):
                 source_model = self.sourceModel()
                 index = source_model.index(source_row, 0, source_parent)
                 path = index.data(QFileSystemModel.FilePathRole)
-                return normpath(path).lower() in self.tagged_paths
+                # return normpath(path).lower() in self.tagged_paths
+                return normpath(path) in self.tagged_paths
             elif self.filter_mode == 'none of' and source_parent == source_model.index(source_model.rootPath()):
                 source_model = self.sourceModel()
                 index = source_model.index(source_row, 0, source_parent)
                 path = index.data(QFileSystemModel.FilePathRole)
-                return normpath(path).lower() not in self.tagged_paths
+                return normpath(path) not in self.tagged_paths
             elif self.filter_mode == 'no tags' and source_parent == source_model.index(source_model.rootPath()):
                 source_model = self.sourceModel()
                 index = source_model.index(source_row, 0, source_parent)
                 path = index.data(QFileSystemModel.FilePathRole)
-                return get_tags(normpath(path).lower()) == []
+                return get_tags(normpath(path)) == []
             elif self.filter_mode == 'any tags' and source_parent == source_model.index(source_model.rootPath()):
                 source_model = self.sourceModel()
                 index = source_model.index(source_row, 0, source_parent)
                 path = index.data(QFileSystemModel.FilePathRole)
-                return len(get_tags(normpath(path).lower()))>0
+                return len(get_tags(normpath(path)))>0
             else:
                 return True
         else:

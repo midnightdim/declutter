@@ -13,6 +13,7 @@ import logging
 from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
+import glob
 
 VERSION = '1.06'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
@@ -729,7 +730,7 @@ def rename_tag(old_tag, new_tag):
     save_settings(SETTINGS_FILE, settings)             
 
 def set_tags(filename, tags): # TBD optimize this
-    filename = str(filename).lower()
+    # filename = str(filename).lower()
     #print('setting tags')
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -755,14 +756,14 @@ def set_tags(filename, tags): # TBD optimize this
     conn.commit()
     conn.close()
 
-def get_tags(filename, lowercase = True):  # TBD lowercase parameter is trash! Need to remove it
-    filename = str(filename).lower() if lowercase else str(filename)
+def get_tags(filename):
+    filename = str(filename).lower()
     #filename = filename.lower()
     #print(type(filename))
     #print('getting tags for ' + str(filename))
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?)", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?)", (str(filename),))]
     #print(filename)
     #print(tags)
     if not tags:
@@ -780,7 +781,7 @@ def add_tag(filename, tag):
 
 def remove_tags(filename, tags):
     filename = str(filename)
-    filename = filename.lower()
+    # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
     c.execute("SELECT id from files WHERE filepath = ?", (filename,))
@@ -849,7 +850,7 @@ def get_files_by_tag(tag):
     conn.close()
     return files
 
-# print(get_files_by_tags(['concert','me']))
+# print(get_files_by_tags(['Chains of Sanity','forever']))
 
 def remove_tag(filename, tag):
     remove_tags(filename, [tag])
@@ -989,28 +990,45 @@ def get_file_tags_by_group(group, filename):
 # encode('ascii', 'replace'))
 
 def check_files(): # TBD need to check if files still exist and if not remove them
-    settings = load_settings(SETTINGS_FILE)
-    tags = get_all_tags_from_db()
-    if tags and settings['tags']:
-        for t in tags:
-            if t not in settings['tags']:
-                delete_tag(t)
     files = get_all_files_from_db()
     if files:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
         for f in files:
-            get_tags(f) # this removes file from DB if it doesn't have tags
+            if os.path.exists(f):
+                actual = get_actual_filename(f)
+                if not actual:
+                    actual = str(Path(f).resolve())  # TBD this is incorrect in case of symlinks
+                if actual:
+                    c.execute("UPDATE files SET filepath = ? WHERE filepath = ?", (actual,f))
+            else:
+                # print(f,'doesnt exist, deleting')
+                c.execute("DELETE FROM files WHERE filepath = ?", (f,))  
+        conn.commit()
+        conn.close()
+
+    # settings = load_settings(SETTINGS_FILE)
+    # tags = get_all_tags_from_db()
+    # if tags and settings['tags']:
+    #     for t in tags:
+    #         if t not in settings['tags']:
+    #             delete_tag(t)
+    # files = get_all_files_from_db()
+    # if files:
+    #     for f in files:
+    #         get_tags(f) # this removes file from DB if it doesn't have tags
     
-    for t in settings['tags']:
-        files = get_files_by_tag(t)
-        if files:
-            for f in files:
-                if not Path(f).exists():
-                    remove_all_tags(f)
-                    logging.debug('Removed ' + str(f) + ' from tags table - file doesn\'t exist')
-                else:
-                    filename_tolower(f)
-        else:
-            delete_tag(t)
+    # for t in settings['tags']:
+    #     files = get_files_by_tag(t)
+    #     if files:
+    #         for f in files:
+    #             if not Path(f).exists():
+    #                 remove_all_tags(f)
+    #                 logging.debug('Removed ' + str(f) + ' from tags table - file doesn\'t exist')
+    #             else:
+    #                 filename_tolower(f)
+    #     else:
+    #         delete_tag(t)
 
 def filename_tolower(filename): # TBD remove this in the future
     filename = str(filename)
@@ -1155,7 +1173,32 @@ else:
     except Exception as e:
         logging.exception(e)
 
+def get_actual_filename(name):
+    dirs = name.split('\\')
+    # disk letter
+    test_name = [dirs[0].upper()]
+    for d in dirs[1:]:
+        test_name += ["%s[%s]" % (d[:-1], d[-1])]
+    res = glob.glob('\\'.join(test_name))
+    if not res:
+        #File not found
+        return None
+    return res[0]
 
+# def get_actual_filename2(path):
+#     path = os.path.normpath(path).lower()
+#     parts = path.split(os.sep)
+#     result = parts[0].upper()
+#     # check that root actually exists
+#     if not os.path.exists(result):
+#         return
+#     for part in parts[1:]:
+#         actual = next((item for item in os.listdir(result) if item.lower() == part), None)
+#         if actual is None:
+#             # path doesn't exist
+#             return
+#         result += os.sep + actual
+#     return result
 
 
 #migrate_to_db()
@@ -1180,5 +1223,11 @@ else:
 # save_settings(SETTINGS_FILE, settings)
 # path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
 # advanced_move(path,path)
-# check_files()
+check_files()
 # create_group('Rating')
+
+# print(get_actual_filename2('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf'))
+
+# p = Path('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf')
+# print(p.resolve())
+# print(Path(r'd:\dim\winfiles\downloads\test (0).txt').resolve())

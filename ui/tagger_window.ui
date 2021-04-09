@@ -32,7 +32,7 @@
           </item>
           <item>
            <property name="text">
-            <string>Tag(s)</string>
+            <string>Tagged</string>
            </property>
           </item>
          </widget>

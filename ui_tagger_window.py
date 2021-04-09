@@ -447,7 +447,7 @@ class Ui_taggerWindow(object):
         self.actionNew_tagger_window.setShortcut(QCoreApplication.translate("taggerWindow", u"Ctrl+N", None))
 #endif // QT_CONFIG(shortcut)
         self.sourceComboBox.setItemText(0, QCoreApplication.translate("taggerWindow", u"Folder", None))
-        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tag(s)", None))
+        self.sourceComboBox.setItemText(1, QCoreApplication.translate("taggerWindow", u"Tagged", None))
 
         self.browseButton.setText(QCoreApplication.translate("taggerWindow", u"Browse...", None))
         self.menuOptions.setTitle(QCoreApplication.translate("taggerWindow", u"Options", None))
