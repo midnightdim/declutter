@@ -1,7 +1,7 @@
 import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
-from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider
+from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider, QComboBox
 from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl, QDateTime, QMimeDatabase
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
@@ -413,6 +413,7 @@ class TaggerWindow(QMainWindow):
     #     if widget is not None and widget.objectName() == "scrollAreaWidgetContents":
     #         self.manage_tags()
 
+##### BEGIN TAG FILTER SECTION (OBSOLETE!) TBD
     def init_filter_checkboxes(self):
         # removing all filter tag checkboxes
         while True:
@@ -464,6 +465,7 @@ class TaggerWindow(QMainWindow):
                 i+=1
 
         self.update_treeview()
+##### END TAG FILTER SECTION (OBSOLETE!) TBD
 
     def init_tag_checkboxes(self):
         # removing all tag checkboxes
@@ -472,6 +474,11 @@ class TaggerWindow(QMainWindow):
                 self.ui.tagsLayout.itemAt(0).widget().deleteLater()       
             if not self.ui.tagsLayout.takeAt(0):
                 break
+
+        # self.test_combo = QComboBox()
+        # self.test_combo.addItems(('one','two','three'))
+        # self.ui.tagsLayout.addWidget(self.test_combo)
+        # self.test_combo.currentIndexChanged.connect(self.set_tags)
 
         for i in range(0,self.tag_model.rowCount()):
         # i = 0
@@ -766,6 +773,8 @@ class TaggerWindow(QMainWindow):
         # print('set_tags called')
         sender = self.sender()
         # print(sender)
+        # if type(sender) == QCheckBox:
+        #     print('checkbox')
         # print("clicked",state)
         # index = self.ui.treeView.currentIndex()
         # file_path = normpath(self.model.filePath(self.sorting_model.mapToSource(index)))      

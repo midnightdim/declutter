@@ -182,7 +182,8 @@ def apply_rule(rule, dryrun = False):
                                     report['copied'] += 1
                                     msg = "Copied " + f + " to " + str(result)
                         if rule['keep_tags']:
-                            if set_tags(result, get_tags(f)):
+                            tags = get_tags(f)
+                            if set_tags(result, tags):
                                 #logging.info("Copied tags for " + f)
                                 msg += ", tags copied too"
                             else:
@@ -324,7 +325,7 @@ def resolve_path(target_folder, path):
         final_path = final_path.replace(r[0],group_tags[0] if group_tags else 'None')
     
     return final_path
-    
+
     # rep = re.findall("<replace:(.*):(.*)>", newname)
     # newname = re.sub("<replace(.*?)>", '', newname)
     # for r in rep:
@@ -733,43 +734,55 @@ def rename_tag(old_tag, new_tag):
 
 def set_tags(filename, tags): # TBD optimize this
     # filename = str(filename).lower()
-    #print('setting tags')
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT id from files WHERE filepath = ?", (filename,))
-    row = c.fetchone()
-    if row is None:               
-        c.execute("INSERT INTO files VALUES (null, ?)", (filename,))
-        file_id = c.lastrowid   
-    else:
-        file_id = row[0]  
-        c.execute("DELETE FROM file_tags WHERE file_tags.file_id = ?", (file_id,))        
-    for t in tags:
-        c.execute("SELECT id from tags WHERE name = ?", (t,))
+    filename = str(filename)
+    print('setting tags',filename,tags)
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        # print(filename)
+        c.execute("SELECT id from files WHERE filepath = ?", (filename,))
         row = c.fetchone()
+        # print(row)
         if row is None:               
-            # c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-            # tag_id = c.lastrowid
-            tag_id = create_tag(t)
-        else:            
-            tag_id = row[0] 
-        c.execute("INSERT INTO file_tags VALUES (?,?)", (file_id,tag_id))
-        #print('inserting tags for {}, {}'.format(file_id,tag_id))
-    conn.commit()
-    conn.close()
+            c.execute("INSERT INTO files VALUES (null, ?)", (filename,))
+            file_id = c.lastrowid   
+        else:
+            file_id = row[0]  
+            c.execute("DELETE FROM file_tags WHERE file_tags.file_id = ?", (file_id,))        
+        for t in tags:
+            c.execute("SELECT id from tags WHERE name = ?", (t,))
+            row = c.fetchone()
+            if row is None:               
+                # c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
+                # tag_id = c.lastrowid
+                tag_id = create_tag(t)
+            else:            
+                tag_id = row[0] 
+            c.execute("INSERT INTO file_tags VALUES (?,?)", (file_id,tag_id))
+            #print('inserting tags for {}, {}'.format(file_id,tag_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        logging.exception(e)
+        return False
+
+# set_tags('D:\dc_test\Projects\Seeds\seeds4.jpg',['Seeds'])
 
 def get_tags(filename):
-    filename = str(filename).lower()
+    # filename = str(filename).lower()
+    filename = str(filename)
     #filename = filename.lower()
     #print(type(filename))
     #print('getting tags for ' + str(filename))
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
     #print(filename)
     #print(tags)
     if not tags:
-        c.execute("DELETE FROM files WHERE filepath = ?", (filename,))  
+        c.execute("DELETE FROM files WHERE LOWER(filepath) = ?", (filename,))  
         conn.commit()
     conn.close()
     return tags
@@ -803,10 +816,11 @@ def remove_tags(filename, tags):
 
 def remove_all_tags(filename):
     filename = str(filename)
-    filename = filename.lower()
+    # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
-    c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename,))
+    # c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename,))
+    c.execute("SELECT id from files WHERE filepath = ?", (filename,))
     row = c.fetchone()
     #print(row)
     if row is None:
@@ -977,7 +991,7 @@ def get_file_tags_by_group(group, filename):
     tags = []
     if row is not None:
         group_id = row[0]
-        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (str(filename),group_id))]
+        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) AND tags.group_id = ?", (str(filename),group_id))]
     conn.close()
     return tags
 
@@ -1225,7 +1239,7 @@ def get_actual_filename(name):
 # save_settings(SETTINGS_FILE, settings)
 # path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
 # advanced_move(path,path)
-check_files()
+check_files()   # TBD - remove this in the future?
 # create_group('Rating')
 
 # print(get_actual_filename2('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf'))
@@ -1233,3 +1247,4 @@ check_files()
 # p = Path('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf')
 # print(p.resolve())
 # print(Path(r'd:\dim\winfiles\downloads\test (0).txt').resolve())
+# print(resolve_path('D:\dc_test\Projects\<group:Project>','D:\DIM\WinFiles\Downloads\EngUtiDbxug.jpg'))

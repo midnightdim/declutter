@@ -113,8 +113,6 @@ class RulesWindow(QMainWindow):
                 rule['id'] = i # renumbering rules
                 self.settings['rules'].append(rule)
 
-
-
             save_settings(SETTINGS_FILE, self.settings)
             self.load_rules()
             self.ui.rulesTable.selectRow(rule_idx-1)
