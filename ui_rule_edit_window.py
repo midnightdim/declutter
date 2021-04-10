@@ -20,7 +20,7 @@ class Ui_RuleEditWindow(object):
         if not RuleEditWindow.objectName():
             RuleEditWindow.setObjectName(u"RuleEditWindow")
         RuleEditWindow.setWindowModality(Qt.ApplicationModal)
-        RuleEditWindow.resize(694, 554)
+        RuleEditWindow.resize(694, 571)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -245,10 +245,10 @@ class Ui_RuleEditWindow(object):
 
         self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.sourceRemoveButton)
 
-        self.tagAddButton = QPushButton(RuleEditWindow)
-        self.tagAddButton.setObjectName(u"tagAddButton")
+        self.allTaggedAddButton = QPushButton(RuleEditWindow)
+        self.allTaggedAddButton.setObjectName(u"allTaggedAddButton")
 
-        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.tagAddButton)
+        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.allTaggedAddButton)
 
 
         self.gridLayout.addLayout(self.formLayout_3, 2, 1, 1, 1)
@@ -387,7 +387,7 @@ class Ui_RuleEditWindow(object):
         self.recursiveCheckBox.setText(QCoreApplication.translate("RuleEditWindow", u"Recursive", None))
         self.folderAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Folder", None))
         self.sourceRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
-        self.tagAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Tag", None))
+        self.allTaggedAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"All tagged", None))
         self.label_2.setText(QCoreApplication.translate("RuleEditWindow", u"Tags/folders to process", None))
         self.fileWithSameNameLabel.setText(QCoreApplication.translate("RuleEditWindow", u"If file with same name and different size exists:", None))
         self.overwriteComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"increment name", None))

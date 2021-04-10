@@ -4,7 +4,7 @@ from PySide2.QtGui import QIcon, QColor, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
 from PySide2.QtCore import (Qt, QAbstractItemModel, QItemSelectionModel)
 from ui_rule_edit_window import Ui_RuleEditWindow
-from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color, get_tags_and_groups
+from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color, get_tags_and_groups, ALL_TAGGED_TEXT
 from condition_dialog import ConditionDialog
 from ui_list_dialog import Ui_listDialog
 from os.path import normpath
@@ -34,6 +34,7 @@ class RuleEditWindow(QDialog):
         self.ui.conditionRemoveButton.clicked.connect(self.delete_condition)
         self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
         self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.ui.allTaggedAddButton.clicked.connect(self.add_all_tagged)
         
         self.tag_model = QStandardItemModel()
         generate_tag_model(self.tag_model,get_tags_and_groups(),False)
@@ -54,7 +55,7 @@ class RuleEditWindow(QDialog):
         self.ui.newestLabel.setVisible(False)
         self.ui.line.setVisible(False)
 
-        self.ui.tagAddButton.setVisible(False)
+        # self.ui.tagAddButton.setVisible(False)
         self.ui.conditionLoadButton.setVisible(False)
         self.ui.conditionSaveButton.setVisible(False)
 
@@ -96,9 +97,9 @@ class RuleEditWindow(QDialog):
         #print(self.rule)
         self.refresh_conditions()
 
-    def refresh_sources(self):
-        self.ui.sourceListWidget.clear()
-        self.ui.sourceListWidget.addItems(self.rule['folders'])
+    # def refresh_sources(self):
+    #     self.ui.sourceListWidget.clear()
+    #     self.ui.sourceListWidget.addItems(self.rule['folders'])
 
     def refresh_conditions(self):
         conds = []
@@ -260,12 +261,23 @@ class RuleEditWindow(QDialog):
         if directory:
             if not 'folders' in self.rule.keys():
                 self.rule['folders'] = []
-            self.rule['folders'].append(normpath(directory))
-            self.refresh_sources()
+            if normpath(directory) not in self.rule['folders']:
+                self.rule['folders'].append(normpath(directory))
+                self.ui.sourceListWidget.addItem(normpath(directory))
+            # self.refresh_sources()
+
+    def add_all_tagged(self):
+        if not 'folders' in self.rule.keys():
+            self.rule['folders'] = []
+        if ALL_TAGGED_TEXT not in self.rule['folders']:
+            self.rule['folders'].append(ALL_TAGGED_TEXT)
+            self.ui.sourceListWidget.addItem(ALL_TAGGED_TEXT)
+        # self.refresh_sources()
 
     def delete_source(self):
         del self.rule['folders'][self.ui.sourceListWidget.selectedIndexes()[0].row()]
-        self.refresh_sources()    
+        self.ui.sourceListWidget.takeItem(self.ui.sourceListWidget.currentRow())
+        # self.refresh_sources()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

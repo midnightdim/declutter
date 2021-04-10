@@ -20,6 +20,7 @@ APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
+ALL_TAGGED_TEXT = 'All tagged files and folders'
 
 logging.basicConfig(level=logging.DEBUG, filename= LOG_FILE, filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
@@ -348,8 +349,46 @@ def apply_all_rules(settings):
         details.extend(rule_details)
     return report, details
 
+def get_files_affected_by_rule(rule, allow_empty_conditions = False):
+    #print("Rule: "+rule['name'])
+
+    if (not 'conditions' in rule.keys() or not rule['conditions']) and not allow_empty_conditions:
+        return([])
+    found = []
+    for f in rule['folders']:
+        if Path(f).is_dir() or f == ALL_TAGGED_TEXT:
+            found.extend(get_files_affected_by_rule_folder(rule, f, []))
+        else:
+            logging.error('Folder ' + f + ' in rule ' + rule['name'] + ' doesn\'t exist, skipping')
+        #print(found)
+    if 'ignore_newest' in rule.keys() and rule['ignore_newest']:
+        folders = {}
+        result = []
+        for f in found:
+            if os.path.isfile(f):
+                folder = Path(f).parent
+                if not folder in folders.keys():
+                    folders[folder] = []
+                folders[folder].append(f)
+            else:
+                result.append(f)
+        
+        for val in folders.values():
+            unsorted_files = {}
+            for sf in val:
+                unsorted_files[sf] = get_file_time(sf)
+            sorted_files = {k: v for k, v in sorted(unsorted_files.items(), key=lambda item: -item[1])}
+            target_list = list(sorted_files)[int(rule['ignore_N']):]
+            result.extend(target_list)
+            
+        return result
+    else:
+        return sorted(list(set(found))) # returning only unique results
+    #return found
+
 def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
-    files = os.listdir(dirname)
+        
+    files = get_all_files_from_db() if dirname == ALL_TAGGED_TEXT else os.listdir(dirname)
     out_files = files_found
     for f in files:
         if f != '.dc': # ignoring .dc folder TBD can be removed for now and brough back for sidecar files
@@ -358,6 +397,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                 conditions_met = False
             else:
                 conditions_met = False if rule['condition_switch'] == 'any' else True
+                conditions_met = True if rule['action'] == 'Filter' and rule['conditions'] == [] else conditions_met # return all files in tagger when no filters are added
                 for c in rule['conditions']:
                     condition_met = False
                     if c['type'] == 'tags':
@@ -432,44 +472,6 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
             #if not conditions_met and os.path.isdir(fullname) and rule['recursive']:
                 get_files_affected_by_rule_folder(rule, fullname, out_files)
     return out_files
-
-def get_files_affected_by_rule(rule):
-    #print("Rule: "+rule['name'])
-
-    if not 'conditions' in rule.keys() or not rule['conditions']:
-        #print("no conds")
-        return([])
-    found = []
-    for f in rule['folders']:
-        if Path(f).is_dir():
-            found.extend(get_files_affected_by_rule_folder(rule, f, []))
-        else:
-            logging.error('Folder ' + f + ' in rule ' + rule['name'] + ' doesn\'t exist, skipping')
-        #print(found)
-    if 'ignore_newest' in rule.keys() and rule['ignore_newest']:
-        folders = {}
-        result = []
-        for f in found:
-            if os.path.isfile(f):
-                folder = Path(f).parent
-                if not folder in folders.keys():
-                    folders[folder] = []
-                folders[folder].append(f)
-            else:
-                result.append(f)
-        
-        for val in folders.values():
-            unsorted_files = {}
-            for sf in val:
-                unsorted_files[sf] = get_file_time(sf)
-            sorted_files = {k: v for k, v in sorted(unsorted_files.items(), key=lambda item: -item[1])}
-            target_list = list(sorted_files)[int(rule['ignore_N']):]
-            result.extend(target_list)
-            
-        return result
-    else:
-        return found
-    #return found
 
 def get_file_time(filename, date_type = 0):
     if Path(filename).exists():
@@ -763,7 +765,7 @@ def get_tags(filename):
     #print('getting tags for ' + str(filename))
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?)", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
     #print(filename)
     #print(tags)
     if not tags:

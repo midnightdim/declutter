@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>694</width>
-    <height>554</height>
+    <height>571</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -341,9 +341,9 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="tagAddButton">
+        <widget class="QPushButton" name="allTaggedAddButton">
          <property name="text">
-          <string>Add Tag</string>
+          <string>All tagged</string>
          </property>
         </widget>
        </item>

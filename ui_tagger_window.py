@@ -21,7 +21,7 @@ class Ui_taggerWindow(object):
     def setupUi(self, taggerWindow):
         if not taggerWindow.objectName():
             taggerWindow.setObjectName(u"taggerWindow")
-        taggerWindow.resize(1269, 817)
+        taggerWindow.resize(1302, 817)
         icon = QIcon()
         icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
         taggerWindow.setWindowIcon(icon)
@@ -80,7 +80,7 @@ class Ui_taggerWindow(object):
         taggerWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(taggerWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1269, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1302, 21))
         self.menuOptions = QMenu(self.menubar)
         self.menuOptions.setObjectName(u"menuOptions")
         self.menuFile = QMenu(self.menubar)
@@ -136,7 +136,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_3 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.tagsLayout = QVBoxLayout()
-        self.tagsLayout.setSpacing(4)
+        self.tagsLayout.setSpacing(3)
         self.tagsLayout.setObjectName(u"tagsLayout")
 
         self.gridLayout_3.addLayout(self.tagsLayout, 0, 0, 1, 1)
@@ -261,167 +261,89 @@ class Ui_taggerWindow(object):
 
         self.tagsFilterDockWidget.setWidget(self.dockWidgetContents_2)
         taggerWindow.addDockWidget(Qt.RightDockWidgetArea, self.tagsFilterDockWidget)
-        self.otherFiltersDockWidget = QDockWidget(taggerWindow)
-        self.otherFiltersDockWidget.setObjectName(u"otherFiltersDockWidget")
-        sizePolicy2.setHeightForWidth(self.otherFiltersDockWidget.sizePolicy().hasHeightForWidth())
-        self.otherFiltersDockWidget.setSizePolicy(sizePolicy2)
-        self.otherFiltersDockWidget.setMinimumSize(QSize(216, 150))
-        self.otherFiltersDockWidget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
-        self.dockWidgetContents_3 = QWidget()
-        self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
-        self.verticalLayout = QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.nameLabel = QLabel(self.dockWidgetContents_3)
-        self.nameLabel.setObjectName(u"nameLabel")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.filtersDockWidget = QDockWidget(taggerWindow)
+        self.filtersDockWidget.setObjectName(u"filtersDockWidget")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.nameLabel.sizePolicy().hasHeightForWidth())
-        self.nameLabel.setSizePolicy(sizePolicy5)
+        sizePolicy5.setHeightForWidth(self.filtersDockWidget.sizePolicy().hasHeightForWidth())
+        self.filtersDockWidget.setSizePolicy(sizePolicy5)
+        self.filtersDockWidget.setAllowedAreas(Qt.BottomDockWidgetArea|Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        self.dockWidgetContents_4 = QWidget()
+        self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
+        self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContents_4)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.filterConditionSwitchCombo = QComboBox(self.dockWidgetContents_4)
+        self.filterConditionSwitchCombo.addItem("")
+        self.filterConditionSwitchCombo.addItem("")
+        self.filterConditionSwitchCombo.setObjectName(u"filterConditionSwitchCombo")
+        self.filterConditionSwitchCombo.setMaximumSize(QSize(42, 16777215))
 
-        self.horizontalLayout_6.addWidget(self.nameLabel)
+        self.horizontalLayout_6.addWidget(self.filterConditionSwitchCombo)
 
-        self.nameCombo = QComboBox(self.dockWidgetContents_3)
-        self.nameCombo.addItem("")
-        self.nameCombo.addItem("")
-        self.nameCombo.setObjectName(u"nameCombo")
-        sizePolicy6 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.label = QLabel(self.dockWidgetContents_4)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout_6.addWidget(self.label)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
+
+        self.conditionListWidget = QListWidget(self.dockWidgetContents_4)
+        self.conditionListWidget.setObjectName(u"conditionListWidget")
+        sizePolicy6 = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.nameCombo.sizePolicy().hasHeightForWidth())
-        self.nameCombo.setSizePolicy(sizePolicy6)
-        self.nameCombo.setMinimumSize(QSize(42, 0))
-        self.nameCombo.setMaximumSize(QSize(42, 16777215))
+        sizePolicy6.setHeightForWidth(self.conditionListWidget.sizePolicy().hasHeightForWidth())
+        self.conditionListWidget.setSizePolicy(sizePolicy6)
+        self.conditionListWidget.setMinimumSize(QSize(170, 0))
+        self.conditionListWidget.setBaseSize(QSize(170, 0))
 
-        self.horizontalLayout_6.addWidget(self.nameCombo)
+        self.verticalLayout_3.addWidget(self.conditionListWidget)
 
-        self.filemask = QLineEdit(self.dockWidgetContents_3)
-        self.filemask.setObjectName(u"filemask")
-        sizePolicy6.setHeightForWidth(self.filemask.sizePolicy().hasHeightForWidth())
-        self.filemask.setSizePolicy(sizePolicy6)
-        self.filemask.setMinimumSize(QSize(60, 0))
+        self.filterButtonsLayout = QHBoxLayout()
+        self.filterButtonsLayout.setObjectName(u"filterButtonsLayout")
+        self.filterAddButton = QPushButton(self.dockWidgetContents_4)
+        self.filterAddButton.setObjectName(u"filterAddButton")
+        sizePolicy7 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.filterAddButton.sizePolicy().hasHeightForWidth())
+        self.filterAddButton.setSizePolicy(sizePolicy7)
+        self.filterAddButton.setMinimumSize(QSize(50, 0))
+        self.filterAddButton.setMaximumSize(QSize(55, 16777215))
+        self.filterAddButton.setBaseSize(QSize(0, 0))
 
-        self.horizontalLayout_6.addWidget(self.filemask)
+        self.filterButtonsLayout.addWidget(self.filterAddButton)
 
+        self.filterRemoveButton = QPushButton(self.dockWidgetContents_4)
+        self.filterRemoveButton.setObjectName(u"filterRemoveButton")
+        sizePolicy8 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy8.setHorizontalStretch(0)
+        sizePolicy8.setVerticalStretch(0)
+        sizePolicy8.setHeightForWidth(self.filterRemoveButton.sizePolicy().hasHeightForWidth())
+        self.filterRemoveButton.setSizePolicy(sizePolicy8)
+        self.filterRemoveButton.setMaximumSize(QSize(55, 16777215))
 
-        self.verticalLayout.addLayout(self.horizontalLayout_6)
+        self.filterButtonsLayout.addWidget(self.filterRemoveButton)
 
-        self.ageLayout = QHBoxLayout()
-        self.ageLayout.setObjectName(u"ageLayout")
-        self.ageLabel = QLabel(self.dockWidgetContents_3)
-        self.ageLabel.setObjectName(u"ageLabel")
+        self.filterClearButton = QPushButton(self.dockWidgetContents_4)
+        self.filterClearButton.setObjectName(u"filterClearButton")
+        self.filterClearButton.setMaximumSize(QSize(55, 16777215))
 
-        self.ageLayout.addWidget(self.ageLabel)
-
-        self.ageCombo = QComboBox(self.dockWidgetContents_3)
-        self.ageCombo.addItem("")
-        self.ageCombo.addItem("")
-        self.ageCombo.setObjectName(u"ageCombo")
-        self.ageCombo.setMinimumSize(QSize(40, 0))
-        self.ageCombo.setMaximumSize(QSize(40, 16777215))
-
-        self.ageLayout.addWidget(self.ageCombo)
-
-        self.age = QLineEdit(self.dockWidgetContents_3)
-        self.age.setObjectName(u"age")
-        sizePolicy6.setHeightForWidth(self.age.sizePolicy().hasHeightForWidth())
-        self.age.setSizePolicy(sizePolicy6)
-        self.age.setMinimumSize(QSize(45, 0))
-        self.age.setMaxLength(8)
-
-        self.ageLayout.addWidget(self.age)
-
-        self.ageUnitsCombo = QComboBox(self.dockWidgetContents_3)
-        self.ageUnitsCombo.addItem("")
-        self.ageUnitsCombo.addItem("")
-        self.ageUnitsCombo.addItem("")
-        self.ageUnitsCombo.addItem("")
-        self.ageUnitsCombo.setObjectName(u"ageUnitsCombo")
-        self.ageUnitsCombo.setMinimumSize(QSize(60, 0))
-
-        self.ageLayout.addWidget(self.ageUnitsCombo)
+        self.filterButtonsLayout.addWidget(self.filterClearButton)
 
 
-        self.verticalLayout.addLayout(self.ageLayout)
+        self.verticalLayout_3.addLayout(self.filterButtonsLayout)
 
-        self.sizeLayout = QHBoxLayout()
-        self.sizeLayout.setObjectName(u"sizeLayout")
-        self.sizeLabel = QLabel(self.dockWidgetContents_3)
-        self.sizeLabel.setObjectName(u"sizeLabel")
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.sizeLayout.addWidget(self.sizeLabel)
+        self.verticalLayout_3.addItem(self.verticalSpacer_3)
 
-        self.sizeCombo = QComboBox(self.dockWidgetContents_3)
-        self.sizeCombo.addItem("")
-        self.sizeCombo.addItem("")
-        self.sizeCombo.setObjectName(u"sizeCombo")
-        self.sizeCombo.setMinimumSize(QSize(40, 0))
-        self.sizeCombo.setMaximumSize(QSize(40, 16777215))
-
-        self.sizeLayout.addWidget(self.sizeCombo)
-
-        self.size = QLineEdit(self.dockWidgetContents_3)
-        self.size.setObjectName(u"size")
-        sizePolicy6.setHeightForWidth(self.size.sizePolicy().hasHeightForWidth())
-        self.size.setSizePolicy(sizePolicy6)
-        self.size.setMinimumSize(QSize(45, 0))
-        self.size.setMaxLength(10)
-
-        self.sizeLayout.addWidget(self.size)
-
-        self.sizeUnitsCombo = QComboBox(self.dockWidgetContents_3)
-        self.sizeUnitsCombo.addItem("")
-        self.sizeUnitsCombo.addItem("")
-        self.sizeUnitsCombo.addItem("")
-        self.sizeUnitsCombo.addItem("")
-        self.sizeUnitsCombo.addItem("")
-        self.sizeUnitsCombo.setObjectName(u"sizeUnitsCombo")
-        self.sizeUnitsCombo.setMinimumSize(QSize(40, 0))
-
-        self.sizeLayout.addWidget(self.sizeUnitsCombo)
-
-
-        self.verticalLayout.addLayout(self.sizeLayout)
-
-        self.horizontalLayout_9 = QHBoxLayout()
-        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.typeLabel = QLabel(self.dockWidgetContents_3)
-        self.typeLabel.setObjectName(u"typeLabel")
-
-        self.horizontalLayout_9.addWidget(self.typeLabel)
-
-        self.typeSwitchCombo = QComboBox(self.dockWidgetContents_3)
-        self.typeSwitchCombo.addItem("")
-        self.typeSwitchCombo.addItem("")
-        self.typeSwitchCombo.setObjectName(u"typeSwitchCombo")
-        self.typeSwitchCombo.setMinimumSize(QSize(42, 0))
-        self.typeSwitchCombo.setMaximumSize(QSize(42, 16777215))
-        self.typeSwitchCombo.setBaseSize(QSize(0, 0))
-
-        self.horizontalLayout_9.addWidget(self.typeSwitchCombo)
-
-        self.typeCombo = QComboBox(self.dockWidgetContents_3)
-        self.typeCombo.setObjectName(u"typeCombo")
-        sizePolicy6.setHeightForWidth(self.typeCombo.sizePolicy().hasHeightForWidth())
-        self.typeCombo.setSizePolicy(sizePolicy6)
-
-        self.horizontalLayout_9.addWidget(self.typeCombo)
-
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_9.addItem(self.horizontalSpacer_6)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_9)
-
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Preferred)
-
-        self.verticalLayout.addItem(self.verticalSpacer_3)
-
-        self.otherFiltersDockWidget.setWidget(self.dockWidgetContents_3)
-        taggerWindow.addDockWidget(Qt.RightDockWidgetArea, self.otherFiltersDockWidget)
+        self.filtersDockWidget.setWidget(self.dockWidgetContents_4)
+        taggerWindow.addDockWidget(Qt.RightDockWidgetArea, self.filtersDockWidget)
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
@@ -461,7 +383,7 @@ class Ui_taggerWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.mediaPlayButton.setText("")
         self.mediaDurationLabel.setText(QCoreApplication.translate("taggerWindow", u"0:00 / 0:00", None))
-        self.tagsFilterDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Tags Filter", None))
+        self.tagsFilterDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Tags Filters", None))
         self.tagsFilterCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"-no filter-", None))
         self.tagsFilterCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"any tags", None))
         self.tagsFilterCombo.setItemText(2, QCoreApplication.translate("taggerWindow", u"any of", None))
@@ -470,34 +392,13 @@ class Ui_taggerWindow(object):
         self.tagsFilterCombo.setItemText(5, QCoreApplication.translate("taggerWindow", u"no tags", None))
 
         self.tagsFilterLabel.setText(QCoreApplication.translate("taggerWindow", u"selected:", None))
-        self.otherFiltersDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Other Filters", None))
-        self.nameLabel.setText(QCoreApplication.translate("taggerWindow", u"Name", None))
-        self.nameCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"isn't", None))
-        self.nameCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"is", None))
+        self.filtersDockWidget.setWindowTitle(QCoreApplication.translate("taggerWindow", u"Filters", None))
+        self.filterConditionSwitchCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"any", None))
+        self.filterConditionSwitchCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"all", None))
 
-        self.filemask.setText(QCoreApplication.translate("taggerWindow", u"*", None))
-        self.ageLabel.setText(QCoreApplication.translate("taggerWindow", u"Age", None))
-        self.ageCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u">=", None))
-        self.ageCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"<", None))
-
-        self.ageUnitsCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"days", None))
-        self.ageUnitsCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"weeks", None))
-        self.ageUnitsCombo.setItemText(2, QCoreApplication.translate("taggerWindow", u"months", None))
-        self.ageUnitsCombo.setItemText(3, QCoreApplication.translate("taggerWindow", u"years", None))
-
-        self.sizeLabel.setText(QCoreApplication.translate("taggerWindow", u"Size", None))
-        self.sizeCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u">=", None))
-        self.sizeCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"<", None))
-
-        self.sizeUnitsCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"B", None))
-        self.sizeUnitsCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"KB", None))
-        self.sizeUnitsCombo.setItemText(2, QCoreApplication.translate("taggerWindow", u"MB", None))
-        self.sizeUnitsCombo.setItemText(3, QCoreApplication.translate("taggerWindow", u"GB", None))
-        self.sizeUnitsCombo.setItemText(4, QCoreApplication.translate("taggerWindow", u"TB", None))
-
-        self.typeLabel.setText(QCoreApplication.translate("taggerWindow", u"Type ", None))
-        self.typeSwitchCombo.setItemText(0, QCoreApplication.translate("taggerWindow", u"is", None))
-        self.typeSwitchCombo.setItemText(1, QCoreApplication.translate("taggerWindow", u"isn't", None))
-
+        self.label.setText(QCoreApplication.translate("taggerWindow", u"of these must be true:", None))
+        self.filterAddButton.setText(QCoreApplication.translate("taggerWindow", u"Add", None))
+        self.filterRemoveButton.setText(QCoreApplication.translate("taggerWindow", u"Remove", None))
+        self.filterClearButton.setText(QCoreApplication.translate("taggerWindow", u"Clear", None))
     # retranslateUi
 

@@ -107,6 +107,9 @@ class FileSystemModelLite(QAbstractItemModel):
             return color
         return None
 
+    def sort(self, column, order=Qt.AscendingOrder):
+        return super().sort(column, order)
+
     def filePath(self, index: QModelIndex):
         if not index.isValid():
             return None
