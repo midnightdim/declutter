@@ -291,6 +291,7 @@ class Widget(QWidget):
 
 # print(QMimeDatabase().mimeTypeForFile("C:\\windows-version.txt"))
 
+# print(QFileInfo('d:\\dim\\winfiles\\downloads').canonicalFilePath())
 
 if __name__ == "__main__":
     from sys import argv, exit

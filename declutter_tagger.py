@@ -143,18 +143,18 @@ class TaggerWindow(QMainWindow):
             # self.sorting_model.filter_mode = self.ui.tagsFilterCombo.currentText()
             # self.sorting_model.filter_tags = filter_tags
 
-            self.rule['folders'] = [normpath(self.ui.pathEdit.text())]
-
             # self.sorting_model.rule = self.rule
-
             # self.sorting_model.recalc_tagged_paths()
-            # print(self.rule)
-            self.sorting_model.recalc_filtered_paths(self.rule)
+            # print(self.rule)           
             # print(self.sorting_model.filter_tags)
             # print(self.sorting_model.tagged_paths)
             self.sorting_model.setSourceModel(self.model)   
             self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
             # self.sorting_model.setSortLocaleAware(True)
+
+            # self.rule['folders'] = [normpath(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.rootIndex())))]            
+            self.rule['folders'] = [normpath(self.ui.pathEdit.text())]            
+            self.sorting_model.recalc_filtered_paths(self.rule)
             
             self.ui.treeView.setModel(self.sorting_model)
             # self.ui.treeView.setModel(self.model)
@@ -669,7 +669,10 @@ class TaggerWindow(QMainWindow):
             self.ui.statusbar.clearMessage()
             self.model.setRootPath(normpath(file_path)) # TBD reuse this in a function
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path)))
-            self.ui.pathEdit.setText(file_path)
+            # self.ui.pathEdit.setText(file_path)
+            self.ui.pathEdit.setText(normpath(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.rootIndex()))))
+            # print(self.model.filePath(self.model.rootPath()))
+            # print(self.model.rootDirectory())
             if normpath(self.settings['current_folder']) != normpath(file_path):
                 self.settings['current_folder'] = file_path
                 if file_path in self.settings['recent_folders']:
@@ -908,24 +911,26 @@ class SortingModel(QSortFilterProxyModel):
     #         super(SortingModel, self).sort(column, order)
 
     def recalc_filtered_paths(self, rule):
+        print(rule)
         if 'conditions' in rule.keys() and rule['conditions']:
             self.filtered_paths = get_files_affected_by_rule(rule)
             self.filter_enabled = True
         else:
             self.filter_enabled = False
+        print(self.filtered_paths)
         # print(self.filtered_paths)
 
-    def recalc_tagged_paths(self):
-        # print('tagged_paths called',datetime.now())
-        all_paths=[]
-        # print('here')
-        # print(self.filter_tags)
-        # print(self.filter_mode)
-        if self.filter_mode in ('any of', 'none of'):
-            for t in self.filter_tags:
-                all_paths = list(set(all_paths + get_files_by_tag(t)))
-        elif self.filter_mode == 'all of':
-            all_paths = get_files_by_tags(self.filter_tags)  # TBD this could be simplified by passing True as second parameter, but this could slow down filtering
+    # def recalc_tagged_paths(self):
+    #     # print('tagged_paths called',datetime.now())
+    #     all_paths=[]
+    #     # print('here')
+    #     # print(self.filter_tags)
+    #     # print(self.filter_mode)
+    #     if self.filter_mode in ('any of', 'none of'):
+    #         for t in self.filter_tags:
+    #             all_paths = list(set(all_paths + get_files_by_tag(t)))
+    #     elif self.filter_mode == 'all of':
+    #         all_paths = get_files_by_tags(self.filter_tags)  # TBD this could be simplified by passing True as second parameter, but this could slow down filtering
 
         # print(all_paths)
         # if not tree:
@@ -936,7 +941,7 @@ class SortingModel(QSortFilterProxyModel):
         #         all_paths.append(str(Path(t).parent).lower())
         # print(all_paths)
         #return all_paths
-        self.tagged_paths = all_paths
+        # self.tagged_paths = all_paths
         # print('tagged_paths done',datetime.now())
 
     def lessThan(self, source_left: QModelIndex, source_right: QModelIndex):

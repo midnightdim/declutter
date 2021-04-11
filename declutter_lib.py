@@ -735,12 +735,13 @@ def rename_tag(old_tag, new_tag):
 def set_tags(filename, tags): # TBD optimize this
     # filename = str(filename).lower()
     filename = str(filename)
-    print('setting tags',filename,tags)
+    filename_lower = filename.lower() # this may be redundant, I'm being extra cautios here
+    # print('setting tags',filename,tags)
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
         # print(filename)
-        c.execute("SELECT id from files WHERE filepath = ?", (filename,))
+        c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename_lower,))
         row = c.fetchone()
         # print(row)
         if row is None:               
@@ -770,15 +771,15 @@ def set_tags(filename, tags): # TBD optimize this
 # set_tags('D:\dc_test\Projects\Seeds\seeds4.jpg',['Seeds'])
 
 def get_tags(filename):
-    # filename = str(filename).lower()
-    filename = str(filename)
+    filename = str(filename).lower()
+    # filename = str(filename)
     #filename = filename.lower()
     #print(type(filename))
     #print('getting tags for ' + str(filename))
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
     #print(filename)
     #print(tags)
     if not tags:
