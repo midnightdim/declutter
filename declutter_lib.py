@@ -15,7 +15,7 @@ import sqlite3
 from declutter_sidecar_files import *
 import glob
 
-VERSION = '1.06'
+VERSION = '1.07'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")

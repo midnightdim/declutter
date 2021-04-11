@@ -7,7 +7,7 @@
 [Setup]
 AppName=DeClutter
 AppPublisher=Dmitry Beloglazov
-AppVersion=1.06
+AppVersion=1.07
 WizardStyle=modern
 DefaultDirName={autopf}\DeClutter
 ; Since no icons will be created in "{group}", we don't need the wizard
