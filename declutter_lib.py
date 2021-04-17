@@ -15,7 +15,7 @@ import sqlite3
 from declutter_sidecar_files import *
 import glob
 
-VERSION = '1.07'
+VERSION = '1.09'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -83,9 +83,9 @@ def save_settings(settings_file, settings):
     with open(settings_file, 'w') as f:
         jsondump(settings, f, indent=4)
 
-def get_all_tags():
-    #return load_settings(SETTINGS_FILE)['tags']
-    return get_all_tags_from_db()
+# def get_all_tags():
+#     #return load_settings(SETTINGS_FILE)['tags']
+#     return get_all_tags_from_db()
 
 def get_all_files(dirname, files_found = [], recursive = True):
     files = os.listdir(dirname)
@@ -234,7 +234,7 @@ def apply_rule(rule, dryrun = False):
                                 result = advanced_move(p, Path(p.parent) / newname, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 if result:
                                     newfullname = Path(p.parent / newname)
-                                    if newfullname.is_dir(): # if renamed a folder check if its children are in the list and if they are update their paths
+                                    if newfullname.is_dir(): # if renamed a folder check if its children are in the list, and if they are update their paths
                                         for i in range(0, len(files)):
                                             if p in Path(files[i]).parents:
                                                 files[i] = files[i].replace(str(p),str(newfullname))
@@ -256,15 +256,21 @@ def apply_rule(rule, dryrun = False):
                         msg = 'Error: name pattern is missing for rule ' + rule['name']
                         logging.error("Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
+                    # print('here')
+                    tags = get_tags(f)
                     target_subfolder = resolve_path(rule['target_subfolder'],p)
                     if p.parent.name != target_subfolder: # check if we're not already in the subfolder
                         #target = Path(rule['target_subfolder']) / p.name
                         if not dryrun:
-                            target = advanced_move(f, p.parent / Path(target_subfolder) / p.name, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
-                            if target:
+                            result = advanced_move(f, p.parent / Path(target_subfolder) / p.name, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
+                            if result:
                                 remove_all_tags(f)
                                 report['moved to subfolder'] += 1
                                 msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
+
+                                if rule['keep_tags'] and tags: # TBD implement removing tags if keep_tags == False
+                                    set_tags(result, tags)
+                                    msg += ", with tags"                                
                             #print("going to copy" + f + " to " + rule['target_folder'])
                         else:
                             msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
@@ -404,7 +410,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                     if c['type'] == 'tags':
                         #print(fullname)
                         tags = get_tags(fullname)
-                        #print(tags)
+                        # print(tags)
                         common_tags = [value for value in tags if value in c['tags']]                    
                         #print(common_tags)
                         if c['tag_switch'] == 'any':
@@ -417,6 +423,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                             condition_met = tags == []
                         elif c['tag_switch'] == 'any tags':
                             condition_met = len(tags)>0
+                        elif c['tag_switch'] == 'tags in group':
+                            condition_met = c['tag_group'] in get_tag_groups(fullname)
                     elif c['type'] == 'date':
                         settings = load_settings(SETTINGS_FILE)
                         if c['age_switch'] == '>=':
@@ -550,7 +558,7 @@ def remove_file_or_dir(filepath):
     else:
         return False
 
-def advanced_move(source_path, target_path, overwrite = False, copy = False): 
+def advanced_move(source_path, target_path, overwrite = False, copy = False):  # copy = Fale means move = TBD improve this
     # print('advanced move')
     # print(source_path)
     # print(target_path)
@@ -577,10 +585,14 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):
     else:
         #print('sps ' + str(get_size(source_path)))
         #print('tps ' + str(get_size(target_path)))
-        if get_size(source_path) == get_size(target_path): # folder with the same size exists            
+        if get_size(source_path) == get_size(target_path): # file/folder with the same size exists         
             #print('its file/dir with the same size, skipping')
             #remove_file_or_dir(source_path)
-            return False 
+            if not copy:
+                remove_file_or_dir(source_path) # if we're moving the file/folder and it's already there just delete the source file/folder
+                return target_path
+            else:                
+                return False 
             #return target_path # TBD maybe should return something else
         else:
             #print('its a file/dir with different size')
@@ -733,15 +745,17 @@ def rename_tag(old_tag, new_tag):
     save_settings(SETTINGS_FILE, settings)             
 
 def set_tags(filename, tags): # TBD optimize this
-    # filename = str(filename).lower()
-    filename = str(filename)
-    filename_lower = filename.lower() # this may be redundant, I'm being extra cautios here
+    # print('set_tags',filename,tags)
+    filename = os.path.normpath(filename).lower()
+    # filename_lower = filename.lower() # this may be redundant, I'm being extra cautios here
+    # print(filename_lower)
     # print('setting tags',filename,tags)
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
         # print(filename)
-        c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename_lower,))
+        # c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename_lower,))
+        c.execute("SELECT id from files WHERE filepath = ?", (filename,))
         row = c.fetchone()
         # print(row)
         if row is None:               
@@ -771,19 +785,19 @@ def set_tags(filename, tags): # TBD optimize this
 # set_tags('D:\dc_test\Projects\Seeds\seeds4.jpg',['Seeds'])
 
 def get_tags(filename):
-    filename = str(filename).lower()
+    filename = os.path.normpath(filename).lower()
     # filename = str(filename)
     #filename = filename.lower()
     #print(type(filename))
     #print('getting tags for ' + str(filename))
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
-    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
     #print(filename)
     #print(tags)
     if not tags:
-        c.execute("DELETE FROM files WHERE LOWER(filepath) = ?", (filename,))  
+        c.execute("DELETE FROM files WHERE filepath = ?", (filename,))  
         conn.commit()
     conn.close()
     return tags
@@ -796,7 +810,7 @@ def add_tag(filename, tag):
     add_tags(filename, [tag])
 
 def remove_tags(filename, tags):
-    filename = str(filename)
+    filename = str(filename).lower()
     # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
@@ -816,7 +830,7 @@ def remove_tags(filename, tags):
     conn.close()
 
 def remove_all_tags(filename):
-    filename = str(filename)
+    filename = str(filename).lower()
     # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
@@ -840,10 +854,24 @@ def get_all_files_from_db():
     conn.close()
     return files
 
-def get_all_tags_from_db():
+def get_all_tags():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     tags = [f[0] for f in c.execute("SELECT name FROM tags ORDER by list_order")]
+    conn.close()
+    return tags
+
+def get_all_tag_groups():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    groups = [f[0] for f in c.execute("SELECT name FROM tag_groups ORDER by list_order")]
+    conn.close()
+    return groups
+
+def get_tag_groups(filename):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    tags = [f[0] for f in c.execute("SELECT name from tag_groups WHERE id in (SELECT tags.group_id FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id)", (str(filename),))]
     conn.close()
     return tags
 
@@ -992,7 +1020,7 @@ def get_file_tags_by_group(group, filename):
     tags = []
     if row is not None:
         group_id = row[0]
-        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) AND tags.group_id = ?", (str(filename),group_id))]
+        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (str(filename),group_id))]
     conn.close()
     return tags
 
@@ -1006,20 +1034,21 @@ def get_file_tags_by_group(group, filename):
 # os.mkdir(path)
 # encode('ascii', 'replace'))
 
-def check_files(): # TBD need to check if files still exist and if not remove them
+def check_files(): # TBD need to notify user about lost files (not just log this)!!
     files = get_all_files_from_db()
     if files:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
         for f in files:
             if os.path.exists(f):
-                actual = get_actual_filename(f)
+                # actual = get_actual_filename(f)
+                actual = os.path.normpath(f).lower()
                 if not actual:
                     actual = str(Path(f).resolve())  # TBD this is incorrect in case of symlinks
                 if actual:
                     c.execute("UPDATE files SET filepath = ? WHERE filepath = ?", (actual,f))
             else:
-                # print(f,'doesnt exist, deleting')
+                logging.warning('Tagged file doesn\'t exist, removing from database: '+f)
                 c.execute("DELETE FROM files WHERE filepath = ?", (f,))  
         conn.commit()
         conn.close()
@@ -1200,7 +1229,7 @@ def get_actual_filename(name):
     if not res:
         #File not found
         return None
-    return res[0]
+    return os.path.normpath(res[0])
 
 # def get_actual_filename2(path):
 #     path = os.path.normpath(path).lower()
@@ -1228,16 +1257,12 @@ def get_actual_filename(name):
 
 #filename_tolower(r'D:\DIM\WinFiles\Downloads\test.py')
 
-#print(get_files_affected_by_rule(get_rule_by_name('Archive invoices')))
+# print(get_files_affected_by_rule(get_rule_by_name('Move tagged downloads to subfolder')))
 #apply_rule(get_rule_by_name('Archive invoices'))
 #pragma = migrate_db()
 #print(bool(pragma))
 #migrate_db()
 
-
-# settings = load_settings()
-# settings['tags'] = []
-# save_settings(SETTINGS_FILE, settings)
 # path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
 # advanced_move(path,path)
 check_files()   # TBD - remove this in the future?

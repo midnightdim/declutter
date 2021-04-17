@@ -14,6 +14,7 @@ from send2trash import send2trash
 from datetime import datetime
 from file_system_model_lite import FileSystemModelLite
 from condition_dialog import ConditionDialog
+from qt_material import apply_stylesheet
 
 class TaggerWindow(QMainWindow):
     def __init__(self):
@@ -54,9 +55,10 @@ class TaggerWindow(QMainWindow):
         self.ui.menuView.addAction(self.ui.tagsDockWidget.toggleViewAction())
         self.ui.menuView.addAction(self.ui.mediaDockWidget.toggleViewAction())
         self.ui.menuView.addAction(self.ui.filtersDockWidget.toggleViewAction())        
-        self.ui.menuView.addAction(self.ui.tagsFilterDockWidget.toggleViewAction())        
+        # self.ui.menuView.addAction(self.ui.tagsFilterDockWidget.toggleViewAction())        
         self.ui.tagsFilterDockWidget.hide()
         self.ui.filterAddButton.clicked.connect(self.add_condition)
+        self.ui.filterAddButton.sizeHint()
         self.ui.filterRemoveButton.clicked.connect(self.delete_condition)
         self.ui.filterClearButton.clicked.connect(self.clear_conditions)
         self.ui.filterConditionSwitchCombo.currentIndexChanged.connect(self.update_treeview)
@@ -68,6 +70,7 @@ class TaggerWindow(QMainWindow):
 
         self.ui.treeView.doubleClicked.connect(self.open)
         self.ui.actionManage_Tags.triggered.connect(self.manage_tags)
+        self.ui.actionNew_tagger_window.triggered.connect(self.new_window)
 
         self.ui.pathEdit.returnPressed.connect(self.change_path)
         self.ui.browseButton.clicked.connect(self.choose_path)
@@ -79,6 +82,11 @@ class TaggerWindow(QMainWindow):
         # self.ui.tagsFilterLayout.setGeometry(QRect(0,0,0,0))
 
         self.populate() # TBD can't it be just a part of init()?
+
+    def new_window(self): # TBD not sure if this is safe
+        print('Not implemented yet')
+        self.tagger = TaggerWindow()
+        self.tagger.show()
 
     def update_treeview(self):
         # print('updating treeview')
@@ -161,6 +169,7 @@ class TaggerWindow(QMainWindow):
             self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path)))
             # self.ui.treeView.setRootIndex(self.model.index(path))
             # self.ui.treeView.header().resizeSection(0,350)
+            self.model.fileRenamed.connect(self.tag_renamed_file)
             self.model.setIconProvider(QFileIconProvider())
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
             self.ui.treeView.setSortingEnabled(True)
@@ -172,6 +181,11 @@ class TaggerWindow(QMainWindow):
             self.ui.treeView.setDefaultDropAction(Qt.MoveAction)
             # print('drop action set to',self.ui.treeView.defaultDropAction())
             # print(self.ui.treeView.acceptDrops())
+
+    def tag_renamed_file(self, path, oldName, newName):
+        print('renamed')
+        set_tags(os.path.join(path,newName),get_tags(os.path.join(path,oldName)))
+        remove_all_tags(os.path.join(path,oldName))
 
 ##### BEGIN CONDITION SECTION
     def add_condition(self):  
@@ -203,8 +217,10 @@ class TaggerWindow(QMainWindow):
         conds = []
 
         for c in self.rule['conditions']:
-            if c['type'] == 'tags':
-                conds.append('Has ' + c['tag_switch'] + (' of these tags:\n' + '\n'.join(c['tags']) if c['tag_switch'] not in ('no tags','any tags') else ''))
+            if c['type'] == 'tags' and c['tag_switch'] != 'tags in group':
+                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(c['tags']) if c['tag_switch'] not in ('no tags','any tags') else ''))
+            elif c['type'] == 'tags' and c['tag_switch'] == 'tags in group':
+                conds.append('Has tags in group: '+c['tag_group'] )
             elif c['type'] == 'date':
                 conds.append('Age is ' + c['age_switch'] + ' ' + str(c['age']) + ' ' + c['age_units'])      
             elif c['type'] == 'name':
@@ -236,11 +252,14 @@ class TaggerWindow(QMainWindow):
 
     # volume knob controlled by mouse wheel if the playback is on, click on media dock widget controls play/pause
     def eventFilter(self, source, event):
-        return super(TaggerWindow, self).eventFilter(source, event)
+        # return super(TaggerWindow, self).eventFilter(source, event)
         # print(source,event,event.type())
         if source == self.ui.treeView:
             # print(event,event.type())
             if event.type() == QEvent.KeyPress:
+                if event.key() == Qt.Key_F2:
+                    self.player.stop()
+                    self.playlist.clear()
                 if event.key() in (Qt.Key_Return, Qt.Key_Enter):
                     # self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.selectionModel().selectedRows()[0]))
                     if self.ui.treeView.state() is not QAbstractItemView.EditingState:
@@ -839,8 +858,8 @@ class TagFSModel(QFileSystemModel):
             if role == Qt.DisplayRole:
                 #return self.fileName(index)
                 return ', '.join(get_tags(normpath(self.filePath(index))))
-            if role == Qt.TextAlignmentRole:
-                return Qt.AlignLeft
+            # if role == Qt.TextAlignmentRole:
+            #     return Qt.AlignLeft
         if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))) and tag_get_color(get_tags(normpath(self.filePath(index)))[0]):
             #return QColor("#ccffff")
             color = QColor()
@@ -911,13 +930,13 @@ class SortingModel(QSortFilterProxyModel):
     #         super(SortingModel, self).sort(column, order)
 
     def recalc_filtered_paths(self, rule):
-        print(rule)
+        # print(rule)
         if 'conditions' in rule.keys() and rule['conditions']:
             self.filtered_paths = get_files_affected_by_rule(rule)
             self.filter_enabled = True
         else:
             self.filter_enabled = False
-        print(self.filtered_paths)
+        # print(self.filtered_paths)
         # print(self.filtered_paths)
 
     # def recalc_tagged_paths(self):
@@ -1043,7 +1062,7 @@ def millis_to_str(duration):
 def main():
     app = QApplication(sys.argv)
     #QApplication.setQuitOnLastWindowClosed(False)
-
+    # apply_stylesheet(app, theme='light_purple.xml', invert_secondary=True)
     window = TaggerWindow()
     window.show()
     sys.exit(app.exec_())

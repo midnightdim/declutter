@@ -292,6 +292,11 @@ class Widget(QWidget):
 # print(QMimeDatabase().mimeTypeForFile("C:\\windows-version.txt"))
 
 # print(QFileInfo('d:\\dim\\winfiles\\downloads').canonicalFilePath())
+# from PySide2.QtCore import QDir
+# print(QDir.fromNativeSeparators('d:\\dim\\winfiles\\downloads'))
+# print(QDir('d:\\dim\\winfiles\\downloads'))
+
+# print(QDir('d:\\dim\\winfiles').entryList(('downloads'), sort = QDir.IgnoreCase))
 
 if __name__ == "__main__":
     from sys import argv, exit

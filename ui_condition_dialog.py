@@ -185,6 +185,7 @@ class Ui_Condition(object):
         self.tagsCombo.addItem("")
         self.tagsCombo.addItem("")
         self.tagsCombo.addItem("")
+        self.tagsCombo.addItem("")
         self.tagsCombo.setObjectName(u"tagsCombo")
 
         self.horizontalLayout_7.addWidget(self.tagsCombo)
@@ -193,6 +194,11 @@ class Ui_Condition(object):
         self.tagLabel2.setObjectName(u"tagLabel2")
 
         self.horizontalLayout_7.addWidget(self.tagLabel2)
+
+        self.tagGroupsCombo = QComboBox(Condition)
+        self.tagGroupsCombo.setObjectName(u"tagGroupsCombo")
+
+        self.horizontalLayout_7.addWidget(self.tagGroupsCombo)
 
         self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -313,6 +319,7 @@ class Ui_Condition(object):
         self.tagsCombo.setItemText(2, QCoreApplication.translate("Condition", u"none", None))
         self.tagsCombo.setItemText(3, QCoreApplication.translate("Condition", u"no tags", None))
         self.tagsCombo.setItemText(4, QCoreApplication.translate("Condition", u"any tags", None))
+        self.tagsCombo.setItemText(5, QCoreApplication.translate("Condition", u"tags in group", None))
 
         self.tagLabel2.setText(QCoreApplication.translate("Condition", u"of selected tags:", None))
         self.selectedTagsLabel.setText(QCoreApplication.translate("Condition", u"Selected tags:", None))

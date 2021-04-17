@@ -314,6 +314,11 @@
            <string>any tags</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>tags in group</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item>
@@ -322,6 +327,9 @@
           <string>of selected tags:</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="tagGroupsCombo"/>
        </item>
        <item>
         <spacer name="horizontalSpacer_3">

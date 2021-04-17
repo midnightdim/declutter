@@ -4,7 +4,7 @@ from PySide2.QtGui import QColor, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox
 from PySide2.QtCore import (Qt, QAbstractItemModel, QItemSelectionModel)
 from ui_condition_dialog import Ui_Condition
-from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color, get_tags_and_groups
+from declutter_lib import load_settings, SETTINGS_FILE, get_all_tags, tag_get_color, get_tags_and_groups, get_all_tag_groups
 from tags_dialog import generate_tag_model
 #from PySide6.QtGui import 
 
@@ -30,7 +30,8 @@ class ConditionDialog(QDialog):
 
         #self.loadCondition()
         self.ui.typeCombo.insertItems(0,load_settings()['file_types'].keys())
-        self.update_visibility()        
+        self.update_visibility()
+        self.ui.tagGroupsCombo.insertItems(0,get_all_tag_groups())
         self.ui.conditionCombo.currentIndexChanged.connect(self.update_visibility)
         self.ui.tagsCombo.currentIndexChanged.connect(self.update_tags_visibility)
 
@@ -59,15 +60,17 @@ class ConditionDialog(QDialog):
         self.ui.tagLabel2.setVisible(state == "tags")
         self.ui.tagsView.setVisible(state == "tags")
         self.ui.selectedTagsLabel.setVisible(state == "tags")
+        self.ui.tagGroupsCombo.setVisible(state == "tags" and self.ui.tagsCombo.currentText() == "tags in group")
         self.ui.typeCombo.setVisible(state == "type")
         self.ui.typeLabel.setVisible(state == "type")
         self.ui.typeSwitchCombo.setVisible(state == "type")
 
     def update_tags_visibility(self):
         state = self.ui.tagsCombo.currentText()
-        self.ui.tagLabel2.setVisible(state not in ('no tags', 'any tags'))
-        self.ui.tagsView.setEnabled(state not in ('no tags', 'any tags'))
-        self.ui.selectedTagsLabel.setVisible(state not in ('no tags', 'any tags'))
+        self.ui.tagLabel2.setVisible(state not in ('no tags', 'any tags', 'tags in group'))
+        self.ui.tagsView.setEnabled(state not in ('no tags', 'any tags', 'tags in group'))
+        self.ui.selectedTagsLabel.setVisible(state not in ('no tags', 'any tags', 'tags in group'))
+        self.ui.tagGroupsCombo.setVisible(state == 'tags in group')
 
     def loadCondition(self, cond={}):
         self.condition = cond
@@ -86,7 +89,9 @@ class ConditionDialog(QDialog):
                 self.ui.sizeUnitsCombo.setCurrentIndex(self.ui.sizeUnitsCombo.findText(cond['size_units']))            
             elif cond['type'] == 'tags':
                 self.ui.tagsCombo.setCurrentIndex(self.ui.tagsCombo.findText(cond['tag_switch']))
-                if cond['tag_switch'] in ('no tags', 'any tags'):
+                self.ui.tagGroupsCombo.setVisible(cond['tag_switch'] == 'tags in group')
+                self.ui.tagGroupsCombo.setCurrentText(cond['tag_group'])
+                if cond['tag_switch'] in ('no tags', 'any tags', 'tags in group'):
                     self.ui.tagLabel2.setVisible(False)
                     self.ui.tagsView.setEnabled(False)
 
@@ -131,7 +136,9 @@ class ConditionDialog(QDialog):
         elif self.condition['type'] == 'tags':
             self.condition['tag_switch']=self.ui.tagsCombo.currentText()
             self.condition['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
-            if not self.condition['tags'] and not self.condition['tag_switch'] in ('no tags', 'any tags'):
+            if self.condition['tag_switch'] == 'tags in group':
+                self.condition['tag_group'] = self.ui.tagGroupsCombo.currentText()
+            if not self.condition['tags'] and not self.condition['tag_switch'] in ('no tags', 'any tags', 'tags in group'):
                 error = "You haven't selected any tags"
         elif self.condition['type'] == 'type':      
             self.condition['file_type_switch']=self.ui.typeSwitchCombo.currentText()

@@ -105,8 +105,10 @@ class RuleEditWindow(QDialog):
         conds = []
 
         for c in self.rule['conditions']:
-            if c['type'] == 'tags':
+            if c['type'] == 'tags' and c['tag_switch'] != 'tags in group':
                 conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(c['tags']) if c['tag_switch'] not in ('no tags','any tags') else ''))
+            elif c['type'] == 'tags' and c['tag_switch'] == 'tags in group':
+                conds.append('Has tags in group: '+c['tag_group'] )
             elif c['type'] == 'date':
                 conds.append('Age is ' + c['age_switch'] + ' ' + str(c['age']) + ' ' + c['age_units'])      
             elif c['type'] == 'name':
@@ -244,7 +246,7 @@ class RuleEditWindow(QDialog):
         self.ui.toFolderLabel.setVisible(state in ("Move", "Copy"))
         self.ui.targetFolderEdit.setVisible(state in ("Move", "Copy"))
         self.ui.folderBrowseButton.setVisible(state in ("Move", "Copy","Move to subfolder"))
-        self.ui.keepTagsCheckBox.setVisible(state in ("Move", "Copy"))
+        self.ui.keepTagsCheckBox.setVisible(state in ("Move", "Copy","Move to subfolder"))
         self.ui.keepFolderStructureCheckBox.setVisible(state in ("Move", "Copy"))
         self.ui.fileWithSameNameLabel.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))
         self.ui.overwriteComboBox.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))

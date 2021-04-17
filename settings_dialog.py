@@ -44,7 +44,7 @@ class SettingsDialog(QDialog):
 
         # self.ui.fileTypesTable.cellDoubleClicked.connect(self.table_dblclicked)
         self.ui.addFileTypeButton.clicked.connect(self.add_new_file_type)
-        self.ui.fileTypesTable.cellActivated.connect(self.cell_entered)
+        # self.ui.fileTypesTable.cellActivated.connect(self.cell_entered)
         self.ui.fileTypesTable.cellChanged.connect(self.cell_changed, Qt.QueuedConnection)
 
         default_style_name = QApplication.style().objectName().lower()
@@ -62,14 +62,16 @@ class SettingsDialog(QDialog):
         rbs[self.settings['date_type']].setChecked(True)
         self.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
 
-    def cell_entered(self,x,y):
-        print('entered',x,y)
+    # def cell_entered(self,x,y):
+    #     print('entered',x,y)
 
     def cell_changed(self,row,col):
+        # print('cell changed')
         if col == 0:
             settings = load_settings()
             new_value = self.ui.fileTypesTable.item(row,0).text()
-            if new_value in settings['file_types'].keys(): 
+            other_values = [self.ui.fileTypesTable.item(i,0).text() for i in range(0,self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0) and i!=row]
+            if new_value in other_values:#settings['file_types'].keys(): 
                 QMessageBox.critical(self, "Error", "Duplicate format name, please change it")
                 self.ui.fileTypesTable.editItem(self.ui.fileTypesTable.item(row,0))
                 return False
@@ -83,8 +85,10 @@ class SettingsDialog(QDialog):
                         for k in range (0,len(settings['rules'][i]['conditions'])):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
+                                print('updating value')
                                 settings['rules'][i]['conditions'][k]['file_type'] = new_value
                     save_settings(SETTINGS_FILE,settings)
+                    self.settings = settings
 
                 if new_value == "":
                     count = 0
@@ -101,6 +105,7 @@ class SettingsDialog(QDialog):
                     if reply == QMessageBox.Yes:
                         del settings['file_types'][prev_value]
                         save_settings(SETTINGS_FILE,settings)
+                        self.settings = settings
                         self.ui.fileTypesTable.removeRow(row)
                     else:
                         self.ui.fileTypesTable.item(row,0).setText(prev_value)
@@ -123,6 +128,12 @@ class SettingsDialog(QDialog):
         # self.ui.fileTypesGridLayout.addWidget(QLineEdit(),3,1)
 
     def accept(self):
+        # print('accept')
+        format_names = [self.ui.fileTypesTable.item(i,0).text() for i in range(0,self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0)]
+        if len(format_names) != len(set(format_names)):
+            QMessageBox.critical(self, "Error", "Duplicate format name(s) detected, please remove duplicates")
+            return False
+
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))]
         for c in rbs:
             if c.isChecked():
