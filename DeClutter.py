@@ -146,6 +146,7 @@ class RulesWindow(QMainWindow):
     def show_settings(self):
         settings_window = SettingsDialog()
         if settings_window.exec_():
+            print('exec successful')
             self.settings = load_settings()
             self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
             self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
@@ -204,6 +205,7 @@ class RulesWindow(QMainWindow):
     def edit_rule(self, r, c):
         if c == 1: # Enabled/Disabled is clicked
             self.settings['rules'][r]['enabled'] = not self.settings['rules'][r]['enabled']
+            save_settings(SETTINGS_FILE, self.settings)
         else:
             rule = deepcopy(self.settings['rules'][r])
             self.rule_window = RuleEditWindow()
@@ -211,7 +213,7 @@ class RulesWindow(QMainWindow):
             self.rule_window.exec_() # TBD this should return 1 or 0 for Save and Cancel, but it doesn't, so I had to use .updated flag, should be revised
             if self.rule_window.updated:
                 self.settings['rules'][r] = self.rule_window.rule
-        save_settings(SETTINGS_FILE, self.settings)            
+        save_settings(SETTINGS_FILE, self.settings)
         self.load_rules()
         
     def delete_rule(self):
@@ -340,12 +342,12 @@ class declutter_service(QThread):
         self.signals = service_signals()
         self.signals.signal1.connect(parent.show_tray_message)
         self.starting_seconds = time()
-        self.settings = load_settings(SETTINGS_FILE)
+        # self.settings = load_settings(SETTINGS_FILE)
 
     def run(self):
         print("Processing rules...",datetime.now())
         details = []
-        report, details = apply_all_rules(self.settings)
+        report, details = apply_all_rules(load_settings())
         msg = ""
         for key in report.keys():
             msg+= key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""

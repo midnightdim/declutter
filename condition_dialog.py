@@ -90,7 +90,8 @@ class ConditionDialog(QDialog):
             elif cond['type'] == 'tags':
                 self.ui.tagsCombo.setCurrentIndex(self.ui.tagsCombo.findText(cond['tag_switch']))
                 self.ui.tagGroupsCombo.setVisible(cond['tag_switch'] == 'tags in group')
-                self.ui.tagGroupsCombo.setCurrentText(cond['tag_group'])
+                if 'tag_group' in cond.keys():
+                    self.ui.tagGroupsCombo.setCurrentText(cond['tag_group'])
                 if cond['tag_switch'] in ('no tags', 'any tags', 'tags in group'):
                     self.ui.tagLabel2.setVisible(False)
                     self.ui.tagsView.setEnabled(False)

@@ -259,6 +259,7 @@ def apply_rule(rule, dryrun = False):
                     # print('here')
                     tags = get_tags(f)
                     target_subfolder = resolve_path(rule['target_subfolder'],p)
+                    # print(f,tags,target_subfolder)
                     if p.parent.name != target_subfolder: # check if we're not already in the subfolder
                         #target = Path(rule['target_subfolder']) / p.name
                         if not dryrun:
@@ -350,7 +351,7 @@ def apply_all_rules(settings):
     report = {}
     details = []
     for rule in settings['rules']:
-        rule_report, rule_details = apply_rule(rule, settings['dryrun']) # TBD vN doesn't look optimal
+        rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
         #print(rule_report)
         report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
         details.extend(rule_details)
@@ -395,7 +396,7 @@ def get_files_affected_by_rule(rule, allow_empty_conditions = False):
 
 def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
         
-    files = get_all_files_from_db() if dirname == ALL_TAGGED_TEXT else os.listdir(dirname)
+    files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(dirname)
     out_files = files_found
     for f in files:
         if f != '.dc': # ignoring .dc folder TBD can be removed for now and brough back for sidecar files
@@ -408,15 +409,16 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                 for c in rule['conditions']:
                     condition_met = False
                     if c['type'] == 'tags':
-                        #print(fullname)
+                        # print(fullname)
                         tags = get_tags(fullname)
                         # print(tags)
                         common_tags = [value for value in tags if value in c['tags']]                    
-                        #print(common_tags)
+                        # print(common_tags)
                         if c['tag_switch'] == 'any':
                             condition_met = len(common_tags) > 0 # or better bool(common_tags)?
                         elif c['tag_switch'] == 'all':
-                            condition_met = common_tags == tags and tags # tags must be not empty
+                            condition_met = common_tags == c['tags'] and tags # tags must be not empty
+                            # print(condition_met)
                         elif c['tag_switch'] == 'none':
                             condition_met = common_tags == []
                         elif c['tag_switch'] == 'no tags':
@@ -424,15 +426,21 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                         elif c['tag_switch'] == 'any tags':
                             condition_met = len(tags)>0
                         elif c['tag_switch'] == 'tags in group':
+                            # print(get_tag_groups(fullname))
                             condition_met = c['tag_group'] in get_tag_groups(fullname)
+                        # if condition_met:
+                        #     print(fullname,tags,common_tags,c['tag_switch'])
                     elif c['type'] == 'date':
-                        settings = load_settings(SETTINGS_FILE)
-                        if c['age_switch'] == '>=':
-                            if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) >= convert_to_days(float(c['age']), c['age_units']):
-                                condition_met = True
-                        elif c['age_switch'] == '<':
-                            if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) < convert_to_days(float(c['age']), c['age_units']):
-                                condition_met = True
+                        try:
+                            settings = load_settings(SETTINGS_FILE)
+                            if c['age_switch'] == '>=':
+                                if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) >= convert_to_days(float(c['age']), c['age_units']):
+                                    condition_met = True
+                            elif c['age_switch'] == '<':
+                                if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) < convert_to_days(float(c['age']), c['age_units']):
+                                    condition_met = True
+                        except Exception as e:
+                            logging.exception(e)
                     # elif c['type'] == 'newest N' and os.path.isfile(fullname): # TBD delete this!
                     #     condition_met = True
                     elif c['type'] == 'size' and os.path.isfile(fullname):                
@@ -786,14 +794,13 @@ def set_tags(filename, tags): # TBD optimize this
 
 def get_tags(filename):
     filename = os.path.normpath(filename).lower()
-    # filename = str(filename)
     #filename = filename.lower()
     #print(type(filename))
-    #print('getting tags for ' + str(filename))
+    #print('getting tags for ' + filename)
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
-    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (filename,))]
     #print(filename)
     #print(tags)
     if not tags:
@@ -801,6 +808,20 @@ def get_tags(filename):
         conn.commit()
     conn.close()
     return tags
+
+# returns list of tuples [(tag, group_id)]
+def get_tags_by_group_ids(filename):
+    filename = os.path.normpath(filename).lower()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    tags = [f for f in c.execute("SELECT name, group_id FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?)", (filename,))]
+    if not tags:
+        c.execute("DELETE FROM files WHERE filepath = ?", (filename,))  
+        conn.commit()
+    conn.close()
+    return tags
+
+# print(get_tags_by_group_ids(r'D:\DIM\WinFiles\Downloads\Tagged\Birthday.mp4_snapshot_00.19.000.jpg'))
 
 def add_tags(filename, tags):
     cur_tags = get_tags(filename)
@@ -810,7 +831,7 @@ def add_tag(filename, tag):
     add_tags(filename, [tag])
 
 def remove_tags(filename, tags):
-    filename = str(filename).lower()
+    filename = os.path.normpath(filename).lower()
     # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
@@ -830,7 +851,7 @@ def remove_tags(filename, tags):
     conn.close()
 
 def remove_all_tags(filename):
-    filename = str(filename).lower()
+    filename = os.path.normpath(filename).lower()
     # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()    
@@ -861,6 +882,14 @@ def get_all_tags():
     conn.close()
     return tags
 
+def get_all_tags_by_group_id(id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    tags = [f[0] for f in c.execute("SELECT name FROM tags WHERE group_id=?",(id,))]
+    conn.close()
+    return tags    
+
+
 def get_all_tag_groups():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -869,9 +898,10 @@ def get_all_tag_groups():
     return groups
 
 def get_tag_groups(filename):
+    filename = os.path.normpath(filename).lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    tags = [f[0] for f in c.execute("SELECT name from tag_groups WHERE id in (SELECT tags.group_id FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id)", (str(filename),))]
+    tags = [f[0] for f in c.execute("SELECT name from tag_groups WHERE id in (SELECT tags.group_id FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id)", (filename,))]
     conn.close()
     return tags
 
@@ -1012,7 +1042,7 @@ def move_group_to_group(group1,group2,position):
     conn.close()    
 
 def get_file_tags_by_group(group, filename):
-    filename = str(filename).lower()
+    filename = os.path.normpath(filename).lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT id FROM tag_groups WHERE name = ?", (group,))
@@ -1020,7 +1050,7 @@ def get_file_tags_by_group(group, filename):
     tags = []
     if row is not None:
         group_id = row[0]
-        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (str(filename),group_id))]
+        tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (filename,group_id))]
     conn.close()
     return tags
 
@@ -1076,15 +1106,15 @@ def check_files(): # TBD need to notify user about lost files (not just log this
     #     else:
     #         delete_tag(t)
 
-def filename_tolower(filename): # TBD remove this in the future
-    filename = str(filename)
-    if filename != filename.lower():
-        tags = get_tags(filename, False)
-        tags_lower = get_tags(filename)
-        if tags:
-            if set(tags) != set(tags_lower):
-                add_tags(filename.lower(), tags)
-                remove_all_tags(filename)
+# def filename_tolower(filename): # TBD remove this in the future
+#     filename = os.path.normpath(filename)
+#     if filename != filename.lower():
+#         tags = get_tags(filename, False)
+#         tags_lower = get_tags(filename)
+#         if tags:
+#             if set(tags) != set(tags_lower):
+#                 add_tags(filename.lower(), tags)
+#                 remove_all_tags(filename)
 
 def export_tags(dirname): #TBD revise this, add recursion
     try:
@@ -1228,7 +1258,7 @@ def get_actual_filename(name):
     res = glob.glob('\\'.join(test_name))
     if not res:
         #File not found
-        return None
+        return os.path.normpath(Path(name).resolve()) # TBD this is a bit dangerous - will affect symlinks
     return os.path.normpath(res[0])
 
 # def get_actual_filename2(path):
@@ -1274,3 +1304,5 @@ check_files()   # TBD - remove this in the future?
 # print(p.resolve())
 # print(Path(r'd:\dim\winfiles\downloads\test (0).txt').resolve())
 # print(resolve_path('D:\dc_test\Projects\<group:Project>','D:\DIM\WinFiles\Downloads\EngUtiDbxug.jpg'))
+
+# print(get_files_affected_by_rule(get_rule_by_name('Move to subfolder according to Store tag')))

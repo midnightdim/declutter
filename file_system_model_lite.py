@@ -226,10 +226,11 @@ class FileSystemModelLite(QAbstractItemModel):
 
         db = QMimeDatabase()
         for file in file_list:
-            actual = get_actual_filename(file)
-            if not actual:
-                actual = str(Path(file).resolve()) # TBD this is dangerous in case of symlinks
-            file = actual
+            # actual = get_actual_filename(file)
+            # if not actual:
+            #     actual = str(Path(file).resolve()) # TBD this is dangerous in case of symlinks
+            # file = actual
+            
             # print(file,get_actual_filename(file))
             # print(osp.getmtime(file))
             # print(int(osp.getmtime(file)*1000))

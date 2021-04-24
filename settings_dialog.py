@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtUiTools import loadUiType
+from PySide2.QtUiTools import loadUiType, QUiLoader
 # from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QSpacerItem, QLineEdit, QPushButton, QStyleFactory, QSizePolicy, QLabel, QTableWidgetItem, QHeaderView
 from PySide2.QtCore import Qt
@@ -11,6 +11,9 @@ class SettingsDialog(QDialog):
     def __init__(self):
         super(SettingsDialog, self).__init__()
         self.ui = Ui_settingsDialog()
+        # self.ui = QUiLoader().load('ui/settings_dialog.ui')
+        # QUiLoader().load('ui/settings_dialog.ui').show()
+        # self.ui.show()
         self.ui.setupUi(self)
         self.initialize()
 
@@ -128,7 +131,7 @@ class SettingsDialog(QDialog):
         # self.ui.fileTypesGridLayout.addWidget(QLineEdit(),3,1)
 
     def accept(self):
-        # print('accept')
+        print('accept')
         format_names = [self.ui.fileTypesTable.item(i,0).text() for i in range(0,self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0)]
         if len(format_names) != len(set(format_names)):
             QMessageBox.critical(self, "Error", "Duplicate format name(s) detected, please remove duplicates")
@@ -151,6 +154,7 @@ class SettingsDialog(QDialog):
                 self.settings['file_types'][self.ui.fileTypesTable.item(i,0).text()] = self.ui.fileTypesTable.item(i,1).text()
 
         save_settings(SETTINGS_FILE, self.settings)
+        print('settings updated and saved')
         super(SettingsDialog, self).accept()
 
     def change_style(self, style_name):
@@ -159,6 +163,6 @@ class SettingsDialog(QDialog):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = SettingsDialog()
-    window.show()
+    # window.ui.show()
 
     sys.exit(app.exec_())

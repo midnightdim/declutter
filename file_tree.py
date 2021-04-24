@@ -4,6 +4,7 @@ from PySide2.QtWidgets import *
 from declutter_lib import get_tags, set_tags, remove_all_tags
 from os import path
 from pathlib import Path
+import logging
 
 class FileTree(QTreeView):
     def __init__(self, parent=None):
@@ -20,7 +21,7 @@ class FileTree(QTreeView):
     #     tree = event.source()    
 
     def dragLeaveEvent(self, event):
-        print('drag leave')
+        # print('drag leave')
         self.parent().parent().player.stop()
         self.parent().parent().playlist.clear()        
 
@@ -30,26 +31,32 @@ class FileTree(QTreeView):
 
     def dropEvent(self, event):
         # tree = event.source()
-        to_index = self.indexAt(event.pos())
-        new_path = path.normpath(self.model().sourceModel().filePath(self.model().mapToSource(to_index)))
-        new_path = Path(new_path).parent.absolute() if not path.isdir(new_path) else new_path
-        if self.parent().parent().player:
-            self.parent().parent().player.stop()
-            self.parent().parent().playlist.clear()
-        # print(new_path)
-        for url in event.mimeData().urls():
-            old_path = path.normpath(url.toLocalFile())
-            tags = get_tags(old_path)
-            # print(tags)
-            new_path = path.join(new_path,path.basename(old_path))
-            # new_path = path.normpath(path.join(self.model().sourceModel().rootPath(),path.basename(old_path)))
-            # print('about to copy tags from',old_path,'to',new_path,':',tags)
+        position = self.dropIndicatorPosition()
+        if not (position == QAbstractItemView.BelowItem or position == QAbstractItemView.AboveItem):
+            to_index = self.indexAt(event.pos())
+            target_folder = path.normpath(self.model().sourceModel().filePath(self.model().mapToSource(to_index)))
+            # print(target_folder)
+            target_folder = Path(target_folder).parent.absolute() if not path.isdir(target_folder) else target_folder
+            if self.parent().parent().player:
+                self.parent().parent().player.stop()
+                self.parent().parent().playlist.clear()
             # print(new_path)
-            if new_path != old_path and not Path(new_path).exists(): # don't copy tags if target file exists because it won't be moved
-                # print('copied')
-                # TBD add this to logging
-                set_tags(path.normpath(new_path),tags)
-                remove_all_tags(old_path)
+            for url in event.mimeData().urls():
+                old_path = path.normpath(url.toLocalFile())
+                tags = get_tags(old_path)
+                # print(tags)
+                new_path = path.join(target_folder,path.basename(old_path))
+                # print(old_path,new_path)
+                # new_path = path.normpath(path.join(self.model().sourceModel().rootPath(),path.basename(old_path)))
+                # print('about to copy tags from',old_path,'to',new_path,':',tags)
+                # print(new_path)
+                if tags and new_path != old_path and not Path(new_path).exists(): # don't copy tags if target file exists because it won't be moved
+                    logging.debug("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
+                    # print("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
+                    # print('copied')
+                    # TBD add this to logging
+                    set_tags(path.normpath(new_path),tags)
+                    remove_all_tags(old_path)
         # print(self.rootIndex())
         # print(self.model().sourceModel().rootPath())
         # print(self.model().sourceModel().filePath(self.model().sourceModel().rootIndex()))

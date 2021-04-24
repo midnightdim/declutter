@@ -183,7 +183,6 @@ class TaggerWindow(QMainWindow):
             # print(self.ui.treeView.acceptDrops())
 
     def tag_renamed_file(self, path, oldName, newName):
-        print('renamed')
         set_tags(os.path.join(path,newName),get_tags(os.path.join(path,oldName)))
         remove_all_tags(os.path.join(path,oldName))
 
@@ -323,6 +322,8 @@ class TaggerWindow(QMainWindow):
                 print('drop')
                 for url in event.mimeData().urls():
                     print(url.toLocalFile())
+        # elif source in self.tag_combos:
+        #     print('combo event')
         else: 
             if event.type() == QEvent.MouseButtonPress:
                 self.play_media()
@@ -373,6 +374,7 @@ class TaggerWindow(QMainWindow):
         self.settings = load_settings()
         self.checkAction = {}  # checkboxes in context menu
         self.tag_checkboxes = {} # checkboxes in tag dock widget
+        self.tag_combos = {} # comboboxes in tag dock widget
         self.filter_tag_checkboxes = {} # checkboxes in tag filter dock widget
         self.rule = {'recursive':False, 'action': 'Filter', 'conditions':[]} # filter rule
         self.tag_model = QStandardItemModel()
@@ -505,22 +507,28 @@ class TaggerWindow(QMainWindow):
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group['name_shown']:
                 self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
-            for k in range(0,self.tag_model.item(i).rowCount()):
-                tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
-                self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
-                self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
-                # self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
-                # self.tag_checkboxes[tag['name']].stateChanged.connect(self.test)
-                self.tag_checkboxes[tag['name']].clicked.connect(self.set_tags)
-                # self.tag_checkboxes[tag['name']].toggled.connect(self.test2)
-                if tag['color']:
-                    color = QColor()
-                    color.setRgba(tag['color'])
-                    # color.setAlpha(100)
-                    self.tag_checkboxes[tag['name']].setPalette(color)
-                    self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
-            if i<self.tag_model.rowCount()-1:
-                self.ui.tagsLayout.addWidget(QHLine())
+            if group['widget_type'] == 0:
+                for k in range(0,self.tag_model.item(i).rowCount()):
+                    tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
+                    self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
+                    self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
+                    # self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
+                    # self.tag_checkboxes[tag['name']].stateChanged.connect(self.test)
+                    self.tag_checkboxes[tag['name']].clicked.connect(self.set_tags)
+                    # self.tag_checkboxes[tag['name']].toggled.connect(self.test2)
+                    if tag['color']:
+                        color = QColor()
+                        color.setRgba(tag['color'])
+                        # color.setAlpha(100)
+                        self.tag_checkboxes[tag['name']].setPalette(color)
+                        self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
+            elif group['widget_type'] == 1:
+                self.tag_combos[group['id']] = QComboBox(self)
+                self.tag_combos[group['id']].addItems([""]+[self.tag_model.item(i).child(k).data(Qt.UserRole)['name'] for k in range(0,self.tag_model.item(i).rowCount())])
+                self.ui.tagsLayout.addWidget(self.tag_combos[group['id']])
+                self.tag_combos[group['id']].currentIndexChanged.connect(self.set_tags)
+            # if i<self.tag_model.rowCount()-1:
+            #     self.ui.tagsLayout.addWidget(QHLine())
 
     def update_tag_checkboxes(self):
         # print('update_tag_checkboxes called')
@@ -530,23 +538,46 @@ class TaggerWindow(QMainWindow):
         else:
             cur_selection = [normpath(self.model.filePath(index)) for index in indexes]             
 
-        all_files_tags = []
-        for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
-            all_files_tags.extend(get_tags(f))
-      
-        for t in get_all_tags():
-            # blocker = QSignalBlocker(self.tag_checkboxes[t])
-            if t not in all_files_tags:
-                self.tag_checkboxes[t].setTristate(False)
-                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
-                    self.tag_checkboxes[t].setChecked(False)
-            elif all_files_tags.count(t) < len(cur_selection):
-                self.tag_checkboxes[t].setTristate(True)
-                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
-                    self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
-            else:
-                if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
-                    self.tag_checkboxes[t].setChecked(True)
+        all_files_tags_with_group_ids = []
+        for f in cur_selection:  # TBD v3 not the most efficient procedure maybe: could be get_files_tags procedure
+            all_files_tags_with_group_ids.extend(get_tags_by_group_ids(f))
+
+        # print(all_files_tags)
+        if all_files_tags_with_group_ids:
+            all_files_tags, n = zip(*all_files_tags_with_group_ids)
+        else:
+            all_files_tags = []
+
+        tree = {}
+        for t in set(all_files_tags_with_group_ids):
+            if t[1] not in tree.keys():
+                tree[t[1]] = []
+            tree[t[1]].append(t[0])
+
+        # print(tree)
+
+        for i in range(0,self.tag_model.rowCount()):
+            group = self.tag_model.item(i).data(Qt.UserRole)
+            if group['widget_type'] == 0:
+                for t in get_all_tags_by_group_id(group['id']):
+                    # blocker = QSignalBlocker(self.tag_checkboxes[t])
+                    if t not in all_files_tags:
+                        self.tag_checkboxes[t].setTristate(False)
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
+                            self.tag_checkboxes[t].setChecked(False)
+                    elif all_files_tags.count(t) < len(cur_selection):
+                        self.tag_checkboxes[t].setTristate(True)
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
+                            self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
+                    else:
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
+                            self.tag_checkboxes[t].setChecked(True)
+            elif group['widget_type'] == 1:
+                # print(group['id'], type(group['id']))
+                if group['id'] not in tree.keys():
+                    self.tag_combos[group['id']].setCurrentText('')
+                else:
+                    self.tag_combos[group['id']].setCurrentText(tree[group['id']][0]) # TBD improve this!
 
     def update_recent_menu(self):
         self.ui.recent_menu.clear()
@@ -813,12 +844,19 @@ class TaggerWindow(QMainWindow):
             cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
         # print(cur_selection)
 
-        for file_path in cur_selection:
-            # print(file_path)
-            if state: #checked - it was 2 when used with stateChanged
-                add_tag(file_path,sender.text())
-            elif not state: #unchecked - it was 0 when used with stateChanged
-                remove_tag(file_path,sender.text())
+        if type(sender) == QCheckBox:
+            for file_path in cur_selection:
+                if state: #checked - it was 2 when used with stateChanged
+                    add_tag(file_path,sender.text())
+                elif not state: #unchecked - it was 0 when used with stateChanged
+                    remove_tag(file_path,sender.text())
+        elif type(sender) == QComboBox:
+            for file_path in cur_selection:
+                if sender.currentText() == '':
+                    remove_tags(file_path,[sender.itemText(i) for i in range(0,sender.count()) if sender.itemText(i) != ''])
+                else:
+                    remove_tags(file_path,[sender.itemText(i) for i in range(0,sender.count()) if sender.itemText(i) != '']) # TBD maybe optimize this
+                    add_tag(file_path, sender.currentText())
         # print('tags set, updating checkboxes')
         # self.update_tag_checkboxes()
         # print('done')
