@@ -35,6 +35,9 @@ class FileTree(QTreeView):
         if not (position == QAbstractItemView.BelowItem or position == QAbstractItemView.AboveItem):
             to_index = self.indexAt(event.pos())
             target_folder = path.normpath(self.model().sourceModel().filePath(self.model().mapToSource(to_index)))
+            if target_folder == '.':
+                # print(path.normpath(self.model().sourceModel().filePath(self.model().sourceModel().rootIndex())))
+                target_folder = path.normpath(self.model().sourceModel().rootPath())
             # print(target_folder)
             target_folder = Path(target_folder).parent.absolute() if not path.isdir(target_folder) else target_folder
             if self.parent().parent().player:
@@ -50,16 +53,17 @@ class FileTree(QTreeView):
                 # new_path = path.normpath(path.join(self.model().sourceModel().rootPath(),path.basename(old_path)))
                 # print('about to copy tags from',old_path,'to',new_path,':',tags)
                 # print(new_path)
-                if tags and new_path != old_path and not Path(new_path).exists(): # don't copy tags if target file exists because it won't be moved
-                    logging.debug("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
-                    # print("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
+                if tags and new_path != old_path and not Path(new_path).exists(): # don't copy tags if target file exists because it won't be moved                    
+                    print("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
                     # print('copied')
                     # TBD add this to logging
                     set_tags(path.normpath(new_path),tags)
                     remove_all_tags(old_path)
+                    logging.debug("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
         # print(self.rootIndex())
         # print(self.model().sourceModel().rootPath())
         # print(self.model().sourceModel().filePath(self.model().sourceModel().rootIndex()))
+        
         super().dropEvent(event)
 
 

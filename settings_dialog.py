@@ -73,7 +73,7 @@ class SettingsDialog(QDialog):
         if col == 0:
             settings = load_settings()
             new_value = self.ui.fileTypesTable.item(row,0).text()
-            other_values = [self.ui.fileTypesTable.item(i,0).text() for i in range(0,self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0) and i!=row]
+            other_values = [self.ui.fileTypesTable.item(i,0).text() for i in range(self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0) and i!=row]
             if new_value in other_values:#settings['file_types'].keys(): 
                 QMessageBox.critical(self, "Error", "Duplicate format name, please change it")
                 self.ui.fileTypesTable.editItem(self.ui.fileTypesTable.item(row,0))
@@ -84,8 +84,8 @@ class SettingsDialog(QDialog):
                     # print('updating settings and rules')
                     settings['file_types'][new_value]=settings['file_types'][prev_value]
                     del settings['file_types'][prev_value]
-                    for i in range(0,len(settings['rules'])):
-                        for k in range (0,len(settings['rules'][i]['conditions'])):
+                    for i in range(len(settings['rules'])):
+                        for k in range (len(settings['rules'][i]['conditions'])):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
                                 print('updating value')
@@ -95,7 +95,7 @@ class SettingsDialog(QDialog):
 
                 if new_value == "":
                     count = 0
-                    for i in range(0,len(settings['rules'])):
+                    for i in range(len(settings['rules'])):
                         for k in range (0,len(settings['rules'][i]['conditions'])):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
@@ -132,7 +132,7 @@ class SettingsDialog(QDialog):
 
     def accept(self):
         print('accept')
-        format_names = [self.ui.fileTypesTable.item(i,0).text() for i in range(0,self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0)]
+        format_names = [self.ui.fileTypesTable.item(i,0).text() for i in range(self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i,0)]
         if len(format_names) != len(set(format_names)):
             QMessageBox.critical(self, "Error", "Duplicate format name(s) detected, please remove duplicates")
             return False
@@ -149,7 +149,7 @@ class SettingsDialog(QDialog):
         
         self.settings['file_types'] = {}
         # TBD add validation
-        for i in range(0,self.ui.fileTypesTable.rowCount()):
+        for i in range(self.ui.fileTypesTable.rowCount()):
             if self.ui.fileTypesTable.item(i,0) and self.ui.fileTypesTable.item(i,0).text():
                 self.settings['file_types'][self.ui.fileTypesTable.item(i,0).text()] = self.ui.fileTypesTable.item(i,1).text()
 

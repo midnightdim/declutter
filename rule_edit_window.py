@@ -219,8 +219,8 @@ class RuleEditWindow(QDialog):
         if 'overwrite_switch' in rule.keys():
             self.ui.overwriteComboBox.setCurrentIndex(self.ui.overwriteComboBox.findText(rule['overwrite_switch']))
 
-        for i in range(0,self.ui.tagsView.model().rowCount()):
-            for k in range(0,self.ui.tagsView.model().item(i).rowCount()):
+        for i in range(self.ui.tagsView.model().rowCount()):
+            for k in range(self.ui.tagsView.model().item(i).rowCount()):
                 if self.ui.tagsView.model().item(i).child(k).text() in rule['tags']:
                     # print(self.ui.tagsView.model().item(i).child(k).text())
                     self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)

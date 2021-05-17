@@ -9,5 +9,6 @@ sandbox.py
 *.spec
 build.bat
 dist/
+build/
 sandbox/
 ui/icons/

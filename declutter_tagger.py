@@ -17,8 +17,8 @@ from condition_dialog import ConditionDialog
 from qt_material import apply_stylesheet
 
 class TaggerWindow(QMainWindow):
-    def __init__(self):
-        super(TaggerWindow, self).__init__()
+    def __init__(self, parent = None):
+        super(TaggerWindow, self).__init__(parent)
         self.ui = Ui_taggerWindow()
         self.ui.setupUi(self)
 
@@ -84,9 +84,8 @@ class TaggerWindow(QMainWindow):
         self.populate() # TBD can't it be just a part of init()?
 
     def new_window(self): # TBD not sure if this is safe
-        print('Not implemented yet')
-        self.tagger = TaggerWindow()
-        self.tagger.show()
+        tagger = TaggerWindow(self)
+        tagger.show()
 
     def update_treeview(self):
         # print('updating treeview')
@@ -444,13 +443,13 @@ class TaggerWindow(QMainWindow):
                 break
 
         # creating filter tag checkboxes from tag model
-        for i in range(0,self.tag_model.rowCount()):
+        for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group['name_shown']:
                 group_widget = QLabel('<b>'+group['name']+'</b>')
                 group_widget.setVisible(False)
                 self.ui.tagsFilterLayout.addWidget(group_widget)
-            for k in range(0,self.tag_model.item(i).rowCount()):
+            for k in range(self.tag_model.item(i).rowCount()):
                 tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                 self.filter_tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
                 self.filter_tag_checkboxes[tag['name']].setVisible(False)
@@ -501,14 +500,14 @@ class TaggerWindow(QMainWindow):
         # self.ui.tagsLayout.addWidget(self.test_combo)
         # self.test_combo.currentIndexChanged.connect(self.set_tags)
 
-        for i in range(0,self.tag_model.rowCount()):
+        for i in range(self.tag_model.rowCount()):
         # i = 0
         # for group in data.keys():
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group['name_shown']:
                 self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
             if group['widget_type'] == 0:
-                for k in range(0,self.tag_model.item(i).rowCount()):
+                for k in range(self.tag_model.item(i).rowCount()):
                     tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                     self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
                     self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
@@ -524,7 +523,7 @@ class TaggerWindow(QMainWindow):
                         self.tag_checkboxes[tag['name']].setAutoFillBackground(True) 
             elif group['widget_type'] == 1:
                 self.tag_combos[group['id']] = QComboBox(self)
-                self.tag_combos[group['id']].addItems([""]+[self.tag_model.item(i).child(k).data(Qt.UserRole)['name'] for k in range(0,self.tag_model.item(i).rowCount())])
+                self.tag_combos[group['id']].addItems([""]+[self.tag_model.item(i).child(k).data(Qt.UserRole)['name'] for k in range(self.tag_model.item(i).rowCount())])
                 self.ui.tagsLayout.addWidget(self.tag_combos[group['id']])
                 self.tag_combos[group['id']].currentIndexChanged.connect(self.set_tags)
             # if i<self.tag_model.rowCount()-1:
@@ -556,7 +555,7 @@ class TaggerWindow(QMainWindow):
 
         # print(tree)
 
-        for i in range(0,self.tag_model.rowCount()):
+        for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group['widget_type'] == 0:
                 for t in get_all_tags_by_group_id(group['id']):
@@ -773,12 +772,12 @@ class TaggerWindow(QMainWindow):
         
         self.checkAction = {}
 
-        for i in range(0,self.tag_model.rowCount()):
+        for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group['name_shown']:
                 menu.addAction(group['name'])
                 # self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
-            for k in range(0,self.tag_model.item(i).rowCount()):
+            for k in range(self.tag_model.item(i).rowCount()):
                 tag = self.tag_model.item(i).child(k).data(Qt.UserRole)  
                 t = tag['name']              
                 self.checkAction[t] = CheckBoxAction(self,t)
@@ -853,9 +852,9 @@ class TaggerWindow(QMainWindow):
         elif type(sender) == QComboBox:
             for file_path in cur_selection:
                 if sender.currentText() == '':
-                    remove_tags(file_path,[sender.itemText(i) for i in range(0,sender.count()) if sender.itemText(i) != ''])
+                    remove_tags(file_path,[sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != ''])
                 else:
-                    remove_tags(file_path,[sender.itemText(i) for i in range(0,sender.count()) if sender.itemText(i) != '']) # TBD maybe optimize this
+                    remove_tags(file_path,[sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != '']) # TBD maybe optimize this
                     add_tag(file_path, sender.currentText())
         # print('tags set, updating checkboxes')
         # self.update_tag_checkboxes()

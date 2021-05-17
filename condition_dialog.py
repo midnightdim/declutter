@@ -96,8 +96,8 @@ class ConditionDialog(QDialog):
                     self.ui.tagLabel2.setVisible(False)
                     self.ui.tagsView.setEnabled(False)
 
-                for i in range(0,self.ui.tagsView.model().rowCount()):
-                    for k in range(0,self.ui.tagsView.model().item(i).rowCount()):
+                for i in range(self.ui.tagsView.model().rowCount()):
+                    for k in range(self.ui.tagsView.model().item(i).rowCount()):
                         if self.ui.tagsView.model().item(i).child(k).text() in cond['tags']:
                             # print(self.ui.tagsView.model().item(i).child(k).text())
                             self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)

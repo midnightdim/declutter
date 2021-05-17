@@ -1,8 +1,8 @@
 import sys
-from PySide6.QtUiTools import loadUiType
+#from PySide2.QtUiTools import loadUiType
 
-from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog, QPushButton
-from PySide2.QtCore import (Qt, QAbstractItemModel)
+from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog, QPushButton, QComboBox, QDialogButtonBox, QVBoxLayout
+from PySide2.QtCore import (Qt, QAbstractItemModel, QSize)
 from PySide2.QtGui import QPalette, QColor, QStandardItemModel, QStandardItem, QIcon
 from ui_tags_dialog import Ui_tagsDialog
 from tag_tree import TagTree, get_tree_selection_level
@@ -112,29 +112,33 @@ class TagsDialog(QDialog):
                 #     logging.exception(f'exception {e}')
         else: # group
             group = cur_item['name']
-            other_groups = [self.model.item(i).data(Qt.UserRole)['name'] for i in range(0,self.model.rowCount())]
+            other_groups = [self.model.item(i).data(Qt.UserRole)['name'] for i in range(self.model.rowCount())]
             # print(other_groups)
             other_groups.remove(group)
-            newgroup, ok = QInputDialog.getText(self, "Rename group",
-                "Enter new name:", QLineEdit.Normal, group)
-            if ok and newgroup != '' and newgroup != group:
-                if newgroup in other_groups:
-                    QMessageBox.information(self, "Can't do that", "Another group with this name already exists. Please choose a different name.")
-                else:
-                    rename_group(group,newgroup)
-                    # print('renaming')
-                    cur_item['name'] = newgroup
-                    self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item,Qt.UserRole)
-                    self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(newgroup,Qt.DisplayRole)
-                    # self.ui.treeView.setModel(self.model)
-                # try:
-                    # if newgroup in get_all_tags():
-                    #     merge = QMessageBox.question(self, "Warning",
-                    #         "This tag already exists, files tagged with '" + group + "' will be tagged with '" + newgroup + "'.\nAre you sure you want to proceed?",
-                    #         QMessageBox.Yes | QMessageBox.No)
-                    # if newgroup == QMessageBox.Yes:
-                        # rename_tag(cur_tag,newtag)          
-                    # self.load_tags()
+
+            group_dialog = GroupDialog(group)
+            # print(group_dialog.lineEdit.text())
+            if group_dialog.exec_():
+                # print(group_dialog.comboBox.currentIndex())
+                newgroup = group_dialog.lineEdit.text()
+                widget_type = group_dialog.comboBox.currentIndex()
+                set_group_type(group,widget_type)
+                cur_item['widget_type'] = widget_type
+                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item,Qt.UserRole)                
+
+                # newgroup, ok = QInputDialog.getText(self, "Rename group",
+                #     "Enter new name:", QLineEdit.Normal, group)
+                if newgroup != '' and newgroup != group:
+                    if newgroup in other_groups:
+                        QMessageBox.information(self, "Can't do that", "Another group with this name already exists. Please choose a different name.")
+                    else:
+                        rename_group(group,newgroup)
+                        # print('renaming')
+                        cur_item['name'] = newgroup
+                        # cur_item['widget_type'] = widget_type
+                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item,Qt.UserRole)
+                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(newgroup,Qt.DisplayRole)
+
         
     def set_color(self):        
         if self.ui.treeView.currentIndex().data(Qt.UserRole)['type'] == 'tag':
@@ -238,9 +242,41 @@ def generate_tag_model(model, data, groups_selectable = True):
                 # for f in get_files_by_tag(tag['name']):
                 #     tag_item.appendRow(QStandardItem(f))
 
+class GroupDialog(QDialog):
+    def __init__(self, group):
+        super(GroupDialog, self).__init__()
+        vbox = QVBoxLayout()
+        self.comboBox = QComboBox()       
+        self.comboBox.addItems(["Multi-value (checkboxes)","Single value (combobox)"])
+        self.lineEdit = QLineEdit(group)
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.accepted.connect(self.accept)
+
+        vbox.addWidget(self.lineEdit)
+        vbox.addWidget(self.comboBox)        
+        vbox.addWidget(self.buttonBox)
+        icon = QIcon()
+        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
+        self.setWindowIcon(icon)
+        self.setLayout(vbox)
+
+    def accept(self):
+        # print('accept')
+        return super().accept()
+
+    def reject(self):
+        return super().reject()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+   
     window = TagsDialog()
-    window.show()
+    window.show()    
+    # window = GroupDialog("test")
+    # print(window.exec_())
+    # print(window.lineEditA.text())
 
     sys.exit(app.exec_())

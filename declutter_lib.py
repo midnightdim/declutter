@@ -15,14 +15,14 @@ import sqlite3
 from declutter_sidecar_files import *
 import glob
 
-VERSION = '1.09'
+VERSION = '1.10'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 ALL_TAGGED_TEXT = 'All tagged files and folders'
 
-logging.basicConfig(level=logging.DEBUG, filename= LOG_FILE, filemode="a+",
+logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
 def load_settings(settings_file = SETTINGS_FILE):
@@ -235,7 +235,7 @@ def apply_rule(rule, dryrun = False):
                                 if result:
                                     newfullname = Path(p.parent / newname)
                                     if newfullname.is_dir(): # if renamed a folder check if its children are in the list, and if they are update their paths
-                                        for i in range(0, len(files)):
+                                        for i in range(len(files)):
                                             if p in Path(files[i]).parents:
                                                 files[i] = files[i].replace(str(p),str(newfullname))
                                     # tf = get_tag_file_path(f) # TBD bring this back for sidecar files
@@ -417,7 +417,8 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                         if c['tag_switch'] == 'any':
                             condition_met = len(common_tags) > 0 # or better bool(common_tags)?
                         elif c['tag_switch'] == 'all':
-                            condition_met = common_tags == c['tags'] and tags # tags must be not empty
+                            # print(tags,common_tags)
+                            condition_met = set(common_tags) == set(c['tags']) and tags # tags must be not empty
                             # print(condition_met)
                         elif c['tag_switch'] == 'none':
                             condition_met = common_tags == []
@@ -988,6 +989,13 @@ def create_group(name, widget_type=0, name_shown=1):
     conn.close()
     return group_id
 
+def set_group_type(group, widget_type):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("UPDATE tag_groups SET widget_type = ? WHERE name = ?", (widget_type,group))
+    conn.commit()
+    conn.close()        
+
 def move_tag_to_group(tag_id,group_id):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -1305,4 +1313,4 @@ check_files()   # TBD - remove this in the future?
 # print(Path(r'd:\dim\winfiles\downloads\test (0).txt').resolve())
 # print(resolve_path('D:\dc_test\Projects\<group:Project>','D:\DIM\WinFiles\Downloads\EngUtiDbxug.jpg'))
 
-# print(get_files_affected_by_rule(get_rule_by_name('Move to subfolder according to Store tag')))
+# print(get_files_affected_by_rule(get_rule_by_name('2 tags test')))

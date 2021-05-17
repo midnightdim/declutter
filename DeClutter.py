@@ -80,8 +80,8 @@ class RulesWindow(QMainWindow):
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
 
-        self.tagger = TaggerWindow() 
-        self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)        
+        self.tagger = TaggerWindow()
+        self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
         #DoubleClicked.connect(self.editRule)
     
     # def not_implemented_yet(self):   
@@ -314,9 +314,17 @@ class RulesWindow(QMainWindow):
         super().setVisible(visible)        
 
     def show_tagger(self):        
+        # self.tagger = TaggerWindow()
+        # self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
         self.tagger.show()
-        self.tagger.activateWindow()
-
+        # self.tagger.setVisible(True)
+        # self.tagger.activateWindow()
+        # self.tagger.restoreState()
+        
+        self.tagger.init_tag_checkboxes()  # TBD this is not a good solution - not sure why tags disappear on tagger window close, need to research this
+        # print(self.tagger.ui.tagsLayout.itemAt(1).widget())
+        # print(self.tagger.ui.tagsLayout.itemAt(1).widget().setVisible(True))
+    
     @Slot(str, list)
     def show_tray_message(self,message,details):
         if message:
