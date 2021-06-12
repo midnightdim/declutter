@@ -7,7 +7,7 @@ sandbox.py
 *.exe
 *.bak
 *.spec
-build.bat
+*.bat
 dist/
 build/
 sandbox/
