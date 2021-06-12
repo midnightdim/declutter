@@ -82,6 +82,9 @@ class RulesWindow(QMainWindow):
 
         self.tagger = TaggerWindow()
         self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
+
+        instanced_thread = new_version_checker(self)
+        instanced_thread.start()
         #DoubleClicked.connect(self.editRule)
     
     # def not_implemented_yet(self):   
@@ -321,7 +324,8 @@ class RulesWindow(QMainWindow):
         # self.tagger.activateWindow()
         # self.tagger.restoreState()
         
-        self.tagger.init_tag_checkboxes()  # TBD this is not a good solution - not sure why tags disappear on tagger window close, need to research this
+        self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution
+        # self.tagger.ui.tagsScrollArea.setWidgetResizable(True)    
         # print(self.tagger.ui.tagsLayout.itemAt(1).widget())
         # print(self.tagger.ui.tagsLayout.itemAt(1).widget().setVisible(True))
     
@@ -363,6 +367,28 @@ class declutter_service(QThread):
             msg = "Processed files and folders:\n" + msg
         self.signals.signal1.emit(msg, details)
 
+class new_version_checker(QThread):
+    def __init__(self, parent=None):
+        QThread.__init__(self, parent)
+
+    def run(self):
+        try:
+            url = 'http://declutter.top/latest_version.txt'
+            r = requests.get(url)
+            if r and float(r.text.strip())>float(load_settings()['version']):
+                reply = QMessageBox.question(window, "New version: " + r.text.strip(),
+                r"There's a new version of DeClutter available. Download now?",
+                QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    try:
+                        webbrowser.open('http://declutter.top/DeClutter.latest.exe')
+                    except Exception as e:
+                        logging.exception(f'exception {e}')
+
+        except Exception as e:
+            logging.exception(f'exception {e}')
+
+
 def main():
     app = QApplication(sys.argv)
     QApplication.setQuitOnLastWindowClosed(False)
@@ -372,25 +398,6 @@ def main():
 
     window = RulesWindow()
     window.show()
-
-    try:
-        url = 'http://declutter.top/latest_version.txt'
-        r = requests.get(url)
-        if r and float(r.text.strip())>float(load_settings()['version']):
-            reply = QMessageBox.question(window, "New version: " + r.text.strip(),
-            r"There's a new version of DeClutter available. Download now?",
-            QMessageBox.Yes | QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                try:
-                    webbrowser.open('http://declutter.top/DeClutter.latest.exe')
-                except Exception as e:
-                    logging.exception(f'exception {e}')
-
-    except Exception as e:
-        logging.exception(f'exception {e}')
-        #logging.error('No DeClutter_service.exe file found')
-
-
 
     sys.exit(app.exec_())
 

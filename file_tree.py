@@ -54,12 +54,15 @@ class FileTree(QTreeView):
                 # print('about to copy tags from',old_path,'to',new_path,':',tags)
                 # print(new_path)
                 if tags and new_path != old_path and not Path(new_path).exists(): # don't copy tags if target file exists because it won't be moved                    
-                    print("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
                     # print('copied')
                     # TBD add this to logging
                     set_tags(path.normpath(new_path),tags)
-                    remove_all_tags(old_path)
-                    logging.debug("File moved: {} to {}, moved tags {}".format(old_path,new_path,tags))
+                    action = 'copied'
+                    if event.dropAction() == Qt.MoveAction:
+                        action = 'moved'
+                        remove_all_tags(old_path)
+                    print("File {}: {} to {}, {} tags {}".format(action,old_path,new_path,action,tags))
+                    logging.debug("File {}: {} to {}, {} tags {}".format(action,old_path,new_path,action,tags))
         # print(self.rootIndex())
         # print(self.model().sourceModel().rootPath())
         # print(self.model().sourceModel().filePath(self.model().sourceModel().rootIndex()))

@@ -90,7 +90,7 @@ class RuleEditWindow(QDialog):
     def edit_condition(self, cond):
         #print(self.ui.conditionListWidget.indexFromItem(cond).row())
         self.condition_window = ConditionDialog()
-        self.condition_window.loadCondition(self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(cond).row()])
+        self.condition_window.load_condition(self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(cond).row()])
         self.condition_window.exec_()
         #self.condition_window.show()
         # print(self.condition_window.condition)

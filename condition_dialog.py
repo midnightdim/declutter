@@ -72,7 +72,7 @@ class ConditionDialog(QDialog):
         self.ui.selectedTagsLabel.setVisible(state not in ('no tags', 'any tags', 'tags in group'))
         self.ui.tagGroupsCombo.setVisible(state == 'tags in group')
 
-    def loadCondition(self, cond={}):
+    def load_condition(self, cond={}):
         self.condition = cond
         if cond:
             self.ui.conditionCombo.setCurrentIndex(self.ui.conditionCombo.findText(cond['type']))
@@ -81,7 +81,7 @@ class ConditionDialog(QDialog):
                 self.ui.filemask.setText(cond['filemask'])
             elif cond['type'] == 'date':
                 self.ui.ageCombo.setCurrentIndex(self.ui.ageCombo.findText(cond['age_switch']))
-                self.ui.age.setText(cond['age'])
+                self.ui.age.setText(str(cond['age']))
                 self.ui.ageUnitsCombo.setCurrentIndex(self.ui.ageUnitsCombo.findText(cond['age_units']))
             elif cond['type'] == 'size':
                 self.ui.sizeCombo.setCurrentIndex(self.ui.sizeCombo.findText(cond['size_switch']))

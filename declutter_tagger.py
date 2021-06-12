@@ -32,7 +32,6 @@ class TaggerWindow(QMainWindow):
         self.player.setPlaylist(self.playlist)
         self.ui.mediaVolumeDial.valueChanged.connect(self.player.setVolume)
         self.ui.mediaPlayButton.clicked.connect(self.play_media)
-        # self.ui.mediaPauseButton.clicked.connect(self.pause_media)
         self.player.durationChanged.connect(self.change_duration)
         self.player.positionChanged.connect(self.change_position)
         self.player.stateChanged.connect(self.media_update_play_button)
@@ -80,12 +79,12 @@ class TaggerWindow(QMainWindow):
         self.ui.tagsFilterCombo.currentIndexChanged.connect(self.update_filter_from_combo)
         self.ui.tagsFilterLabel.setVisible(False)
         # self.ui.tagsFilterLayout.setGeometry(QRect(0,0,0,0))
-
         self.populate() # TBD can't it be just a part of init()?
 
     def new_window(self): # TBD not sure if this is safe
         tagger = TaggerWindow(self)
         tagger.show()
+        tagger.move(self.x()+30,self.y()+30)
 
     def update_treeview(self):
         # print('updating treeview')
@@ -412,10 +411,9 @@ class TaggerWindow(QMainWindow):
               
         # self.ui.treeView.installEventFilter(self)
         # self.setStyleSheet("QDockWidget::title {position: relative; top: 100px;}")
-        # self.setStyleSheet("QMainWindow::separator{ margin: 100px;}");
-        
+        # self.setStyleSheet("QMainWindow::separator{ margin: 100px;}");    
         self.init_tag_checkboxes()
-        self.init_filter_checkboxes()
+        # self.init_filter_checkboxes()
         self.update_ui()
 
     # def test(self, state):
@@ -489,6 +487,7 @@ class TaggerWindow(QMainWindow):
 
     def init_tag_checkboxes(self):
         # removing all tag checkboxes
+        # print('init tag checkboxes called')
         while True:
             if self.ui.tagsLayout.itemAt(0):
                 self.ui.tagsLayout.itemAt(0).widget().deleteLater()       
@@ -511,6 +510,7 @@ class TaggerWindow(QMainWindow):
                     tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                     self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
                     self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
+                    # print('added widget for', tag['name'])
                     # self.tag_checkboxes[tag['name']].stateChanged.connect(self.set_tags)
                     # self.tag_checkboxes[tag['name']].stateChanged.connect(self.test)
                     self.tag_checkboxes[tag['name']].clicked.connect(self.set_tags)
@@ -525,9 +525,23 @@ class TaggerWindow(QMainWindow):
                 self.tag_combos[group['id']] = QComboBox(self)
                 self.tag_combos[group['id']].addItems([""]+[self.tag_model.item(i).child(k).data(Qt.UserRole)['name'] for k in range(self.tag_model.item(i).rowCount())])
                 self.ui.tagsLayout.addWidget(self.tag_combos[group['id']])
+                # print('added widget (combo) for ',group['id'])
                 self.tag_combos[group['id']].currentIndexChanged.connect(self.set_tags)
             # if i<self.tag_model.rowCount()-1:
             #     self.ui.tagsLayout.addWidget(QHLine())
+        
+        # for i in range(self.ui.tagsLayout.count()):
+        #     self.ui.tagsLayout.itemAt(i).widget().setVisible(True)
+        #     print(self.ui.tagsLayout.itemAt(i).widget().isVisible())
+            
+        # print(self.ui.tagsLayout.children())
+        # print(self.ui.tagsWidget.isVisible())
+        # self.ui.scrollArea.widget().update()
+        # self.ui.scrollArea.widget().repaint()
+        # self.ui.scrollArea.ensureVisible(1,1)
+        # self.ui.scrollArea.widget().setVisible(True)
+        # print(self.ui.scrollArea.widget().size())
+        self.ui.tagsScrollArea.setWidgetResizable(True)
 
     def update_tag_checkboxes(self):
         # print('update_tag_checkboxes called')
@@ -735,8 +749,9 @@ class TaggerWindow(QMainWindow):
         self.tags_dialog = TagsDialog(self.tag_model)
         # self.tags_dialog.model = self.tag_model
         self.tags_dialog.exec_()
+        clear_tags_cache()
         self.init_tag_checkboxes()
-        self.init_filter_checkboxes()
+        # self.init_filter_checkboxes()
         self.update_tag_checkboxes()
 
     def open(self):
@@ -870,7 +885,7 @@ class TagFSModel(QFileSystemModel):
     
     def supportedDragActions(self) -> Qt.DropActions:
         # print("supportedDragActions")
-        return Qt.MoveAction # | super(TagFSModel, self).supportedDropActions()         
+        return Qt.MoveAction | Qt.CopyAction # | super(TagFSModel, self).supportedDropActions()         
 
     def headerData(self, section, orientation, role):
         if section == 4 and role == Qt.DisplayRole:
@@ -891,16 +906,18 @@ class TagFSModel(QFileSystemModel):
         if index.column() == 2 and role == Qt.DisplayRole:
             return QMimeDatabase().mimeTypeForFile(self.filePath(index)).comment()
 
+        tags = get_tags(normpath(self.filePath(index))) if role in (Qt.DisplayRole, Qt.BackgroundRole) else []
+        # print(tags)
         if index.column() == self.columnCount() - 1:
             if role == Qt.DisplayRole:
                 #return self.fileName(index)
-                return ', '.join(get_tags(normpath(self.filePath(index))))
+                return ', '.join(tags)
             # if role == Qt.TextAlignmentRole:
             #     return Qt.AlignLeft
-        if role == Qt.BackgroundRole and get_tags(normpath(self.filePath(index))) and tag_get_color(get_tags(normpath(self.filePath(index)))[0]):
+        if role == Qt.BackgroundRole and tags and tag_get_color(tags[0]):
             #return QColor("#ccffff")
             color = QColor()
-            color.setRgba(tag_get_color(get_tags(normpath(self.filePath(index)))[0]))
+            color.setRgba(tag_get_color(tags[0]))
             return color
 
         return super(TagFSModel, self).data(index, role)

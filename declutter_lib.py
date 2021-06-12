@@ -15,12 +15,13 @@ import sqlite3
 from declutter_sidecar_files import *
 import glob
 
-VERSION = '1.10'
+VERSION = '1.11'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 ALL_TAGGED_TEXT = 'All tagged files and folders'
+TAGS_CACHE = {}
 
 logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
@@ -786,6 +787,7 @@ def set_tags(filename, tags): # TBD optimize this
             #print('inserting tags for {}, {}'.format(file_id,tag_id))
         conn.commit()
         conn.close()
+        TAGS_CACHE[filename] = tags
         return True
     except Exception as e:
         logging.exception(e)
@@ -795,9 +797,11 @@ def set_tags(filename, tags): # TBD optimize this
 
 def get_tags(filename):
     filename = os.path.normpath(filename).lower()
+    if filename in TAGS_CACHE.keys():
+        return TAGS_CACHE[filename]
     #filename = filename.lower()
     #print(type(filename))
-    #print('getting tags for ' + filename)
+    # print('getting tags for ' + filename)
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
@@ -808,6 +812,7 @@ def get_tags(filename):
         c.execute("DELETE FROM files WHERE filepath = ?", (filename,))  
         conn.commit()
     conn.close()
+    TAGS_CACHE[filename] = tags
     return tags
 
 # returns list of tuples [(tag, group_id)]
@@ -831,6 +836,7 @@ def add_tags(filename, tags):
 def add_tag(filename, tag):
     add_tags(filename, [tag])
 
+# removes specified tags from file
 def remove_tags(filename, tags):
     filename = os.path.normpath(filename).lower()
     # filename = filename.lower()
@@ -850,6 +856,8 @@ def remove_tags(filename, tags):
     #tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?)", (filename,))]
     conn.commit()
     conn.close()
+    if filename in TAGS_CACHE.keys():
+        del TAGS_CACHE[filename]
 
 def remove_all_tags(filename):
     filename = os.path.normpath(filename).lower()
@@ -867,7 +875,11 @@ def remove_all_tags(filename):
         c.execute("DELETE FROM file_tags WHERE file_tags.file_id = ?", (file_id,))  
         c.execute("DELETE FROM files WHERE id = ?", (file_id,))  
         conn.commit()
-    conn.close()   
+    conn.close()
+    TAGS_CACHE[filename] = []
+
+def clear_tags_cache():
+    TAGS_CACHE = {}
 
 def get_all_files_from_db():
     conn = sqlite3.connect(DB_FILE)
