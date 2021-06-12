@@ -1,1 +1,0 @@
-cxfreeze DeClutter.py --target-dir dist --base-name Win32GUI --include-modules atexit --icon DeClutter.ico
