@@ -59,6 +59,8 @@ class RuleEditWindow(QDialog):
         self.ui.conditionLoadButton.setVisible(False)
         self.ui.conditionSaveButton.setVisible(False)
 
+        self.ui.ruleNameEdit.setFocus()
+
         self.action_change()
 
     def tags_selection_changed(self):

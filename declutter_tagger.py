@@ -1,7 +1,8 @@
+from os import mkdir
 import sys
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView
-from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider, QComboBox
+from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView, QLineEdit, QMessageBox
+from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider, QComboBox, QInputDialog
 from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl, QDateTime, QMimeDatabase
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
@@ -368,7 +369,6 @@ class TaggerWindow(QMainWindow):
 ##### End Media Player section
 
     def populate(self):
-        #path = r"D:\DIM\WinFiles\Downloads"
         self.settings = load_settings()
         self.checkAction = {}  # checkboxes in context menu
         self.tag_checkboxes = {} # checkboxes in tag dock widget
@@ -664,15 +664,7 @@ class TaggerWindow(QMainWindow):
             self.ui.tagsFilterCombo.addItems(('any tags','any of', 'all of'))
         elif mode == 'Folder':
             self.ui.tagsFilterCombo.addItems(('-no filter-','any tags','any of', 'all of','none of','no tags'))
-        # if mode in ('Folder', 'Folder & tags'):
-        #     for t in self.filter_tags_checkboxes:
-        #         self.ui.horizontalLayout.takeAt(self.ui.horizontalLayout.indexOf(self.filter_tags_checkboxes[t]))    
-        #         self.filter_tags_checkboxes[t].deleteLater()                
-        #         # self.filter_tags_checkboxes[t].hide()
-        #         # self.filter_tags_checkboxes[t].destroy()
-        #         # self.filter_tags_checkboxes[t].setVisible(False)
-        #     self.filter_tags = {}
-        #     self.filter_tags_checkboxes = [] # TBD this is inefficient
+
         self.update_treeview()
 
     def update_status(self):
@@ -774,10 +766,29 @@ class TaggerWindow(QMainWindow):
         elif os.path.isfile(file_path):
             os.startfile(file_path)
 
+    def create_folder(self):
+        folder, ok = QInputDialog.getText(self, "Create new folder",
+                "Enter folder name:", QLineEdit.Normal)
+        if ok and folder != '':
+            index = self.ui.treeView.currentIndex()
+            # TBD this works a bit unexpectedly in "Tagged" mode - it creates a folder inside the parent folder, not the selected folder
+            if self.sorting_model:
+                full_path = Path(self.model.filePath(self.sorting_model.mapToSource(index))).parent / folder
+            else:
+                full_path = Path(self.model.filePath(index)).parent / folder
+            # full_path = Path(file_path).parent / folder
+            try:
+                os.mkdir(full_path)
+            except Exception as e:
+                QMessageBox.critical(self,"Error","Can't create this folder",QMessageBox.Ok)
+
     def context_menu(self, position):
         #index = self.ui.treeView.currentIndex()
         indexes = self.ui.treeView.selectionModel().selectedRows()
-        cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes]
+        if self.sorting_model:
+            cur_selection = [normpath(self.model.filePath(self.sorting_model.mapToSource(index))) for index in indexes] 
+        else:
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]        
 
         all_files_tags = []
         for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
@@ -785,53 +796,37 @@ class TaggerWindow(QMainWindow):
 
         menu = QMenu()
         
+        createFolderAct = QAction("&Create folder", self)
+        # createFolderAct.setShortcuts(QKeySequence.Open)
+        createFolderAct.setStatusTip("Create a new folder")
+        createFolderAct.triggered.connect(self.create_folder)
+        menu.addAction(createFolderAct)      
+
         self.checkAction = {}
 
-        for i in range(self.tag_model.rowCount()):
-            group = self.tag_model.item(i).data(Qt.UserRole)
-            if group['name_shown']:
-                menu.addAction(group['name'])
-                # self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
-            for k in range(self.tag_model.item(i).rowCount()):
-                tag = self.tag_model.item(i).child(k).data(Qt.UserRole)  
-                t = tag['name']              
-                self.checkAction[t] = CheckBoxAction(self,t)
-                self.checkAction[t].checkbox.clicked.connect(self.set_tags)
-                if t not in all_files_tags:
-                    pass
-                    #window[r].update(text = CHAR_UNCHECKED + " " + r)
-                elif all_files_tags.count(t) < len(cur_selection):
-                    self.checkAction[t].checkbox.setTristate(True)
-                    if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.PartiallyChecked:
-                        self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
-                else:
-                    if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.Checked:
-                        self.checkAction[t].checkbox.setChecked(True)
+        # # adding tag checkboxes
+        # for i in range(self.tag_model.rowCount()):
+        #     group = self.tag_model.item(i).data(Qt.UserRole)
+        #     if group['name_shown']:
+        #         menu.addAction(group['name'])
+        #         # self.ui.tagsLayout.addWidget(QLabel('<b>'+group['name']+'</b>'))
+        #     for k in range(self.tag_model.item(i).rowCount()):
+        #         tag = self.tag_model.item(i).child(k).data(Qt.UserRole)  
+        #         t = tag['name']              
+        #         self.checkAction[t] = CheckBoxAction(self,t)
+        #         self.checkAction[t].checkbox.clicked.connect(self.set_tags)
+        #         if t not in all_files_tags:
+        #             pass
+        #             #window[r].update(text = CHAR_UNCHECKED + " " + r)
+        #         elif all_files_tags.count(t) < len(cur_selection):
+        #             self.checkAction[t].checkbox.setTristate(True)
+        #             if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.PartiallyChecked:
+        #                 self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
+        #         else:
+        #             if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.Checked:
+        #                 self.checkAction[t].checkbox.setChecked(True)
 
-                menu.addAction(self.checkAction[t])
-                # self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
-                # self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag['name']])
-
-        # for t in get_all_tags():
-        #     self.checkAction[t] = CheckBoxAction(self,t)           
-        #     self.checkAction[t].checkbox.stateChanged.connect(self.set_tags)
-        #     #print(t)
-        #     # if t in file_tags:
-        #     #     self.checkAction[t].checkbox.setCheckState(Qt.CheckState.Checked)
-        #     #     self.checkAction[t].checkbox.setChecked(True)
-        #     if t not in all_files_tags:
-        #         pass
-        #         #window[r].update(text = CHAR_UNCHECKED + " " + r)
-        #     elif all_files_tags.count(t) < len(cur_selection):
-        #         self.checkAction[t].checkbox.setTristate(True)
-        #         if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.PartiallyChecked:
-        #             self.checkAction[t].checkbox.setCheckState(Qt.CheckState.PartiallyChecked)
-        #     else:
-        #         if self.checkAction[t].checkbox.checkState() is not Qt.CheckState.Checked:
-        #             self.checkAction[t].checkbox.setChecked(True)
-
-
-        #     menu.addAction(self.checkAction[t])
+        #         menu.addAction(self.checkAction[t])
 
         cursor = QCursor()
         menu.exec_(cursor.pos())

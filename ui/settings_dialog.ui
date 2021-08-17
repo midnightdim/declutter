@@ -20,7 +20,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -147,7 +147,7 @@
             <item>
              <widget class="QRadioButton" name="radioButton">
               <property name="text">
-               <string>earliest of modified &amp; created (default)</string>
+               <string>earliest of modified &amp;&amp; created (default)</string>
               </property>
              </widget>
             </item>
@@ -168,7 +168,7 @@
             <item>
              <widget class="QRadioButton" name="radioButton_4">
               <property name="text">
-               <string>latest of modified &amp; created</string>
+               <string>latest of modified &amp;&amp; created</string>
               </property>
              </widget>
             </item>

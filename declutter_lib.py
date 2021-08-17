@@ -1296,33 +1296,4 @@ def get_actual_filename(name):
 #         result += os.sep + actual
 #     return result
 
-
-#migrate_to_db()
-
-#remove_tag_global('trash')
-#print(get_files_by_tag('trash'))
-
-#print(get_files_affected_by_rule(get_rule_by_name('tttt')))
-#apply_rule(get_rule_by_name('tttt'))
-
-#filename_tolower(r'D:\DIM\WinFiles\Downloads\test.py')
-
-# print(get_files_affected_by_rule(get_rule_by_name('Move tagged downloads to subfolder')))
-#apply_rule(get_rule_by_name('Archive invoices'))
-#pragma = migrate_db()
-#print(bool(pragma))
-#migrate_db()
-
-# path = r"D:\Projects.other\Programming\DeClutter archive\test\test.txt"
-# advanced_move(path,path)
 check_files()   # TBD - remove this in the future?
-# create_group('Rating')
-
-# print(get_actual_filename2('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf'))
-
-# p = Path('d:\dim\winfiles\downloads\[free-scores.com]_field-john-nocturnes-8170.pdf')
-# print(p.resolve())
-# print(Path(r'd:\dim\winfiles\downloads\test (0).txt').resolve())
-# print(resolve_path('D:\dc_test\Projects\<group:Project>','D:\DIM\WinFiles\Downloads\EngUtiDbxug.jpg'))
-
-# print(get_files_affected_by_rule(get_rule_by_name('2 tags test')))

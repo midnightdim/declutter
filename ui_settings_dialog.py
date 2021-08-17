@@ -187,7 +187,7 @@ class Ui_settingsDialog(object):
         self.buttonBox.accepted.connect(settingsDialog.accept)
         self.buttonBox.rejected.connect(settingsDialog.reject)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(settingsDialog)
@@ -201,10 +201,10 @@ class Ui_settingsDialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.mainTab), QCoreApplication.translate("settingsDialog", u"Main", None))
         self.dateDefGroupBox.setTitle(QCoreApplication.translate("settingsDialog", u"Date definition", None))
         self.label.setText(QCoreApplication.translate("settingsDialog", u"Which date (from file metadata) should be used in rule conditions?", None))
-        self.radioButton.setText(QCoreApplication.translate("settingsDialog", u"earliest of modified & created (default)", None))
+        self.radioButton.setText(QCoreApplication.translate("settingsDialog", u"earliest of modified && created (default)", None))
         self.radioButton_2.setText(QCoreApplication.translate("settingsDialog", u"modified", None))
         self.radioButton_3.setText(QCoreApplication.translate("settingsDialog", u"created", None))
-        self.radioButton_4.setText(QCoreApplication.translate("settingsDialog", u"latest of modified & created", None))
+        self.radioButton_4.setText(QCoreApplication.translate("settingsDialog", u"latest of modified && created", None))
         self.radioButton_5.setText(QCoreApplication.translate("settingsDialog", u"last access", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.dateTab), QCoreApplication.translate("settingsDialog", u"Date", None))
         ___qtablewidgetitem = self.fileTypesTable.horizontalHeaderItem(0)

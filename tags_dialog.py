@@ -238,6 +238,7 @@ def generate_tag_model(model, data, groups_selectable = True):
                     tag_item.setData(color,Qt.BackgroundRole)
                 tag_item.setDropEnabled(False)
                 tag_item.setEditable(False)  # TBD can change this in the future to make in-place editing
+                # tag_item.setCheckable(True)
                 item.appendRow(tag_item)
                 # for f in get_files_by_tag(tag['name']):
                 #     tag_item.appendRow(QStandardItem(f))

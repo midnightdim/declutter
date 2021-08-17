@@ -30,6 +30,7 @@ class FileTree(QTreeView):
         # print(self.parent().parent().player)
 
     def dropEvent(self, event):
+        # this allows copying and moving files from/to tagger windows and Explorer windows
         # tree = event.source()
         position = self.dropIndicatorPosition()
         if not (position == QAbstractItemView.BelowItem or position == QAbstractItemView.AboveItem):
