@@ -20,7 +20,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -106,6 +106,13 @@
             </spacer>
            </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="launchOnStartupCheckBox">
+           <property name="text">
+            <string>Launch DeClutter on system startup</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_2">

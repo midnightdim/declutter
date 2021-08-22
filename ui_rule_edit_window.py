@@ -376,6 +376,23 @@ class Ui_RuleEditWindow(object):
         self.actionComboBox.setItemText(8, QCoreApplication.translate("RuleEditWindow", u"Move to subfolder", None))
 
         self.toFolderLabel.setText(QCoreApplication.translate("RuleEditWindow", u"to folder", None))
+#if QT_CONFIG(tooltip)
+        self.targetFolderEdit.setToolTip(QCoreApplication.translate("RuleEditWindow", u"<html><head/><body><p>You can use the following tokens:</p><p>&lt;type&gt; will be replaced with file type</p><p>&lt;group:MyGroup&gt; will be replaced with the (first) tag of the file in MyGroup or 'None' if the file doesn't have tags from MyGroup</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.subfolderEdit.setToolTip(QCoreApplication.translate("RuleEditWindow", u"<html><head/><body><p>You can use the following tokens:</p><p>&lt;type&gt; will be replaced with file type</p><p>&lt;group:MyGroup&gt; will be replaced with the (first) tag of the file in MyGroup or 'None' if the file doesn't have tags from MyGroup</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.renameEdit.setToolTip(QCoreApplication.translate("RuleEditWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:19px;\">You can use the following tokens:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:19px;\">&lt;filename&gt; will be replaced with file/folder name</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; line-height:19px;\">&lt;folder&gt; will be replaced with the parent folder name</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-i"
+                        "ndent:0; text-indent:0px; line-height:19px;\">&lt;replace:ABC:XYZ&gt; will replace ABC with XYZ in file/folder name</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.renameEdit.setText(QCoreApplication.translate("RuleEditWindow", u"<filename>", None))
         self.conditionAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add", None))
         self.conditionRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))

@@ -7,7 +7,7 @@
 [Setup]
 AppName=DeClutter
 AppPublisher=Dmitry Beloglazov
-AppVersion=1.11
+AppVersion=1.12
 WizardStyle=modern
 DefaultDirName={autopf}\DeClutter
 ; Since no icons will be created in "{group}", we don't need the wizard
@@ -33,7 +33,7 @@ Source: "lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
 
 [Icons]
 ;IconFilename: "{app}\DeClutter.ico"
-; Name: "{autostartup}\DeClutter"; Filename: "{app}\DeClutter_service.exe"; Tasks:StartMenuEntry;
+Name: "{autostartup}\DeClutter"; Filename: "{app}\DeClutter.exe"; Tasks:StartMenuEntry;
 Name: "{autoprograms}\DeClutter"; Filename: "{app}\DeClutter.exe"; IconFilename: "{app}\DeClutter.ico"
 Name: "{autodesktop}\DeClutter"; Filename: "{app}\DeClutter.exe"; IconFilename: "{app}\DeClutter.ico"; Tasks: desktopicon
 Name: "{group}\Uninstall DeClutter"; Filename: "{uninstallexe}"; IconFilename: "{app}\DeClutter.ico"

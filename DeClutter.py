@@ -149,7 +149,6 @@ class RulesWindow(QMainWindow):
     def show_settings(self):
         settings_window = SettingsDialog()
         if settings_window.exec_():
-            print('exec successful')
             self.settings = load_settings()
             self.trayIcon.setToolTip("DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
             self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))

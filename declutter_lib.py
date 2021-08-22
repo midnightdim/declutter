@@ -1,3 +1,5 @@
+# Contains the core logic of DeClutter app
+
 from json import (load as jsonload, dump as jsondump)
 import json
 import os
@@ -14,8 +16,11 @@ from fnmatch import fnmatch
 import sqlite3
 from declutter_sidecar_files import *
 import glob
+import ctypes as _ctypes
+from ctypes.wintypes import HWND as _HWND, HANDLE as _HANDLE,DWORD as _DWORD,LPCWSTR as _LPCWSTR,MAX_PATH as _MAX_PATH
+from ctypes import create_unicode_buffer as _cub 
 
-VERSION = '1.11'
+VERSION = '1.12'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -27,6 +32,7 @@ logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
 def load_settings(settings_file = SETTINGS_FILE):
+    startup_path = get_startup_shortcut_path()
     if not os.path.isfile(settings_file):
         settings = {}
         settings['version'] = VERSION
@@ -41,6 +47,7 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['dryrun'] = False
         settings['tag_filter_mode'] = "any"
         settings['date_type'] = 0
+        settings['launch_on_startup'] = os.path.exists(startup_path)
         settings['view_show_filter'] = False
         save_settings(settings_file, settings)
     else:
@@ -52,8 +59,8 @@ def load_settings(settings_file = SETTINGS_FILE):
             logging.exception(f'exception {e}')
             logging.error('No settings file found')
             pass
-        settings['version'] = VERSION
-        settings['recent_folders'] = settings['recent_folders'] if 'recent_folders' in settings.keys() else []
+        settings['version'] = VERSION 
+        settings['recent_folders'] = settings['recent_folders'] if 'recent_folders' in settings.keys() else [] #TBD implement a better initialization
         settings['current_drive'] = settings['current_drive'] if 'current_drive' in settings.keys() else ""
         settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""  
         settings['folders'] = settings['folders'] if 'folders' in settings.keys() else []
@@ -69,6 +76,8 @@ def load_settings(settings_file = SETTINGS_FILE):
             'Video':'*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv', \
             'Image':'*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
         settings['file_types'] = settings['file_types'] if 'file_types' in settings.keys() else default_formats
+        # settings['launch_on_startup'] = settings['launch_on_startup'] if 'launch_on_startup' in settings.keys() else True
+        settings['launch_on_startup'] = os.path.exists(startup_path) # setting this parameter based on startup shortcut existence - it can be created by Inno Setup, Windows only
     return settings
 
 
@@ -248,7 +257,7 @@ def apply_rule(rule, dryrun = False):
                                         remove_all_tags(f)
                                         set_tags(newfullname, tags)
                                     report['renamed'] += 1
-                                    msg = 'Renamed ' + f + ' to ' + result
+                                    msg = 'Renamed ' + f + ' to ' + str(result)
                             except Exception as e:
                                 logging.exception(e)
                         else:
@@ -396,8 +405,8 @@ def get_files_affected_by_rule(rule, allow_empty_conditions = False):
     #return found
 
 def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
-        
-    files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(dirname)
+    check_files() # this is required to clean up the missing or incorrect file paths, TBD optimize this
+    files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(dirname) # TBD not sure if we need get_actual_filename() here
     out_files = files_found
     for f in files:
         if f != '.dc': # ignoring .dc folder TBD can be removed for now and brough back for sidecar files
@@ -658,8 +667,12 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("CREATE TABLE files (id INTEGER PRIMARY KEY, filepath VARCHAR NOT NULL UNIQUE)")
-    c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)")
-    c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)")
+    c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL DEFAULT 1, color INTEGER, group_id INTEGER NOT NULL DEFAULT 1")
+    c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER, timestamp INTEGER)")
+    c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1")
+
+    # c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)")
+    # c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)")
     conn.commit()
     conn.close()        
 
@@ -783,7 +796,7 @@ def set_tags(filename, tags): # TBD optimize this
                 tag_id = create_tag(t)
             else:            
                 tag_id = row[0] 
-            c.execute("INSERT INTO file_tags VALUES (?,?)", (file_id,tag_id))
+            c.execute("INSERT INTO file_tags VALUES (?,?,?)", (file_id,tag_id,datetime.datetime.now()))
             #print('inserting tags for {}, {}'.format(file_id,tag_id))
         conn.commit()
         conn.close()
@@ -1183,75 +1196,75 @@ def import_tags(dirname, tagsfile):
     else:
         logging.error(str(dirname) + ' is not a valid folder')
 
-def migrate_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("PRAGMA user_version")
-    pragma = c.fetchone()[0]
-    #logging.info("Database version:" + str(pragma))
-    if (not pragma) or (pragma == 0):
-        try:
-            logging.info("Migration from 0 to 1")
-            tags = load_settings(SETTINGS_FILE)['tags']
-            db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
-            logging.info("Adding missing tags from settings file")
-            for t in [t for t in tags if t not in db_tags]:
-                logging.info("Adding "+t)
-                c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-                #create_tag(t)
+# def migrate_db():
+#     conn = sqlite3.connect(DB_FILE)
+#     c = conn.cursor()
+#     c.execute("PRAGMA user_version")
+#     pragma = c.fetchone()[0]
+#     #logging.info("Database version:" + str(pragma))
+#     if (not pragma) or (pragma == 0):
+#         try:
+#             logging.info("Migration from 0 to 1")
+#             tags = load_settings(SETTINGS_FILE)['tags']
+#             db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
+#             logging.info("Adding missing tags from settings file")
+#             for t in [t for t in tags if t not in db_tags]:
+#                 logging.info("Adding "+t)
+#                 c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
+#                 #create_tag(t)
 
-            settings = load_settings()
-            settings['tags'] = []
-            save_settings(SETTINGS_FILE, settings)
+#             settings = load_settings()
+#             settings['tags'] = []
+#             save_settings(SETTINGS_FILE, settings)
 
-            c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")        
-            i=1
-            for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-                c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
-                i+=1
-            #c.execute("DROP TABLE tags")
-            #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
+#             c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")        
+#             i=1
+#             for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+#                 c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
+#                 i+=1
+#             #c.execute("DROP TABLE tags")
+#             #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
 
-            c.execute("PRAGMA user_version = 1")
-            logging.info("Database updated to version 1")
-            pragma = 1
-            # conn.commit()
-        except Exception as e:
-            logging.exception(e)
+#             c.execute("PRAGMA user_version = 1")
+#             logging.info("Database updated to version 1")
+#             pragma = 1
+#             # conn.commit()
+#         except Exception as e:
+#             logging.exception(e)
 
-    if pragma == 1:
-        try:
-            logging.info("Migration from 1 to 2")
-            logging.info("Adding color column")
-            c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")        
-            # i=1
-            # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-            #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
-            #     i+=1
+#     if pragma == 1:
+#         try:
+#             logging.info("Migration from 1 to 2")
+#             logging.info("Adding color column")
+#             c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")        
+#             # i=1
+#             # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
+#             #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
+#             #     i+=1
 
-            c.execute("PRAGMA user_version = 2")
-            logging.info("Database updated to version 2")
-            pragma = 2
-        except Exception as e:
-            logging.exception(e)
+#             c.execute("PRAGMA user_version = 2")
+#             logging.info("Database updated to version 2")
+#             pragma = 2
+#         except Exception as e:
+#             logging.exception(e)
     
-    if pragma == 2:
-        try:
-            logging.info("Migration from 2 to 3")
-            logging.info("Adding groups table")
-            c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
-            c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 0)")
-            c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER NOT NULL DEFAULT 1")  
-            for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
-                c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
-            c.execute("PRAGMA user_version = 3")
-            logging.info("Database updated to version 3")
-            pragma = 3
-        except Exception as e:
-            logging.exception(e)       
+#     if pragma == 2:
+#         try:
+#             logging.info("Migration from 2 to 3")
+#             logging.info("Adding groups table")
+#             c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
+#             c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 0)")
+#             c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER NOT NULL DEFAULT 1")  
+#             for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
+#                 c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
+#             c.execute("PRAGMA user_version = 3")
+#             logging.info("Database updated to version 3")
+#             pragma = 3
+#         except Exception as e:
+#             logging.exception(e)       
 
-    conn.commit()
-    conn.close()   
+#     conn.commit()
+#     conn.close()   
 
 if not Path(APP_FOLDER).is_dir():
     Path(APP_FOLDER).mkdir()
@@ -1260,14 +1273,14 @@ if not Path(DB_FILE).exists():
     logging.info(r"Database doesn't exist, creating")
     try:
         init_db()
-        migrate_db()        
+        # migrate_db()        
     except Exception as e:
         logging.exception(e)
-else:
-    try:
-        migrate_db()
-    except Exception as e:
-        logging.exception(e)
+# else:
+#     try:
+#         migrate_db()
+#     except Exception as e:
+#         logging.exception(e)
 
 def get_actual_filename(name):
     dirs = name.split('\\')
@@ -1295,5 +1308,16 @@ def get_actual_filename(name):
 #             return
 #         result += os.sep + actual
 #     return result
+
+def get_startup_shortcut_path():
+    _SHGetFolderPath = _ctypes.windll.shell32.SHGetFolderPathW
+    _SHGetFolderPath.argtypes = [_HWND, _ctypes.c_int, _HANDLE, _DWORD, _LPCWSTR]
+    auPathBuffer = _cub(_MAX_PATH)
+    exit_code=_SHGetFolderPath(0, 24, 0, 0, auPathBuffer) # 24 is the code for Startup folder for All Users
+    # print(auPathBuffer.value)
+
+    # pythoncom.CoInitialize() # remove the '#' at the beginning of the line if running in a thread.
+    return os.path.join(auPathBuffer.value, 'DeClutter.lnk')    
+
 
 check_files()   # TBD - remove this in the future?
