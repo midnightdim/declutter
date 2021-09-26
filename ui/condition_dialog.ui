@@ -20,7 +20,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Condition</string>
   </property>
   <property name="windowIcon">
    <iconset resource="DeClutter.qrc">

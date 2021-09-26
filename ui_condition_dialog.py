@@ -279,7 +279,7 @@ class Ui_Condition(object):
     # setupUi
 
     def retranslateUi(self, Condition):
-        Condition.setWindowTitle(QCoreApplication.translate("Condition", u"Dialog", None))
+        Condition.setWindowTitle(QCoreApplication.translate("Condition", u"Condition", None))
         self.label.setText(QCoreApplication.translate("Condition", u"Select files by", None))
         self.conditionCombo.setItemText(0, QCoreApplication.translate("Condition", u"name", None))
         self.conditionCombo.setItemText(1, QCoreApplication.translate("Condition", u"date", None))

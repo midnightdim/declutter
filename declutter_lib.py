@@ -20,7 +20,7 @@ import ctypes as _ctypes
 from ctypes.wintypes import HWND as _HWND, HANDLE as _HANDLE,DWORD as _DWORD,LPCWSTR as _LPCWSTR,MAX_PATH as _MAX_PATH
 from ctypes import create_unicode_buffer as _cub 
 
-VERSION = '1.12'
+VERSION = '1.12.1'
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -667,9 +667,10 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("CREATE TABLE files (id INTEGER PRIMARY KEY, filepath VARCHAR NOT NULL UNIQUE)")
-    c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL DEFAULT 1, color INTEGER, group_id INTEGER NOT NULL DEFAULT 1")
+    c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL DEFAULT 1, color INTEGER, group_id INTEGER NOT NULL DEFAULT 1)")
     c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER, timestamp INTEGER)")
-    c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1")
+    c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
+    c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 0)")
 
     # c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE)")
     # c.execute("CREATE TABLE file_tags (file_id INTEGER, tag_id INTEGER)")
@@ -1321,3 +1322,4 @@ def get_startup_shortcut_path():
 
 
 check_files()   # TBD - remove this in the future?
+# init_db()

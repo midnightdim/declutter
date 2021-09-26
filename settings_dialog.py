@@ -185,6 +185,7 @@ def update_startup_link(run_on_startup):
         shortcut.WorkingDirectory = os.path.abspath(os.path.join(sys.executable, os.pardir))
         # shortcut.IconLocation = icon
         shortcut.WindowStyle = 7 # 7 - Minimized, 3 - Maximized, 1 - Normal
+        print(shortcut)
         shortcut.save()    
 
     # The implementation below uses winreg and works, but raises antivirus problems, also it's not compatible with Inno Setup

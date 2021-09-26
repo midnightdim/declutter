@@ -12,7 +12,7 @@ build_exe_options = {"excludes": ["tkinter", "PyQt5", "PySide6","pandas","matplo
 # other programs
 setup(
     name="DeClutter",                           # Name of the program
-    version="1.10",                              # Version number
+    version="1.12.1",                           # Version number
     description="File tagger and manager",                # Description
     options = {"build_exe": build_exe_options}, # <-- the missing line
     executables=[Executable("DeClutter.py",     # Executable python file

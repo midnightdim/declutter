@@ -198,7 +198,7 @@ class RulesWindow(QMainWindow):
         self.rule_window = RuleEditWindow()
         if self.rule_window.exec_():
             rule = self.rule_window.rule
-            rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1
+            rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1 if self.settings['rules'] else 1
             self.settings['rules'].append(rule)
             #print(self.settings['rules'])
         save_settings(SETTINGS_FILE, self.settings)
@@ -374,7 +374,7 @@ class new_version_checker(QThread):
         try:
             url = 'http://declutter.top/latest_version.txt'
             r = requests.get(url)
-            if r and float(r.text.strip())>float(load_settings()['version']):
+            if r and r.text.strip()>str(load_settings()['version']):
                 reply = QMessageBox.question(window, "New version: " + r.text.strip(),
                 r"There's a new version of DeClutter available. Download now?",
                 QMessageBox.Yes | QMessageBox.No)

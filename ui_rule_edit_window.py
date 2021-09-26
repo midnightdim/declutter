@@ -405,7 +405,7 @@ class Ui_RuleEditWindow(object):
         self.folderAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"Add Folder", None))
         self.sourceRemoveButton.setText(QCoreApplication.translate("RuleEditWindow", u"Remove", None))
         self.allTaggedAddButton.setText(QCoreApplication.translate("RuleEditWindow", u"All tagged", None))
-        self.label_2.setText(QCoreApplication.translate("RuleEditWindow", u"Tags/folders to process", None))
+        self.label_2.setText(QCoreApplication.translate("RuleEditWindow", u"Sources to process", None))
         self.fileWithSameNameLabel.setText(QCoreApplication.translate("RuleEditWindow", u"If file with same name and different size exists:", None))
         self.overwriteComboBox.setItemText(0, QCoreApplication.translate("RuleEditWindow", u"increment name", None))
         self.overwriteComboBox.setItemText(1, QCoreApplication.translate("RuleEditWindow", u"overwrite", None))
