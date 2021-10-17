@@ -1,14 +1,12 @@
 import sys
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (QAction, QWidget, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, \
-    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory, QLabel, QLineEdit, QSizePolicy, QSpacerItem, QPushButton)
-from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer, QRect, QSize
+from PySide2.QtWidgets import (QAction, QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea, \
+    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory)
+from PySide2.QtCore import QObject, QThread, Signal, Slot, QTimer
 from rule_edit_window import RuleEditWindow
 from settings_dialog import SettingsDialog
 from ui_rules_window import Ui_rulesWindow
-from ui_list_dialog import Ui_listDialog
-from declutter_lib import *
-from declutter_tagger import TaggerWindow
+from ui_list_dialog import Ui_listDialog    
 from copy import deepcopy
 from time import time
 import os
@@ -16,8 +14,13 @@ import logging
 from datetime import datetime
 import requests
 import webbrowser
+from declutter_lib import LITE_MODE
 
-#SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
+if LITE_MODE:
+    from declutter_lib_core import *
+else:
+    from declutter_lib import *
+    from declutter_tagger import TaggerWindow
 
 class RulesWindow(QMainWindow):
     def __init__(self):
@@ -65,10 +68,15 @@ class RulesWindow(QMainWindow):
         self.ui.actionClear_log_file.triggered.connect(self.clear_log_file)
         self.ui.actionSettings.triggered.connect(self.show_settings)
         self.ui.actionAbout.triggered.connect(self.show_about)
-        self.ui.actionOpen_Tagger.triggered.connect(self.show_tagger)
+
+        if not LITE_MODE:
+            self.ui.actionOpen_Tagger.triggered.connect(self.show_tagger)
+            self.tagger = TaggerWindow()
+            self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)            
+        else:
+            self.ui.menuOptions_2.removeAction(self.ui.actionManage_Tags)
+            self.ui.toolBar.removeAction(self.ui.actionOpen_Tagger)
         
-        # self.ui.actionMove_up.triggered.connect(self.not_implemented_yet)
-        # self.ui.actionMove_down.triggered.connect(self.not_implemented_yet)
         self.ui.actionMove_up.triggered.connect(self.move_rule_up)
         self.ui.actionMove_down.triggered.connect(self.move_rule_down)
 
@@ -79,9 +87,6 @@ class RulesWindow(QMainWindow):
         #self.connect(timer, SIGNAL("timeout()"), self.start_thread)
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
-
-        self.tagger = TaggerWindow()
-        self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
 
         instanced_thread = new_version_checker(self)
         instanced_thread.start()
@@ -286,8 +291,9 @@ class RulesWindow(QMainWindow):
         self.showRulesWindow = QAction("Rules", self)
         self.showRulesWindow.triggered.connect(self.showNormal)
 
-        self.showTaggerWindow = QAction("Tagger", self)
-        self.showTaggerWindow.triggered.connect(self.show_tagger)
+        if not LITE_MODE:
+            self.showTaggerWindow = QAction("Tagger", self)
+            self.showTaggerWindow.triggered.connect(self.show_tagger)
 
         self.showSettingsWindow = QAction("Settings", self)
         self.showSettingsWindow.triggered.connect(self.show_settings)
@@ -298,7 +304,8 @@ class RulesWindow(QMainWindow):
     def create_tray_icon(self):
         self.trayIconMenu = QMenu(self)
         self.trayIconMenu.addAction(self.showRulesWindow)
-        self.trayIconMenu.addAction(self.showTaggerWindow)
+        if not LITE_MODE:
+            self.trayIconMenu.addAction(self.showTaggerWindow)
         self.trayIconMenu.addAction(self.showSettingsWindow)
         self.trayIconMenu.addSeparator()
         self.trayIconMenu.addAction(self.quitAction)
@@ -316,17 +323,10 @@ class RulesWindow(QMainWindow):
         super().setVisible(visible)        
 
     def show_tagger(self):        
-        # self.tagger = TaggerWindow()
-        # self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
-        self.tagger.show()
-        # self.tagger.setVisible(True)
-        # self.tagger.activateWindow()
-        # self.tagger.restoreState()
-        
-        self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution
-        # self.tagger.ui.tagsScrollArea.setWidgetResizable(True)    
-        # print(self.tagger.ui.tagsLayout.itemAt(1).widget())
-        # print(self.tagger.ui.tagsLayout.itemAt(1).widget().setVisible(True))
+        if not LITE_MODE:
+            self.tagger.show()    
+            self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution
+
     
     @Slot(str, list)
     def show_tray_message(self,message,details):
@@ -397,6 +397,10 @@ def main():
 
     window = RulesWindow()
     window.show()
+    if LITE_MODE:
+        window.setWindowTitle('DeClutter Lite (beta) ' + VERSION)
+    else:
+        window.setWindowTitle('DeClutter (beta) ' + VERSION)
 
     sys.exit(app.exec_())
 

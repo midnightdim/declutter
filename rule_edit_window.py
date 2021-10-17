@@ -1,10 +1,13 @@
 import sys
 from PySide2.QtUiTools import loadUiType
-from PySide2.QtGui import QIcon, QColor, QStandardItemModel
-from PySide2.QtWidgets import QApplication, QListWidget, QDialog, QDialogButtonBox, QFileDialog, QAbstractItemView, QMessageBox, QSizePolicy, QHBoxLayout, QMessageBox
-from PySide2.QtCore import (Qt, QAbstractItemModel, QItemSelectionModel)
+from PySide2.QtGui import QStandardItemModel
+from PySide2.QtWidgets import QApplication,  QDialog,  QFileDialog, QAbstractItemView, QMessageBox,  QMessageBox
+from PySide2.QtCore import QItemSelectionModel
 from ui_rule_edit_window import Ui_RuleEditWindow
-from declutter_lib import get_all_tags, get_files_affected_by_rule, tag_get_color, get_tags_and_groups, ALL_TAGGED_TEXT
+# from declutter_lib import get_files_affected_by_rule, get_tags_and_groups, ALL_TAGGED_TEXT
+from declutter_lib import LITE_MODE
+if not LITE_MODE:
+    from declutter_lib import get_files_affected_by_rule, get_tags_and_groups, ALL_TAGGED_TEXT
 from condition_dialog import ConditionDialog
 from ui_list_dialog import Ui_listDialog
 from os.path import normpath
@@ -12,15 +15,16 @@ from tags_dialog import generate_tag_model
 #from PySide6.QtGui import 
 
 class RuleEditWindow(QDialog):
-    def __init__(self):
+    # def __init__(self, lite_mode = False):
+    def __init__(self):    
         super(RuleEditWindow, self).__init__()
         self.ui = Ui_RuleEditWindow()
         self.ui.setupUi(self)
-
         self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
 
         self.rule = {}
+        # self.lite_mode = lite_mode
         self.updated = False
         # self.rule = get_rule_by_name("Move envato")
         # self.loadRule(self.rule)
@@ -33,14 +37,16 @@ class RuleEditWindow(QDialog):
         self.ui.conditionAddButton.clicked.connect(self.add_condition)
         self.ui.conditionRemoveButton.clicked.connect(self.delete_condition)
         self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
-        self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.ui.allTaggedAddButton.clicked.connect(self.add_all_tagged)
-        
-        self.tag_model = QStandardItemModel()
-        generate_tag_model(self.tag_model,get_tags_and_groups(),False)
-        self.ui.tagsView.setModel(self.tag_model)
-        self.ui.tagsView.expandAll()
-        self.ui.tagsView.clicked.connect(self.tags_selection_changed)
+
+        if not LITE_MODE:
+            self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
+            self.ui.allTaggedAddButton.clicked.connect(self.add_all_tagged)
+            
+            self.tag_model = QStandardItemModel()
+            generate_tag_model(self.tag_model,get_tags_and_groups(),False)       
+            self.ui.tagsView.setModel(self.tag_model)
+            self.ui.tagsView.expandAll()
+            self.ui.tagsView.clicked.connect(self.tags_selection_changed)
         # for t in get_all_tags():
         #     self.ui.tagsList.addItem(t)
         #     color = tag_get_color(t)
@@ -58,6 +64,14 @@ class RuleEditWindow(QDialog):
         # self.ui.tagAddButton.setVisible(False)
         self.ui.conditionLoadButton.setVisible(False)
         self.ui.conditionSaveButton.setVisible(False)
+
+        if LITE_MODE:
+            self.ui.allTaggedAddButton.setVisible(False)
+            self.ui.keepTagsCheckBox.setVisible(False)
+            self.ui.actionComboBox.removeItem(5)
+            self.ui.actionComboBox.removeItem(5)
+            self.ui.actionComboBox.removeItem(5)
+            self.ui.targetFolderEdit.setToolTip('<type> will be replaced with file type')
 
         self.ui.ruleNameEdit.setFocus()
 
@@ -90,9 +104,12 @@ class RuleEditWindow(QDialog):
         self.refresh_conditions()
 
     def edit_condition(self, cond):
+        c = self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(cond).row()]
+        if c['type'] == 'tags' and LITE_MODE:
+            return
         #print(self.ui.conditionListWidget.indexFromItem(cond).row())
         self.condition_window = ConditionDialog()
-        self.condition_window.load_condition(self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(cond).row()])
+        self.condition_window.load_condition(c)
         self.condition_window.exec_()
         #self.condition_window.show()
         # print(self.condition_window.condition)
@@ -221,13 +238,14 @@ class RuleEditWindow(QDialog):
         if 'overwrite_switch' in rule.keys():
             self.ui.overwriteComboBox.setCurrentIndex(self.ui.overwriteComboBox.findText(rule['overwrite_switch']))
 
-        for i in range(self.ui.tagsView.model().rowCount()):
-            for k in range(self.ui.tagsView.model().item(i).rowCount()):
-                if self.ui.tagsView.model().item(i).child(k).text() in rule['tags']:
-                    # print(self.ui.tagsView.model().item(i).child(k).text())
-                    self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)
-        
-        self.ui.selectedTagsLabel.setText('Selected tags: '+','.join(rule['tags']))
+        if not LITE_MODE:
+            for i in range(self.ui.tagsView.model().rowCount()):
+                for k in range(self.ui.tagsView.model().item(i).rowCount()):
+                    if self.ui.tagsView.model().item(i).child(k).text() in rule['tags']:
+                        # print(self.ui.tagsView.model().item(i).child(k).text())
+                        self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(self.ui.tagsView.model().item(i).child(k)),QItemSelectionModel.Select)
+            
+            self.ui.selectedTagsLabel.setText('Selected tags: '+','.join(rule['tags']))
 
         # for index in self.ui.tagsView.setSelection()
         #     if self.ui.tagsView.item(row).text() in rule['tags']:
@@ -248,7 +266,7 @@ class RuleEditWindow(QDialog):
         self.ui.toFolderLabel.setVisible(state in ("Move", "Copy"))
         self.ui.targetFolderEdit.setVisible(state in ("Move", "Copy"))
         self.ui.folderBrowseButton.setVisible(state in ("Move", "Copy","Move to subfolder"))
-        self.ui.keepTagsCheckBox.setVisible(state in ("Move", "Copy","Move to subfolder"))
+        self.ui.keepTagsCheckBox.setVisible(state in ("Move", "Copy","Move to subfolder") and not LITE_MODE)
         self.ui.keepFolderStructureCheckBox.setVisible(state in ("Move", "Copy"))
         self.ui.fileWithSameNameLabel.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))
         self.ui.overwriteComboBox.setVisible(state in ("Move", "Copy", "Rename", "Move to subfolder"))

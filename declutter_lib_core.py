@@ -4,33 +4,97 @@ from json import (load as jsonload, dump as jsondump)
 import os
 import re
 import time
+# import datetime
+# import stat
 from shutil import copy2, move, copytree, rmtree
 from send2trash import send2trash
+# import subprocess
 from pathlib import Path
 import logging
 from fnmatch import fnmatch
-from declutter_lib_core import LITE_MODE, SETTINGS_FILE, APP_FOLDER, VERSION, load_settings, save_settings, get_file_type, apply_all_rules, get_file_time, convert_to_days, get_folder_size, get_size, get_rule_by_name, get_rule_by_id, advanced_copy, copy_file_or_dir, remove_file_or_dir, advanced_move
-if not LITE_MODE:
-    from declutter_lib_tags import *
-# from declutter_sidecar_files import *
-
-import glob
+# import sqlite3
+# import glob
 # import ctypes as _ctypes
 # from ctypes.wintypes import HWND as _HWND, HANDLE as _HANDLE,DWORD as _DWORD,LPCWSTR as _LPCWSTR,MAX_PATH as _MAX_PATH
 # from ctypes import create_unicode_buffer as _cub 
 
-# VERSION = '1.12.1'
-# APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
+VERSION = '1.12.2'
+LITE_MODE = True
+APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
-DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
-# SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
-ALL_TAGGED_TEXT = 'All tagged files and folders'
+# DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
+SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
+# ALL_TAGGED_TEXT = 'All tagged files and folders'
+# TAGS_CACHE = {}
 
 logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
+def load_settings(settings_file = SETTINGS_FILE):
+    # startup_path = get_startup_shortcut_path()
+    if not os.path.isfile(settings_file):
+        settings = {}
+        settings['version'] = VERSION
+        settings['current_folder'] = ''
+        settings['current_drive'] = ''
+        settings['folders'] = [] # TBD legacy
+        settings['tags'] = []
+        settings['filter_tags'] = []
+        settings['rules'] = []
+        settings['recent_folders'] = []
+        settings['rule_exec_interval'] = 300
+        settings['dryrun'] = False
+        settings['tag_filter_mode'] = "any"
+        settings['date_type'] = 0
+        # settings['launch_on_startup'] = os.path.exists(startup_path)
+        settings['view_show_filter'] = False
+        save_settings(settings_file, settings)
+    else:
+        settings = {}
+        try:
+            with open(settings_file, 'r') as f:
+                settings = jsonload(f)
+        except Exception as e:
+            logging.exception(f'exception {e}')
+            logging.error('No settings file found')
+            pass
+        settings['version'] = VERSION 
+        settings['recent_folders'] = settings['recent_folders'] if 'recent_folders' in settings.keys() else [] #TBD implement a better initialization
+        settings['current_drive'] = settings['current_drive'] if 'current_drive' in settings.keys() else ""
+        settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""  
+        settings['folders'] = settings['folders'] if 'folders' in settings.keys() else []
+        settings['tags'] = settings['tags'] if 'tags' in settings.keys() else []
+        settings['filter_tags'] = settings['filter_tags'] if 'filter_tags' in settings.keys() else []
+        settings['rules'] = settings['rules'] if 'rules' in settings.keys() else []
+        settings['rule_exec_interval'] = settings['rule_exec_interval'] if 'rule_exec_interval' in settings.keys() else 300
+        settings['dryrun'] = settings['dryrun'] if 'dryrun' in settings.keys() else False
+        settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
+        settings['date_type'] = settings['date_type'] if 'date_type' in settings.keys() else 0
+        settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
+        default_formats = {'Audio':'*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma', \
+            'Video':'*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv', \
+            'Image':'*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
+        settings['file_types'] = settings['file_types'] if 'file_types' in settings.keys() else default_formats
+        # settings['launch_on_startup'] = settings['launch_on_startup'] if 'launch_on_startup' in settings.keys() else True
+        # settings['launch_on_startup'] = os.path.exists(startup_path) # setting this parameter based on startup shortcut existence - it can be created by Inno Setup, Windows only
+    return settings
+
+
+def save_settings(settings_file, settings):
+    # TBD this should be carefully checked before writing
+    #print(settings)
+    if not Path(settings_file).parent.is_dir():
+        try:
+            Path(settings_file).parent.mkdir()
+        except Exception as e:
+            logging.exception(f'exception {e}')
+
+    with open(settings_file, 'w') as f:
+        jsondump(settings, f, indent=4)
+
+
 def apply_rule(rule, dryrun = False):
-    report = {'copied':0, 'moved':0, 'moved to subfolder':0, 'deleted':0, 'trashed':0, 'tagged':0, 'untagged':0, 'cleared tags':0, 'renamed':0}
+    report = {'copied':0, 'moved':0, 'moved to subfolder':0, 'deleted':0, 'trashed':0, 'renamed':0}
     details = []
     if rule['enabled']:
         files = get_files_affected_by_rule(rule)
@@ -53,8 +117,6 @@ def apply_rule(rule, dryrun = False):
                                     msg = "Replaced " + str(result) + " with " + f
                                     report['copied'] += 1
                             else:
-                                # if not Path(target.parent).is_dir(): #not sure if this is needed - not needed because copytree creates the full tree
-                                #     os.makedirs(target.parent)
                                 if not dryrun:
                                     result = copytree(f, target)  # TBD will probably crash if target exists!
                                     # hide_dc(result) # TBD only for sidecar files
@@ -66,28 +128,25 @@ def apply_rule(rule, dryrun = False):
                                 #result = target
                             else:
                                 if not dryrun:
-                                    # if not Path(target.parent).is_dir():
-                                    #     os.makedirs(target.parent)
-                                    # result = copy2(f, target)
                                     result = advanced_copy(f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 else:
                                     msg = "Copied " + f + " to " + str(result)
                                 if result:
                                     report['copied'] += 1
                                     msg = "Copied " + f + " to " + str(result)
-                        if rule['keep_tags']:
-                            tags = get_tags(f)
-                            if set_tags(result, tags):
-                                #logging.info("Copied tags for " + f)
-                                msg += ", tags copied too"
-                            else:
-                                msg += ", tags not copied"
-                                #logging.info("not copying tags for " + f)
+                        # if rule['keep_tags']:
+                        #     tags = get_tags(f)
+                        #     if set_tags(result, tags):
+                        #         #logging.info("Copied tags for " + f)
+                        #         msg += ", tags copied too"
+                        #     else:
+                        #         msg += ", tags not copied"
+                        #         #logging.info("not copying tags for " + f)
                     except Exception as e:
                         logging.exception(f'exception {e}')
                 elif rule['action'] == 'Move':                    
                     if not dryrun:
-                        tags = get_tags(f)
+                        # tags = get_tags(f)
                         target_folder = resolve_path(rule['target_folder'],p)
                         # print(p)
                         # print(target_folder)
@@ -100,12 +159,12 @@ def apply_rule(rule, dryrun = False):
                             if result:
                                 msg = "Moved " + f + " to " + str(result)
                                 report['moved'] += 1
-                                remove_all_tags(f)
-                                if rule['keep_tags'] and tags: # TBD implement removing tags if keep_tags == False
-                                    set_tags(result, tags)
-                                    # if Path(get_tag_file_path(f)).is_file(): # TBD bring this back for sidecar files
-                                    #     os.remove(get_tag_file_path(f))
-                                    msg += ", with tags"
+                                # remove_all_tags(f)
+                                # if rule['keep_tags'] and tags: # TBD implement removing tags if keep_tags == False
+                                #     set_tags(result, tags)
+                                #     # if Path(get_tag_file_path(f)).is_file(): # TBD bring this back for sidecar files
+                                #     #     os.remove(get_tag_file_path(f))
+                                #     msg += ", with tags"
                         except Exception as e:
                             logging.exception(f'exception {e}')
                     else:
@@ -136,10 +195,10 @@ def apply_rule(rule, dryrun = False):
                                     # if tf.is_file():
                                     #     os.chdir(tf.parent)
                                     #     os.rename(tf.name, newname + '.json')
-                                    tags = get_tags(f)
-                                    if tags:
-                                        remove_all_tags(f)
-                                        set_tags(newfullname, tags)
+                                    # tags = get_tags(f)
+                                    # if tags:
+                                    #     remove_all_tags(f)
+                                    #     set_tags(newfullname, tags)
                                     report['renamed'] += 1
                                     msg = 'Renamed ' + f + ' to ' + str(result)
                             except Exception as e:
@@ -151,7 +210,7 @@ def apply_rule(rule, dryrun = False):
                         logging.error("Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
                     # print('here')
-                    tags = get_tags(f)
+                    # tags = get_tags(f)
                     target_subfolder = resolve_path(rule['target_subfolder'],p)
                     # print(f,tags,target_subfolder)
                     if p.parent.name != target_subfolder: # check if we're not already in the subfolder
@@ -159,13 +218,13 @@ def apply_rule(rule, dryrun = False):
                         if not dryrun:
                             result = advanced_move(f, p.parent / Path(target_subfolder) / p.name, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                             if result:
-                                remove_all_tags(f)
+                                # remove_all_tags(f)
                                 report['moved to subfolder'] += 1
                                 msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
 
-                                if rule['keep_tags'] and tags: # TBD implement removing tags if keep_tags == False
-                                    set_tags(result, tags)
-                                    msg += ", with tags"                                
+                                # if rule['keep_tags'] and tags: # TBD implement removing tags if keep_tags == False
+                                #     set_tags(result, tags)
+                                #     msg += ", with tags"                                
                             #print("going to copy" + f + " to " + rule['target_folder'])
                         else:
                             msg = "Moved " + f + " to subfolder: " + str(target_subfolder)
@@ -174,7 +233,7 @@ def apply_rule(rule, dryrun = False):
                     if not dryrun:
                         report['deleted'] += 1
                         os.remove(f)
-                        remove_all_tags(f)
+                        # remove_all_tags(f)
                         # if get_tag_file_path(f).is_file(): # TBD implement this for sidecar files
                         #     os.remove(get_tag_file_path(f))
                 elif rule['action'] == 'Send to Trash':
@@ -182,27 +241,27 @@ def apply_rule(rule, dryrun = False):
                     if not dryrun:
                         report['trashed'] += 1
                         send2trash(f)
-                        remove_all_tags(f)
+                        # remove_all_tags(f)
                         # if get_tag_file_path(f).is_file(): # TBD implement this for sidecar files
                         #     os.remove(get_tag_file_path(f))
-                elif rule['action'] == 'Tag':            
-                    #if not dryrun:
-                    if rule['tags'] and not set(rule['tags']).issubset(set(get_tags(f))):
-                        add_tags(f, rule['tags'])
-                        msg = "Tagged " + f + " with " + str(rule['tags'])
-                        report['tagged'] += 1
-                elif rule['action'] == 'Remove tags':            
-                    #if not dryrun:
-                    if rule['tags'] and set(rule['tags']).issubset(set(get_tags(f))):
-                        remove_tags(f, rule['tags'])
-                        msg = "Removed these tags from  " + f + ": " + str(rule['tags'])
-                        report['untagged'] += 1
-                elif rule['action'] == 'Clear all tags':
-                    #if not dryrun:
-                    if get_tags(f):
-                        remove_all_tags(f)
-                        msg = "Cleared tags for  " + f
-                        report['cleared tags'] += 1                        
+                # elif rule['action'] == 'Tag':            
+                #     #if not dryrun:
+                #     if rule['tags'] and not set(rule['tags']).issubset(set(get_tags(f))):
+                #         add_tags(f, rule['tags'])
+                #         msg = "Tagged " + f + " with " + str(rule['tags'])
+                #         report['tagged'] += 1
+                # elif rule['action'] == 'Remove tags':            
+                #     #if not dryrun:
+                #     if rule['tags'] and set(rule['tags']).issubset(set(get_tags(f))):
+                #         remove_tags(f, rule['tags'])
+                #         msg = "Removed these tags from  " + f + ": " + str(rule['tags'])
+                #         report['untagged'] += 1
+                # elif rule['action'] == 'Clear all tags':
+                #     #if not dryrun:
+                #     if get_tags(f):
+                #         remove_all_tags(f)
+                #         msg = "Cleared tags for  " + f
+                #         report['cleared tags'] += 1                        
                 if msg:
                     details.append(msg)
                     logging.debug(msg)
@@ -216,44 +275,37 @@ def apply_rule(rule, dryrun = False):
 # TBD: replacing with None should be optional
 
 def resolve_path(target_folder, path):
-    final_path = target_folder.replace('<type>', get_file_type(path))
-    # final_path = re.sub("<group:(.*)>", get_file_tag_by_group('\1'), target_folder)
-    # final_path = re.sub("<group:(.*)>", '\\1', target_folder)
-    rep = re.findall("(<group:(.*?)>)", target_folder)
-    for r in rep:
-        group_tags = get_file_tags_by_group(r[1],path)
-        # print(group_tags)
-        final_path = final_path.replace(r[0],group_tags[0] if group_tags else 'None')
-    
-    return final_path
+    return target_folder.replace('<type>', get_file_type(path))
 
-    # rep = re.findall("<replace:(.*):(.*)>", newname)
-    # newname = re.sub("<replace(.*?)>", '', newname)
-    # for r in rep:
-    #     newname = newname.replace(r[0], r[1])
+# returns file type based on settings, returns "Other" if type is not identified
+def get_file_type(path):
+    settings = load_settings()
+    for ft in settings['file_types']:
+        for p in settings['file_types'][ft].split(','):
+            if fnmatch(path,p.strip()):
+                return ft
+    return 'Other'
 
-# def apply_all_rules(settings):
-#     report = {}
-#     details = []
-#     for rule in settings['rules']:
-#         rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
-#         #print(rule_report)
-#         report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
-#         details.extend(rule_details)
-#     return report, details
+def apply_all_rules(settings):
+    report = {}
+    details = []
+    for rule in settings['rules']:
+        rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
+        #print(rule_report)
+        report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
+        details.extend(rule_details)
+    return report, details
 
 def get_files_affected_by_rule(rule, allow_empty_conditions = False):
-    #print("Rule: "+rule['name'])
 
     if (not 'conditions' in rule.keys() or not rule['conditions']) and not allow_empty_conditions:
         return([])
     found = []
     for f in rule['folders']:
-        if Path(f).is_dir() or f == ALL_TAGGED_TEXT:
+        if Path(f).is_dir():
             found.extend(get_files_affected_by_rule_folder(rule, f, []))
         else:
             logging.error('Folder ' + f + ' in rule ' + rule['name'] + ' doesn\'t exist, skipping')
-        #print(found)
     if 'ignore_newest' in rule.keys() and rule['ignore_newest']:
         folders = {}
         result = []
@@ -280,8 +332,9 @@ def get_files_affected_by_rule(rule, allow_empty_conditions = False):
     #return found
 
 def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
-    check_files() # this is required to clean up the missing or incorrect file paths, TBD optimize this
-    files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(dirname) # TBD not sure if we need get_actual_filename() here
+    # check_files() # this is required to clean up the missing or incorrect file paths, TBD optimize this
+    # files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(dirname) # TBD not sure if we need get_actual_filename() here
+    files = os.listdir(dirname)
     out_files = files_found
     for f in files:
         if f != '.dc': # ignoring .dc folder TBD can be removed for now and brough back for sidecar files
@@ -294,28 +347,22 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                 for c in rule['conditions']:
                     condition_met = False
                     if c['type'] == 'tags':
-                        # print(fullname)
-                        tags = get_tags(fullname)
-                        # print(tags)
-                        common_tags = [value for value in tags if value in c['tags']]                    
-                        # print(common_tags)
-                        if c['tag_switch'] == 'any':
-                            condition_met = len(common_tags) > 0 # or better bool(common_tags)?
-                        elif c['tag_switch'] == 'all':
-                            # print(tags,common_tags)
-                            condition_met = set(common_tags) == set(c['tags']) and tags # tags must be not empty
-                            # print(condition_met)
-                        elif c['tag_switch'] == 'none':
-                            condition_met = common_tags == []
-                        elif c['tag_switch'] == 'no tags':
-                            condition_met = tags == []
-                        elif c['tag_switch'] == 'any tags':
-                            condition_met = len(tags)>0
-                        elif c['tag_switch'] == 'tags in group':
-                            # print(get_tag_groups(fullname))
-                            condition_met = c['tag_group'] in get_tag_groups(fullname)
-                        # if condition_met:
-                        #     print(fullname,tags,common_tags,c['tag_switch'])
+                        # TBD the basic version shouldn't work with tags so we're considering all tag-related conditions as not met - but this may be not correct in case where "none of" conditions apply
+                        condition_met = False
+                        # tags = get_tags(fullname)
+                        # common_tags = [value for value in tags if value in c['tags']]                    
+                        # if c['tag_switch'] == 'any':
+                        #     condition_met = len(common_tags) > 0 # or better bool(common_tags)?
+                        # elif c['tag_switch'] == 'all':
+                        #     condition_met = set(common_tags) == set(c['tags']) and tags # tags must be not empty
+                        # elif c['tag_switch'] == 'none':
+                        #     condition_met = common_tags == []
+                        # elif c['tag_switch'] == 'no tags':
+                        #     condition_met = tags == []
+                        # elif c['tag_switch'] == 'any tags':
+                        #     condition_met = len(tags)>0
+                        # elif c['tag_switch'] == 'tags in group':
+                        #     condition_met = c['tag_group'] in get_tag_groups(fullname)
                     elif c['type'] == 'date':
                         try:
                             settings = load_settings(SETTINGS_FILE)
@@ -369,12 +416,156 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
             if conditions_met:
                 out_files.append(os.path.normpath(fullname))
             
-            # Important: it recurses for 'Rename' and 'Tag' actions, but doesn't recurse for other actions if the folder matches the conditions
+            # Important: it recurses for 'Rename' action, but doesn't recurse for other actions if the folder matches the conditions
             # That's because the whole folder will be copied/moved/trashed and it doesn't make sense to check its files
-            if (rule['action'] in ('Rename', 'Tag', 'Remove tags', 'Clear all tags') or not conditions_met) and os.path.isdir(fullname) and rule['recursive']:
-            #if not conditions_met and os.path.isdir(fullname) and rule['recursive']:
+            # if (rule['action'] in ('Rename', 'Tag', 'Remove tags', 'Clear all tags') or not conditions_met) and os.path.isdir(fullname) and rule['recursive']:
+            if (rule['action'] == 'Rename' or not conditions_met) and os.path.isdir(fullname) and rule['recursive']:
                 get_files_affected_by_rule_folder(rule, fullname, out_files)
     return out_files
+
+def get_file_time(filename, date_type = 0):
+    if Path(filename).exists():
+        if date_type == 0: # earliest of modified & created
+            return min(os.path.getmtime(filename), os.path.getctime(filename))
+        elif date_type == 1: # modified
+            return os.path.getmtime(filename)
+        elif date_type == 2: # created
+            return os.path.getctime(filename)        
+        elif date_type == 3: # latest of modified & created
+            return max(os.path.getmtime(filename), os.path.getctime(filename))        
+        elif date_type == 4: # last access
+            return os.path.getatime(filename)   
+    else:
+        logging.error('File not found: ' + filename)
+
+def convert_to_days(value, units):
+    if units == 'days':
+        return value
+    elif units == 'weeks':
+        return value * 7
+    elif units == 'months':
+        return value * 30.43 # TBD vN this is a bit rough
+    elif units == 'years':
+        return value * 365.25 # TBD vN this is a bit rough
+
+def get_folder_size(start_path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
+
+def get_size(filepath):
+    if Path(filepath).is_dir():
+        return get_folder_size(filepath)
+    elif Path(filepath).is_file():     
+        #print(os.path.getsize(filepath))   
+        return os.path.getsize(filepath)
+    else:
+        return 0 #TBD maybe return an error?
+
+def get_rule_by_name(name):
+    settings = load_settings(SETTINGS_FILE)
+    for r in settings['rules']:
+        if r['name'] == name:
+            return r
+
+def get_rule_by_id(rule_id, rules = []):
+    if not rules:
+        rules = load_settings(SETTINGS_FILE)['rules']
+    for r in rules:
+        if int(r['id']) == rule_id:
+            return r
+
+def advanced_copy(source_path, target_path, overwrite = False):  
+    return advanced_move(source_path, target_path, overwrite, True)
+
+def copy_file_or_dir(source_path, target_path):
+    if Path(source_path).is_file():
+        res = copy2(source_path,target_path)
+    elif Path(source_path).is_dir():
+        res = copytree(source_path, target_path)
+    else:
+        res = False
+    return res
+
+def remove_file_or_dir(filepath):
+    if Path(filepath).is_dir():
+        rmtree(filepath)
+    elif Path(filepath).is_file():
+        os.remove(filepath)
+    else:
+        return False
+
+def advanced_move(source_path, target_path, overwrite = False, copy = False):  # copy = Fale means move = TBD improve this
+    # print('advanced move')
+    # print(source_path)
+    # print(target_path)
+    # print(overwrite)
+    # print(copy)
+    if not os.path.exists(source_path):
+        return False
+    # TBD this may cause problems if some file is tagged inside the folder and the folder is moved/renamed - 
+    # it will be considered as a different folder since size will be different
+    if not os.path.exists(target_path):
+        #print('path doesnt exist, simply moving')
+        try:
+            if not Path(target_path).parent.exists():
+                os.makedirs(Path(target_path).parent)
+            if copy:
+                res = copy_file_or_dir(source_path, target_path)
+            else:
+                res = move(source_path, target_path)
+            return res
+        except Exception as e:
+            #print(e)
+            logging.exception(e)
+            return False  
+    else:
+        #print('sps ' + str(get_size(source_path)))
+        #print('tps ' + str(get_size(target_path)))
+        if get_size(source_path) == get_size(target_path): # file/folder with the same size exists         
+            #print('its file/dir with the same size, skipping')
+            #remove_file_or_dir(source_path)
+            if not copy:
+                remove_file_or_dir(source_path) # if we're moving the file/folder and it's already there just delete the source file/folder
+                return target_path
+            else:                
+                return False 
+            #return target_path # TBD maybe should return something else
+        else:
+            #print('its a file/dir with different size')
+            if overwrite:
+                try:
+                    remove_file_or_dir(target_path)
+                    if copy:
+                        res = copy_file_or_dir(source_path, target_path)
+                    else:
+                        res = move(source_path, target_path)
+                    return res
+                except Exception as e:
+                    #print(e)
+                    logging.exception(e)
+                    return False
+            else:
+                #print('getting new name')
+                new_name = get_nonexistent_path(source_path, target_path)
+                if new_name:
+                    #print('got new name: ' + new_name)                        
+                    try:
+                        if copy:
+                            res = copy_file_or_dir(source_path, new_name)
+                        else:
+                            res = move(source_path, new_name)
+                        return res
+                    except Exception as e:
+                        #print(e)
+                        logging.exception(e)
+                        return False
+                else:
+                    return False
 
 def get_nonexistent_path(src, dst):
     if not os.path.exists(dst): #based on how we call it we should never get here
@@ -394,49 +585,6 @@ def get_nonexistent_path(src, dst):
         new_fname = "{} ({}){}".format(filename, i, file_extension)
     return new_fname
 
-# else:
-#     try:
-#         migrate_db()
-#     except Exception as e:
-#         logging.exception(e)
 
-def get_actual_filename(name):
-    dirs = name.split('\\')
-    # disk letter
-    test_name = [dirs[0].upper()]
-    for d in dirs[1:]:
-        test_name += ["%s[%s]" % (d[:-1], d[-1])]
-    res = glob.glob('\\'.join(test_name))
-    if not res:
-        #File not found
-        return os.path.normpath(Path(name).resolve()) # TBD this is a bit dangerous - will affect symlinks
-    return os.path.normpath(res[0])
-
-# def get_actual_filename2(path):
-#     path = os.path.normpath(path).lower()
-#     parts = path.split(os.sep)
-#     result = parts[0].upper()
-#     # check that root actually exists
-#     if not os.path.exists(result):
-#         return
-#     for part in parts[1:]:
-#         actual = next((item for item in os.listdir(result) if item.lower() == part), None)
-#         if actual is None:
-#             # path doesn't exist
-#             return
-#         result += os.sep + actual
-#     return result
-
-# def get_startup_shortcut_path():
-#     _SHGetFolderPath = _ctypes.windll.shell32.SHGetFolderPathW
-#     _SHGetFolderPath.argtypes = [_HWND, _ctypes.c_int, _HANDLE, _DWORD, _LPCWSTR]
-#     auPathBuffer = _cub(_MAX_PATH)
-#     exit_code=_SHGetFolderPath(0, 24, 0, 0, auPathBuffer) # 24 is the code for Startup folder for All Users
-#     # print(auPathBuffer.value)
-
-#     # pythoncom.CoInitialize() # remove the '#' at the beginning of the line if running in a thread.
-#     return os.path.join(auPathBuffer.value, 'DeClutter.lnk')
-
-
-# check_files()   
-# init_db()
+if not Path(APP_FOLDER).is_dir():
+    Path(APP_FOLDER).mkdir()

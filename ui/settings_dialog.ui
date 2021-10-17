@@ -108,13 +108,6 @@
           </layout>
          </item>
          <item>
-          <widget class="QCheckBox" name="launchOnStartupCheckBox">
-           <property name="text">
-            <string>Launch DeClutter on system startup</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="verticalSpacer_2">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

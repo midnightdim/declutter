@@ -75,11 +75,6 @@ class Ui_settingsDialog(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
-        self.launchOnStartupCheckBox = QCheckBox(self.mainTab)
-        self.launchOnStartupCheckBox.setObjectName(u"launchOnStartupCheckBox")
-
-        self.verticalLayout_2.addWidget(self.launchOnStartupCheckBox)
-
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer_2)
@@ -203,7 +198,6 @@ class Ui_settingsDialog(object):
         self.label_2.setText(QCoreApplication.translate("settingsDialog", u"Process rules every", None))
         self.label_3.setText(QCoreApplication.translate("settingsDialog", u"minutes", None))
         self.label_4.setText(QCoreApplication.translate("settingsDialog", u"Style", None))
-        self.launchOnStartupCheckBox.setText(QCoreApplication.translate("settingsDialog", u"Launch DeClutter on system startup", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.mainTab), QCoreApplication.translate("settingsDialog", u"Main", None))
         self.dateDefGroupBox.setTitle(QCoreApplication.translate("settingsDialog", u"Date definition", None))
         self.label.setText(QCoreApplication.translate("settingsDialog", u"Which date (from file metadata) should be used in rule conditions?", None))

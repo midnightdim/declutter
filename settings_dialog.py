@@ -3,7 +3,7 @@ from PySide2.QtUiTools import loadUiType, QUiLoader
 # from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QSpacerItem, QLineEdit, QPushButton, QStyleFactory, QSizePolicy, QLabel, QTableWidgetItem, QHeaderView
 from PySide2.QtCore import Qt
-from declutter_lib import get_startup_shortcut_path, load_settings, save_settings, SETTINGS_FILE
+from declutter_lib import load_settings, save_settings, SETTINGS_FILE #, get_startup_shortcut_path
 # import winreg
 # Everything imported below is needed for startup shortcut creation, maybe there's a more elegant solution
 import win32com.client
@@ -69,7 +69,7 @@ class SettingsDialog(QDialog):
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(type(c))] # TBD vN this is not very safe
         rbs[self.settings['date_type']].setChecked(True)
         self.ui.ruleExecIntervalEdit.setText(str(self.settings['rule_exec_interval']/60))
-        self.ui.launchOnStartupCheckBox.setChecked(self.settings['launch_on_startup'])
+        # self.ui.launchOnStartupCheckBox.setChecked(self.settings['launch_on_startup'])
 
     # def cell_entered(self,x,y):
     #     print('entered',x,y)
@@ -148,9 +148,9 @@ class SettingsDialog(QDialog):
                 self.settings['date_type'] = rbs.index(c)
         self.settings['rule_exec_interval']=float(self.ui.ruleExecIntervalEdit.text())*60
         self.settings['style'] = self.ui.styleComboBox.currentText()
-        if self.settings['launch_on_startup'] is not self.ui.launchOnStartupCheckBox.isChecked():
-            self.settings['launch_on_startup'] = self.ui.launchOnStartupCheckBox.isChecked()
-            update_startup_link(self.settings['launch_on_startup'])
+        # if self.settings['launch_on_startup'] is not self.ui.launchOnStartupCheckBox.isChecked():
+        #     self.settings['launch_on_startup'] = self.ui.launchOnStartupCheckBox.isChecked()
+        #     update_startup_link(self.settings['launch_on_startup'])
 
         # for f in self.format_fields:
         #     self.settings['file_types'][f] = self.format_fields[f].text() #TBD add validation
@@ -169,24 +169,24 @@ class SettingsDialog(QDialog):
 
 
 
-def update_startup_link(run_on_startup):
-    path = get_startup_shortcut_path()
-    if os.path.exists(path):
-        os.remove(path)
-    if run_on_startup:
-        target = sys.executable
-        # icon = r'C:\path\to\icon\resource.ico' # not needed, but nice
+# def update_startup_link(run_on_startup):
+#     path = get_startup_shortcut_path()
+#     if os.path.exists(path):
+#         os.remove(path)
+#     if run_on_startup:
+#         target = sys.executable
+#         # icon = r'C:\path\to\icon\resource.ico' # not needed, but nice
 
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortCut(path)
-        shortcut.Targetpath = target
-        # print(os.path.pardir(sys.executable))
-        # print(sys.executable)
-        shortcut.WorkingDirectory = os.path.abspath(os.path.join(sys.executable, os.pardir))
-        # shortcut.IconLocation = icon
-        shortcut.WindowStyle = 7 # 7 - Minimized, 3 - Maximized, 1 - Normal
-        print(shortcut)
-        shortcut.save()    
+#         shell = win32com.client.Dispatch("WScript.Shell")
+#         shortcut = shell.CreateShortCut(path)
+#         shortcut.Targetpath = target
+#         # print(os.path.pardir(sys.executable))
+#         # print(sys.executable)
+#         shortcut.WorkingDirectory = os.path.abspath(os.path.join(sys.executable, os.pardir))
+#         # shortcut.IconLocation = icon
+#         shortcut.WindowStyle = 7 # 7 - Minimized, 3 - Maximized, 1 - Normal
+#         print(shortcut)
+#         shortcut.save()    
 
     # The implementation below uses winreg and works, but raises antivirus problems, also it's not compatible with Inno Setup
     # key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run', 0, winreg.KEY_SET_VALUE)
