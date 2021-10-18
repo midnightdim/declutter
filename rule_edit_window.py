@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtUiTools import loadUiType
+#from PySide2.QtUiTools import loadUiType
 from PySide2.QtGui import QStandardItemModel
 from PySide2.QtWidgets import QApplication,  QDialog,  QFileDialog, QAbstractItemView, QMessageBox,  QMessageBox
 from PySide2.QtCore import QItemSelectionModel
