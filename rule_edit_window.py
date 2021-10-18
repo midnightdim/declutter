@@ -8,6 +8,8 @@ from ui_rule_edit_window import Ui_RuleEditWindow
 from declutter_lib import LITE_MODE
 if not LITE_MODE:
     from declutter_lib import get_files_affected_by_rule, get_tags_and_groups, ALL_TAGGED_TEXT
+else:
+    from declutter_lib_core import get_files_affected_by_rule
 from condition_dialog import ConditionDialog
 from ui_list_dialog import Ui_listDialog
 from os.path import normpath
