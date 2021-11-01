@@ -1,4 +1,5 @@
-import sqlite3, os, logging, datetime
+import sqlite3, os, logging
+from datetime import datetime
 from pathlib import Path
 
 from declutter_lib import load_settings, save_settings, SETTINGS_FILE
@@ -47,7 +48,7 @@ def create_tag(tag, group_id = 1):
     else:
         count = row+1
 
-    c.execute("INSERT INTO tags VALUES (null, ?, ?, null, ?)", (tag,count,group_id)) # TBD replace 1 here
+    c.execute("INSERT INTO tags VALUES (null, ?, ?, null, ?)", (tag,count,group_id))
     tag_id = c.lastrowid
     conn.commit()
     conn.close()
@@ -142,7 +143,7 @@ def set_tags(filename, tags): # TBD optimize this
                 tag_id = create_tag(t)
             else:            
                 tag_id = row[0] 
-            c.execute("INSERT INTO file_tags VALUES (?,?,?)", (file_id,tag_id,datetime.datetime.now()))
+            c.execute("INSERT INTO file_tags VALUES (?,?,?)", (file_id,tag_id,datetime.now()))
             #print('inserting tags for {}, {}'.format(file_id,tag_id))
         conn.commit()
         conn.close()
@@ -151,8 +152,6 @@ def set_tags(filename, tags): # TBD optimize this
     except Exception as e:
         logging.exception(e)
         return False
-
-# set_tags('D:\dc_test\Projects\Seeds\seeds4.jpg',['Seeds'])
 
 def get_tags(filename):
     filename = os.path.normpath(filename).lower()
@@ -442,6 +441,7 @@ def get_file_tags_by_group(group, filename):
 # path = unicodedata.normalize('NFKD', title).encode('utf8')
 # os.mkdir(path)
 # encode('ascii', 'replace'))
+
 
 def check_files(): # TBD need to notify user about lost files (not just log this)!!
     files = get_all_files_from_db()

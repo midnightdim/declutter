@@ -199,13 +199,11 @@ class RulesWindow(QMainWindow):
             print("Service still running, skipping the scheduled exec") 
     
     def add_rule(self):
-        #print("Opening rule window")
         self.rule_window = RuleEditWindow()
         if self.rule_window.exec_():
             rule = self.rule_window.rule
             rule['id'] = max([int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()])+1 if self.settings['rules'] else 1
             self.settings['rules'].append(rule)
-            #print(self.settings['rules'])
         save_settings(SETTINGS_FILE, self.settings)
         self.load_rules()
 
@@ -217,15 +215,12 @@ class RulesWindow(QMainWindow):
             rule = deepcopy(self.settings['rules'][r])
             self.rule_window = RuleEditWindow()
             self.rule_window.load_rule(rule)
-            self.rule_window.exec_() # TBD this should return 1 or 0 for Save and Cancel, but it doesn't, so I had to use .updated flag, should be revised
-            if self.rule_window.updated:
+            if self.rule_window.exec_():
                 self.settings['rules'][r] = self.rule_window.rule
         save_settings(SETTINGS_FILE, self.settings)
         self.load_rules()
         
     def delete_rule(self):
-        #r = self.ui.rulesTable.currentRow()
-        #print(r)
         del_indexes = [r.row() for r in self.ui.rulesTable.selectedIndexes()]
 
         if del_indexes:
@@ -236,8 +231,6 @@ class RulesWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
                 for ind in sorted(del_indexes, reverse=True):
-                    #print("removing",r.row())
-                    #print(self.settings['rules'][r.row()]['name'])
                     del self.settings['rules'][ind]            
                     self.ui.rulesTable.removeRow(ind)
 
@@ -262,18 +255,13 @@ class RulesWindow(QMainWindow):
         msgBox.exec_()
 
     def load_rules(self):
-        #print(self.settings['rules'])
-        #self.ui.rulesTable.insertRow(1)
         self.settings = load_settings()       
         self.ui.rulesTable.setRowCount(len(self.settings['rules']))
         i = 0
-        # self.ui.rulesTable.setItem(0,0,newItem)
-        
-        rule_ids = [int(r['id']) for r in self.settings['rules'] if 'id' in r.keys()] 
-        rule_ids.sort()
-        for rule_id in rule_ids:
-            #rule = self.settings['rules'][rule_id]
-            rule = get_rule_by_id(rule_id)  # TBD vN this look inefficient
+        rules = [(int(r['id']), r) for r in self.settings['rules'] if 'id' in r.keys()] 
+        rules.sort(key=lambda y:y[0])
+
+        for id, rule in rules:
             newItem = QTableWidgetItem(rule['name'])
             self.ui.rulesTable.setItem(i,0,newItem)
             newItem = QTableWidgetItem("Enabled" if rule['enabled'] else "Disabled")
@@ -338,14 +326,11 @@ class RulesWindow(QMainWindow):
                 15000,
             )
         # logging.debug("Details"+str(details))
-        # print(details)
         self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
 
 class service_signals(QObject):
-    signal1 = Signal(str,list)
-    #signal_str2 = Signal(list)
-    #signal_int = Signal(int)    
+    signal1 = Signal(str,list) 
 
 class declutter_service(QThread):
     def __init__(self, parent=None):

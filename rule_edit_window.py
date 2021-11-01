@@ -190,11 +190,6 @@ class RuleEditWindow(QDialog):
                 QMessageBox.Yes | QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     self.rule['enabled'] = True
-            self.updated = True
-            #self.rule_init = self.rule
-            #self.setResult(QDialog.DialogCode.Accepted)  # TBD vN doesn't work for some reason, we shouldn't use a special variable self.updated at all
-            #self.setResult(1)
-            #print(self.result())
             super(RuleEditWindow, self).accept()
 
     def test_rule(self):

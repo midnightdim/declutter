@@ -1,14 +1,14 @@
 import sys
-from PySide2.QtUiTools import loadUiType, QUiLoader
+from PySide2.QtUiTools import loadUiType
 # from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QSpacerItem, QLineEdit, QPushButton, QStyleFactory, QSizePolicy, QLabel, QTableWidgetItem, QHeaderView
+from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QStyleFactory, QTableWidgetItem
 from PySide2.QtCore import Qt
 from declutter_lib import load_settings, save_settings, SETTINGS_FILE #, get_startup_shortcut_path
 # import winreg
 # Everything imported below is needed for startup shortcut creation, maybe there's a more elegant solution
-import win32com.client
+# import win32com.client
 # import pythoncom
-import os
+# import os
 
 from ui_settings_dialog import Ui_settingsDialog
 

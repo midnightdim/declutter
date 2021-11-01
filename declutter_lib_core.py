@@ -19,7 +19,7 @@ from fnmatch import fnmatch
 # from ctypes import create_unicode_buffer as _cub 
 
 VERSION = '1.12.2'
-LITE_MODE = True
+LITE_MODE = False
 APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 # DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
@@ -37,17 +37,17 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['version'] = VERSION
         settings['current_folder'] = ''
         settings['current_drive'] = ''
-        settings['folders'] = [] # TBD legacy
+        settings['folders'] = []
         settings['tags'] = []
-        settings['filter_tags'] = []
+        # settings['filter_tags'] = []
         settings['rules'] = []
         settings['recent_folders'] = []
         settings['rule_exec_interval'] = 300
         settings['dryrun'] = False
-        settings['tag_filter_mode'] = "any"
+        # settings['tag_filter_mode'] = "any"
         settings['date_type'] = 0
         # settings['launch_on_startup'] = os.path.exists(startup_path)
-        settings['view_show_filter'] = False
+        # settings['view_show_filter'] = False
         save_settings(settings_file, settings)
     else:
         settings = {}
@@ -64,13 +64,13 @@ def load_settings(settings_file = SETTINGS_FILE):
         settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""  
         settings['folders'] = settings['folders'] if 'folders' in settings.keys() else []
         settings['tags'] = settings['tags'] if 'tags' in settings.keys() else []
-        settings['filter_tags'] = settings['filter_tags'] if 'filter_tags' in settings.keys() else []
+        # settings['filter_tags'] = settings['filter_tags'] if 'filter_tags' in settings.keys() else []
         settings['rules'] = settings['rules'] if 'rules' in settings.keys() else []
         settings['rule_exec_interval'] = settings['rule_exec_interval'] if 'rule_exec_interval' in settings.keys() else 300
         settings['dryrun'] = settings['dryrun'] if 'dryrun' in settings.keys() else False
-        settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
+        # settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
         settings['date_type'] = settings['date_type'] if 'date_type' in settings.keys() else 0
-        settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
+        # settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
         default_formats = {'Audio':'*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma', \
             'Video':'*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv', \
             'Image':'*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
@@ -81,8 +81,6 @@ def load_settings(settings_file = SETTINGS_FILE):
 
 
 def save_settings(settings_file, settings):
-    # TBD this should be carefully checked before writing
-    #print(settings)
     if not Path(settings_file).parent.is_dir():
         try:
             Path(settings_file).parent.mkdir()
@@ -182,7 +180,6 @@ def apply_rule(rule, dryrun = False):
                         if not dryrun:
                             try:
                                 #os.chdir(p.parent)                      
-                                #os.rename(p.name, newname) #TBD what if file exists?
                                 #print('renaming ' + str(p) + ' to ' + str(Path(p.parent) / newname))
                                 result = advanced_move(p, Path(p.parent) / newname, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 if result:
@@ -289,8 +286,8 @@ def get_file_type(path):
 def apply_all_rules(settings):
     report = {}
     details = []
-    for rule in settings['rules']:
-        rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
+    for rule in settings['rules']: # TBD this doesn't respect the order by id
+        rule_report, rule_details = apply_rule(rule, settings['dryrun']) # TBD vN doesn't look optimal
         #print(rule_report)
         report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
         details.extend(rule_details)
@@ -499,7 +496,7 @@ def remove_file_or_dir(filepath):
     else:
         return False
 
-def advanced_move(source_path, target_path, overwrite = False, copy = False):  # copy = Fale means move = TBD improve this
+def advanced_move(source_path, target_path, overwrite = False, copy = False):  # copy = False means move = TBD improve this
     # print('advanced move')
     # print(source_path)
     # print(target_path)
@@ -507,10 +504,8 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):  #
     # print(copy)
     if not os.path.exists(source_path):
         return False
-    # TBD this may cause problems if some file is tagged inside the folder and the folder is moved/renamed - 
-    # it will be considered as a different folder since size will be different
     if not os.path.exists(target_path):
-        #print('path doesnt exist, simply moving')
+        #p Target path doesnt exist, simply moving/copying
         try:
             if not Path(target_path).parent.exists():
                 os.makedirs(Path(target_path).parent)
@@ -520,7 +515,6 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):  #
                 res = move(source_path, target_path)
             return res
         except Exception as e:
-            #print(e)
             logging.exception(e)
             return False  
     else:
@@ -534,9 +528,8 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):  #
                 return target_path
             else:                
                 return False 
-            #return target_path # TBD maybe should return something else
         else:
-            #print('its a file/dir with different size')
+            # It's a file/dir with different size
             if overwrite:
                 try:
                     remove_file_or_dir(target_path)
@@ -546,14 +539,12 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):  #
                         res = move(source_path, target_path)
                     return res
                 except Exception as e:
-                    #print(e)
                     logging.exception(e)
                     return False
             else:
-                #print('getting new name')
+                # Getting an available name
                 new_name = get_nonexistent_path(source_path, target_path)
                 if new_name:
-                    #print('got new name: ' + new_name)                        
                     try:
                         if copy:
                             res = copy_file_or_dir(source_path, new_name)
@@ -561,7 +552,6 @@ def advanced_move(source_path, target_path, overwrite = False, copy = False):  #
                             res = move(source_path, new_name)
                         return res
                     except Exception as e:
-                        #print(e)
                         logging.exception(e)
                         return False
                 else:

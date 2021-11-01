@@ -3,7 +3,7 @@
 from json import (load as jsonload, dump as jsondump)
 import os
 import re
-import time
+from time import time
 from shutil import copy2, move, copytree, rmtree
 from send2trash import send2trash
 from pathlib import Path
@@ -320,10 +320,10 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found = []):
                         try:
                             settings = load_settings(SETTINGS_FILE)
                             if c['age_switch'] == '>=':
-                                if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) >= convert_to_days(float(c['age']), c['age_units']):
+                                if (float(time()) - get_file_time(fullname, settings['date_type']))/(3600*24) >= convert_to_days(float(c['age']), c['age_units']):
                                     condition_met = True
                             elif c['age_switch'] == '<':
-                                if (float(time.time()) - get_file_time(fullname, settings['date_type']))/(3600*24) < convert_to_days(float(c['age']), c['age_units']):
+                                if (float(time()) - get_file_time(fullname, settings['date_type']))/(3600*24) < convert_to_days(float(c['age']), c['age_units']):
                                     condition_met = True
                         except Exception as e:
                             logging.exception(e)
