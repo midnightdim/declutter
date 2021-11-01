@@ -9,7 +9,7 @@ from send2trash import send2trash
 from pathlib import Path
 import logging
 from fnmatch import fnmatch
-from declutter_lib_core import LITE_MODE, SETTINGS_FILE, APP_FOLDER, VERSION, load_settings, save_settings, get_file_type, apply_all_rules, get_file_time, convert_to_days, get_folder_size, get_size, get_rule_by_name, get_rule_by_id, advanced_copy, copy_file_or_dir, remove_file_or_dir, advanced_move
+from declutter_lib_core import LITE_MODE, SETTINGS_FILE, APP_FOLDER, VERSION, load_settings, save_settings, get_file_type, get_file_time, convert_to_days, get_folder_size, get_size, get_rule_by_name, get_rule_by_id, advanced_copy, copy_file_or_dir, remove_file_or_dir, advanced_move
 if not LITE_MODE:
     from declutter_lib_tags import *
 # from declutter_sidecar_files import *
@@ -232,15 +232,15 @@ def resolve_path(target_folder, path):
     # for r in rep:
     #     newname = newname.replace(r[0], r[1])
 
-# def apply_all_rules(settings):
-#     report = {}
-#     details = []
-#     for rule in settings['rules']:
-#         rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
-#         #print(rule_report)
-#         report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
-#         details.extend(rule_details)
-#     return report, details
+def apply_all_rules(settings):
+    report = {}
+    details = []
+    for rule in settings['rules']:
+        rule_report, rule_details = apply_rule(rule, load_settings()['dryrun']) # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
+        #print(rule_report)
+        report = {k: report.get(k, 0) + rule_report.get(k, 0) for k in set(report) | set(rule_report)}
+        details.extend(rule_details)
+    return report, details
 
 def get_files_affected_by_rule(rule, allow_empty_conditions = False):
     #print("Rule: "+rule['name'])
