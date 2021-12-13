@@ -12,6 +12,7 @@ from send2trash import send2trash
 from pathlib import Path
 import logging
 from fnmatch import fnmatch
+from appdirs import user_data_dir
 # import sqlite3
 # import glob
 # import ctypes as _ctypes
@@ -20,15 +21,16 @@ from fnmatch import fnmatch
 
 VERSION = '1.12.2'
 LITE_MODE = False
-APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
+APP_FOLDER = user_data_dir("DeClutter")
+# APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 # DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
 # ALL_TAGGED_TEXT = 'All tagged files and folders'
 # TAGS_CACHE = {}
 
-logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
-                        format="%(asctime)-15s %(levelname)-8s %(message)s")
+# logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
+#                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
 def load_settings(settings_file = SETTINGS_FILE):
     # startup_path = get_startup_shortcut_path()

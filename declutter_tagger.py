@@ -15,7 +15,7 @@ from send2trash import send2trash
 from datetime import datetime
 from file_system_model_lite import FileSystemModelLite
 from condition_dialog import ConditionDialog
-from qt_material import apply_stylesheet
+# from qt_material import apply_stylesheet
 
 class TaggerWindow(QMainWindow):
     def __init__(self, parent = None):

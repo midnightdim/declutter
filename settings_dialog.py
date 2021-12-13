@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtUiTools import loadUiType
+# from PySide2.QtUiTools import loadUiType
 # from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QDialog, QMessageBox, QStyleFactory, QTableWidgetItem
 from PySide2.QtCore import Qt

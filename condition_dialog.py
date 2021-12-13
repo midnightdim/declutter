@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtUiTools import loadUiType
+# from PySide2.QtUiTools import loadUiType
 from PySide2.QtGui import QStandardItemModel
 from PySide2.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox
 from PySide2.QtCore import QItemSelectionModel
@@ -36,7 +36,7 @@ class ConditionDialog(QDialog):
         #         self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
 
         #self.loadCondition()
-        self.ui.typeCombo.insertItems(0,load_settings()['file_types'].keys())
+        self.ui.typeCombo.insertItems(0,list(load_settings()['file_types'].keys()))
         self.update_visibility()
 
         if not LITE_MODE:
