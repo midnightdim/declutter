@@ -1,9 +1,9 @@
 from os import mkdir
 import sys
-from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QTreeView, QLineEdit, QMessageBox
-from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QDialog, QFileDialog, QListWidget, QDialogButtonBox, QSpacerItem, QSlider, QAbstractSlider, QComboBox, QInputDialog
-from PySide2.QtCore import QObject, QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QSignalBlocker, QMimeData, QUrl, QDateTime, QMimeDatabase
+from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel
+from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QLineEdit, QMessageBox
+from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QLabel, QCheckBox, QFileDialog, QAbstractSlider, QComboBox, QInputDialog
+from PySide2.QtCore import QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QMimeData, QUrl, QMimeDatabase
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from PySide2.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
@@ -12,10 +12,10 @@ from declutter_lib import *
 from os.path import normpath
 from pathlib import Path
 from send2trash import send2trash
-from datetime import datetime
+# from datetime import datetime
 from file_system_model_lite import FileSystemModelLite
 from condition_dialog import ConditionDialog
-from qt_material import apply_stylesheet
+# from qt_material import apply_stylesheet
 
 class TaggerWindow(QMainWindow):
     def __init__(self, parent = None):
@@ -1111,6 +1111,8 @@ def millis_to_str(duration):
 def main():
     app = QApplication(sys.argv)
     #QApplication.setQuitOnLastWindowClosed(False)
+    
+    # can be used with qt_material
     # apply_stylesheet(app, theme='light_purple.xml', invert_secondary=True)
     window = TaggerWindow()
     window.show()
