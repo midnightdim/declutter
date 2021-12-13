@@ -1,11 +1,14 @@
 import sqlite3, os, logging
 from datetime import datetime
 from pathlib import Path
+from appdirs import user_data_dir
 
 from declutter_lib import load_settings, save_settings, SETTINGS_FILE
+from declutter_lib_core import APP_FOLDER
 
 TAGS_CACHE = {}
-APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
+APP_FOLDER = user_data_dir("DeClutter")
+# APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
 
