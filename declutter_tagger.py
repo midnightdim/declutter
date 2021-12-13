@@ -1,5 +1,5 @@
 from os import mkdir
-import sys
+import sys, subprocess
 from PySide2.QtGui import QIcon, QColor, QCursor, QStandardItemModel
 from PySide2.QtWidgets import QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QAction, QFrame, QLineEdit, QMessageBox
 from PySide2.QtWidgets import QWidgetAction, QHBoxLayout, QLabel, QCheckBox, QFileDialog, QAbstractSlider, QComboBox, QInputDialog
@@ -764,7 +764,7 @@ class TaggerWindow(QMainWindow):
             self.settings['current_folder'] = file_path
             save_settings(SETTINGS_FILE,self.settings)
         elif os.path.isfile(file_path):
-            os.startfile(file_path)
+            open_file(file_path)
 
     def create_folder(self):
         folder, ok = QInputDialog.getText(self, "Create new folder",
@@ -1107,6 +1107,13 @@ def millis_to_str(duration):
     #     minutes = "0"+minutes    
     hours=str(int((millis/(1000*60*60))%24))
     return (hours+":" if hours != "0" else "")+minutes+":"+seconds
+
+def open_file(filename):
+    if sys.platform == "win32":
+        os.startfile(filename)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
 
 def main():
     app = QApplication(sys.argv)
