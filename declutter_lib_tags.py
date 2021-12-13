@@ -7,7 +7,7 @@ from declutter_lib import load_settings, save_settings, SETTINGS_FILE
 from declutter_lib_core import APP_FOLDER
 
 TAGS_CACHE = {}
-APP_FOLDER = user_data_dir("DeClutter")
+APP_FOLDER = user_data_dir("DeClutter", appauthor='', roaming=True)
 # APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")

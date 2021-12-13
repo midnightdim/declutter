@@ -21,7 +21,7 @@ from appdirs import user_data_dir
 
 VERSION = '1.12.2'
 LITE_MODE = False
-APP_FOLDER = user_data_dir("DeClutter")
+APP_FOLDER = user_data_dir("DeClutter", appauthor='', roaming=True)
 # APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 # DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
