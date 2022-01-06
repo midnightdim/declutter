@@ -19,9 +19,11 @@ from appdirs import user_data_dir
 # from ctypes.wintypes import HWND as _HWND, HANDLE as _HANDLE,DWORD as _DWORD,LPCWSTR as _LPCWSTR,MAX_PATH as _MAX_PATH
 # from ctypes import create_unicode_buffer as _cub 
 
-VERSION = '1.12.2'
+VERSION = '1.12.2.1'
 LITE_MODE = False
 APP_FOLDER = user_data_dir("DeClutter", appauthor='', roaming=True)
+if not os.path.isdir(APP_FOLDER):
+    os.makedirs(APP_FOLDER)
 # APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
 LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
 # DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")

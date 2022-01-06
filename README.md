@@ -31,4 +31,4 @@ Tagger supports files drag-n-drop with Windows Explorer and between tagger windo
 - if you drag to Windows Explorer you can use Shift key to move the file (by default it's going to be copied)
 - if you drag to another tagger window you can use Ctrl key to copy the file (by default it's going to be moved)
 
-DeClutter is currently available for Windows only. It can be ported to Mac OS and Linux.
+DeClutter is primarily tested on Windows. It runs on MacOS, but hasn't been fully ported yet.
