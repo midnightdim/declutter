@@ -88,12 +88,22 @@ class RulesWindow(QMainWindow):
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
 
-        instanced_thread = new_version_checker(self)
-        instanced_thread.start()
-        #DoubleClicked.connect(self.editRule)
+        self.instanced_thread = new_version_checker(self)
+        self.instanced_thread.start()
+        self.instanced_thread.version.connect(self.suggest_download)
     
     # def not_implemented_yet(self):   
     #     QMessageBox.information(self,"Sorry", "This feature is not implemented yet!")
+    def suggest_download(self, version):
+        if version and version>str(load_settings()['version']):
+            reply = QMessageBox.question(self, "New version: " + version,
+            r"There's a new version of DeClutter available. Download now?",
+            QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                try:
+                    webbrowser.open('https://declutter.top/DeClutter.latest.exe')
+                except Exception as e:
+                    logging.exception(f'exception {e}')
 
     def tray_activated(self, reason):
         if reason == QSystemTrayIcon.DoubleClick:
@@ -105,7 +115,6 @@ class RulesWindow(QMainWindow):
             rule_id = int(self.settings['rules'][rule_idx]['id'])
             #print("swapping",self.settings['rules'][rule_idx]['name'],"and",self.settings['rules'][rule_idx-1]['name'])
             # print(self.settings['rules'][rule_idx]['id'])
-            # print(self.settings['rules'][rule_idx-1]['id'])
             self.settings['rules'][rule_idx]['id'] = self.settings['rules'][rule_idx-1]['id']
             self.settings['rules'][rule_idx-1]['id'] = rule_id
 
@@ -352,22 +361,16 @@ class declutter_service(QThread):
         self.signals.signal1.emit(msg, details)
 
 class new_version_checker(QThread):
+    version = Signal(str)
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
     def run(self):
         try:
-            url = 'http://declutter.top/latest_version.txt'
+            url = 'https://declutter.top/latest_version.txt'
             r = requests.get(url)
-            if r and r.text.strip()>str(load_settings()['version']):
-                reply = QMessageBox.question(window, "New version: " + r.text.strip(),
-                r"There's a new version of DeClutter available. Download now?",
-                QMessageBox.Yes | QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    try:
-                        webbrowser.open('http://declutter.top/DeClutter.latest.exe')
-                    except Exception as e:
-                        logging.exception(f'exception {e}')
+            self.version.emit(r.text.strip())
 
         except Exception as e:
             logging.exception(f'exception {e}')
