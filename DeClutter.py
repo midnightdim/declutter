@@ -385,6 +385,7 @@ def main():
 
     window = RulesWindow()
     window.show()
+    # window.showMinimized()
     if LITE_MODE:
         window.setWindowTitle('DeClutter Lite (beta) ' + VERSION)
     else:

@@ -406,7 +406,11 @@ def get_actual_filename(name):
     test_name = [dirs[0].upper()]
     for d in dirs[1:]:
         test_name += ["%s[%s]" % (d[:-1], d[-1])]
-    res = glob.glob('\\'.join(test_name))
+    res = ""
+    try:
+        res = glob.glob('\\'.join(test_name))
+    except Exception as e:
+        logging.exception(e)
     if not res:
         #File not found
         return os.path.normpath(Path(name).resolve()) # TBD this is a bit dangerous - will affect symlinks
