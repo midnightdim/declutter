@@ -11,7 +11,7 @@ from declutter.config import load_settings, save_settings, SETTINGS_FILE
 # import pythoncom
 # import os
 
-from ui_settings_dialog import Ui_settingsDialog
+from .ui.ui_settings_dialog import Ui_settingsDialog
 
 
 class SettingsDialog(QDialog):

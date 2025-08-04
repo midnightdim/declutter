@@ -13,3 +13,4 @@ build/
 sandbox/
 ui/icons/
 ui_*.py
+.vscode

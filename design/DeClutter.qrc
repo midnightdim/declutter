@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="/images/icons">
+    <file alias="folder.svg">../assets/icons/folder.svg</file>
+    <file alias="tag.svg">../assets/icons/tag.svg</file>
+    <file alias="network-1.svg">../assets/icons/network-1.svg</file>
+    <file alias="media-pause.svg">../assets/icons/media-pause.svg</file>
+    <file alias="media-play.svg">../assets/icons/media-play.svg</file>
+    <file alias="tags.svg">../assets/icons/tags.svg</file>
+    <file alias="brush.svg">../assets/icons/brush.svg</file>
+    <file alias="DeClutter.ico">../assets/DeClutter.ico</file>  <!-- Note: .ico may need separate handling if not SVG -->
+    <file alias="arrow-thin-down.svg">../assets/icons/arrow-thin-down.svg</file>
+    <file alias="arrow-thin-up.svg">../assets/icons/arrow-thin-up.svg</file>
+    <file alias="document-new.svg">../assets/icons/document-new.svg</file>
+    <file alias="trash.svg">../assets/icons/trash.svg</file>
+  </qresource>
+</RCC>

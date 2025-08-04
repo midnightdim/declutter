@@ -3,11 +3,11 @@ from os.path import normpath
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication,  QDialog,  QFileDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import QItemSelectionModel
-from ui_list_dialog import Ui_listDialog
-from ui_rule_edit_window import Ui_RuleEditWindow
-from condition_dialog import ConditionDialog
+from .ui.ui_list_dialog import Ui_listDialog
+from .ui.ui_rule_edit_window import Ui_RuleEditWindow
+from src.condition_dialog import ConditionDialog
 
-from tags_dialog import generate_tag_model
+from .tags_dialog import generate_tag_model
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import get_tags_and_groups
 from declutter.config import ALL_TAGGED_TEXT

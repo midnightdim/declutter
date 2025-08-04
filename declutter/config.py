@@ -68,8 +68,6 @@ def load_settings(settings_file=SETTINGS_FILE):
                            'Image': '*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
         settings['file_types'] = settings['file_types'] if 'file_types' in settings.keys(
         ) else default_formats
-        # settings['launch_on_startup'] = settings['launch_on_startup'] if 'launch_on_startup' in settings.keys() else True
-        # settings['launch_on_startup'] = os.path.exists(startup_path) # setting this parameter based on startup shortcut existence - it can be created by Inno Setup, Windows only
     return settings
 
 def save_settings(settings_file, settings):

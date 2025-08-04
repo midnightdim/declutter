@@ -24,7 +24,6 @@ class FileTree(QTreeView):
     def dragLeaveEvent(self, event):
         # print('drag leave')
         self.parent().parent().player.stop()
-        self.parent().parent().playlist.clear()
 
     # def dragMoveEvent(self, event):
         # print('drag')

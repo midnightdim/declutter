@@ -14,8 +14,8 @@ from PySide6.QtCore import (
 )
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
-from ui_tagger_window import Ui_taggerWindow
-from tags_dialog import TagsDialog, generate_tag_model
+from .ui.ui_tagger_window import Ui_taggerWindow
+from .tags_dialog import TagsDialog, generate_tag_model
 from declutter.config import (
     SETTINGS_FILE, load_settings, save_settings, ALL_TAGGED_TEXT
 )
@@ -29,8 +29,8 @@ from declutter.file_utils import (
 )
 
 # from datetime import datetime
-from file_system_model_lite import FileSystemModelLite
-from condition_dialog import ConditionDialog
+from .file_system_model_lite import FileSystemModelLite
+from .condition_dialog import ConditionDialog
 # from qt_material import apply_stylesheet
 
 
@@ -39,7 +39,7 @@ class TaggerWindow(QMainWindow):
         super(TaggerWindow, self).__init__(parent)
         self.ui = Ui_taggerWindow()
         self.ui.setupUi(self)
-
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
         self.player = QMediaPlayer()
         self._audio_output = QAudioOutput()
         self.player.setAudioOutput(self._audio_output)

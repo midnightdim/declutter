@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>1302</width>
-    <height>817</height>
+    <height>818</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>DeClutter (beta): Tagger</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="DeClutter.qrc">
+   <iconset>
     <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>1302</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
@@ -139,11 +139,8 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
    <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::LeftDockWidgetArea|Qt::DockWidgetArea::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Tags</string>
@@ -183,10 +180,10 @@
         </sizepolicy>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Box</enum>
+        <enum>QFrame::Shape::Box</enum>
        </property>
        <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
+        <enum>QFrame::Shadow::Plain</enum>
        </property>
        <property name="lineWidth">
         <number>0</number>
@@ -199,8 +196,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>180</width>
-          <height>478</height>
+          <width>185</width>
+          <height>476</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -220,7 +217,7 @@
          <item row="1" column="0">
           <spacer name="verticalSpacer">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -265,7 +262,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="DeClutter.qrc">
+            <iconset>
              <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
            </property>
           </widget>
@@ -273,7 +270,7 @@
          <item>
           <widget class="Slider" name="mediaPositionSlider">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
           </widget>
          </item>
@@ -313,7 +310,7 @@
           <string>0:00 / 0:00</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -336,7 +333,7 @@
     </size>
    </property>
    <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::LeftDockWidgetArea|Qt::DockWidgetArea::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Tags Filters</string>
@@ -349,7 +346,7 @@
      <item row="2" column="0">
       <spacer name="verticalSpacer_2">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -418,7 +415,7 @@
        <item>
         <spacer name="horizontalSpacer_7">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -441,7 +438,7 @@
     </sizepolicy>
    </property>
    <property name="allowedAreas">
-    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::BottomDockWidgetArea|Qt::DockWidgetArea::LeftDockWidgetArea|Qt::DockWidgetArea::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Filters</string>
@@ -574,7 +571,7 @@
      <item>
       <spacer name="verticalSpacer_3">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -613,12 +610,12 @@
   <customwidget>
    <class>Slider</class>
    <extends>QSlider</extends>
-   <header>slider</header>
+   <header>..slider</header>
   </customwidget>
   <customwidget>
    <class>FileTree</class>
    <extends>QTreeView</extends>
-   <header>file_tree</header>
+   <header>..file_tree</header>
   </customwidget>
  </customwidgets>
  <resources>

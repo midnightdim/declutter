@@ -2,14 +2,13 @@ import sys
 # from PySide2.QtUiTools import loadUiType
 
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog, QPushButton, QComboBox, QDialogButtonBox, QVBoxLayout
-from PySide6.QtCore import Qt, QAbstractItemModel, QSize
-from PySide6.QtGui import QPalette, QColor, QStandardItemModel, QStandardItem, QIcon
-from ui_tags_dialog import Ui_tagsDialog
-from tag_tree import TagTree, get_tree_selection_level
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor, QStandardItemModel, QStandardItem, QIcon
+from .ui.ui_tags_dialog import Ui_tagsDialog
+# from .tag_tree import get_tree_selection_level
 from declutter.tags import (
     get_all_tags, get_tags_and_groups, rename_tag, set_group_type, rename_group, tag_get_color, tag_set_color, create_tag, create_group, delete_tag, delete_group
 )
-import logging
 
 
 class TagsDialog(QDialog):

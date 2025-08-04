@@ -3,7 +3,7 @@
  <class>tagsDialog</class>
  <widget class="QDialog" name="tagsDialog">
   <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
+   <enum>Qt::WindowModality::ApplicationModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -17,17 +17,17 @@
    <string>Manage Tags</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="DeClutter.qrc">
+   <iconset>
     <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Ok</set>
      </property>
      <property name="centerButtons">
       <bool>false</bool>
@@ -47,7 +47,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="DeClutter.qrc">
+          <iconset>
            <normaloff>:/images/icons/tag.svg</normaloff>:/images/icons/tag.svg</iconset>
          </property>
         </widget>
@@ -61,7 +61,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="DeClutter.qrc">
+          <iconset>
            <normaloff>:/images/icons/folder.svg</normaloff>:/images/icons/folder.svg</iconset>
          </property>
         </widget>
@@ -75,7 +75,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="DeClutter.qrc">
+          <iconset>
            <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
          </property>
         </widget>
@@ -89,7 +89,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="DeClutter.qrc">
+          <iconset>
            <normaloff>:/images/icons/brush.svg</normaloff>:/images/icons/brush.svg</iconset>
          </property>
         </widget>
@@ -97,7 +97,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -120,7 +120,7 @@
   <customwidget>
    <class>TagTree</class>
    <extends>QTreeView</extends>
-   <header location="global">tag_tree</header>
+   <header location="global">..tag_tree</header>
   </customwidget>
  </customwidgets>
  <resources>

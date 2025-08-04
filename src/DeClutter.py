@@ -12,10 +12,10 @@ from PySide6.QtWidgets import (
     QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
 )
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
-from rule_edit_window import RuleEditWindow
-from settings_dialog import SettingsDialog
-from ui_rules_window import Ui_rulesWindow
-from ui_list_dialog import Ui_listDialog
+from .rule_edit_window import RuleEditWindow
+from .settings_dialog import SettingsDialog
+from .ui.ui_rules_window import Ui_rulesWindow
+from .ui.ui_list_dialog import Ui_listDialog
 from declutter.config import (
     SETTINGS_FILE, VERSION, LOG_FILE, load_settings, save_settings
 )
@@ -23,7 +23,7 @@ from declutter.rules import (
     apply_all_rules, apply_rule, get_rule_by_id
 )
 
-from declutter_tagger import TaggerWindow
+from .declutter_tagger import TaggerWindow
 
 
 class RulesWindow(QMainWindow):
@@ -53,6 +53,7 @@ class RulesWindow(QMainWindow):
         self.ui.deleteRule.clicked.connect(self.delete_rule)
         self.ui.applyRule.clicked.connect(self.apply_rule)
         # self.ui.moveUp.clicked.connect(self.start_thread)
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
         self.trayIcon.messageClicked.connect(self.message_clicked)
         self.trayIcon.activated.connect(self.tray_activated)
         self.trayIcon.setToolTip(
@@ -321,7 +322,7 @@ class RulesWindow(QMainWindow):
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-        self.trayIcon.setIcon(QIcon('DeClutter.ico'))
+        self.trayIcon.setIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
         self.trayIcon.setVisible(True)
         self.trayIcon.show()
 
@@ -395,7 +396,7 @@ def main():
     QApplication.setQuitOnLastWindowClosed(False)
 
     logging.info("DeClutter started")
-    app.setWindowIcon(QIcon('DeClutter.ico'))
+    app.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
 
     window = RulesWindow()
     window.show()
