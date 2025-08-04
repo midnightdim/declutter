@@ -1,19 +1,12 @@
 import sqlite3
-import os
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
-from appdirs import user_data_dir
-
-from declutter_lib import load_settings, save_settings, SETTINGS_FILE
-from declutter_lib_core import APP_FOLDER
+from .config import DB_FILE, load_settings, save_settings, SETTINGS_FILE
+# from .file_utils import get_actual_filename
 
 TAGS_CACHE = {}
-APP_FOLDER = user_data_dir("DeClutter", appauthor='', roaming=True)
-# APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
-LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
-DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
-
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -39,7 +32,6 @@ def tag_set_color(tag, color):
     conn.commit()
     conn.close()
 
-
 def tag_get_color(tag):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -47,7 +39,6 @@ def tag_get_color(tag):
     row = c.fetchone()[0]
     conn.close()
     return row
-
 
 def create_tag(tag, group_id=1):
     conn = sqlite3.connect(DB_FILE)
@@ -65,7 +56,6 @@ def create_tag(tag, group_id=1):
     conn.commit()
     conn.close()
     return tag_id
-
 
 def move_tag(tag, direction):  # Moves tag up or down in lists
     tags = get_all_tags()
@@ -94,7 +84,6 @@ def move_tag(tag, direction):  # Moves tag up or down in lists
     conn.commit()
     conn.close()
 
-
 def rename_group(old_group, new_group):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -102,7 +91,6 @@ def rename_group(old_group, new_group):
               (new_group, old_group))
     conn.commit()
     conn.close()
-
 
 def rename_tag(old_tag, new_tag):
     tagged_files = get_files_by_tag(old_tag)
@@ -131,7 +119,6 @@ def rename_tag(old_tag, new_tag):
                 c['tags'].remove(old_tag)
                 c['tags'].append(new_tag)
     save_settings(SETTINGS_FILE, settings)
-
 
 def set_tags(filename, tags):  # TBD optimize this
     # print('set_tags',filename,tags)
@@ -174,7 +161,6 @@ def set_tags(filename, tags):  # TBD optimize this
         logging.exception(e)
         return False
 
-
 def get_tags(filename):
     filename = os.path.normpath(filename).lower()
     if filename in TAGS_CACHE.keys():
@@ -197,8 +183,6 @@ def get_tags(filename):
     return tags
 
 # returns list of tuples [(tag, group_id)]
-
-
 def get_tags_by_group_ids(filename):
     filename = os.path.normpath(filename).lower()
     conn = sqlite3.connect(DB_FILE)
@@ -211,19 +195,14 @@ def get_tags_by_group_ids(filename):
     conn.close()
     return tags
 
-# print(get_tags_by_group_ids(r'D:\DIM\WinFiles\Downloads\Tagged\Birthday.mp4_snapshot_00.19.000.jpg'))
-
-
 def add_tags(filename, tags):
     cur_tags = get_tags(filename)
     set_tags(filename, list(set(tags + cur_tags)))
-
 
 def add_tag(filename, tag):
     add_tags(filename, [tag])
 
 # removes specified tags from file
-
 
 def remove_tags(filename, tags):
     filename = os.path.normpath(filename).lower()
@@ -248,7 +227,6 @@ def remove_tags(filename, tags):
     if filename in TAGS_CACHE.keys():
         del TAGS_CACHE[filename]
 
-
 def remove_all_tags(filename):
     filename = os.path.normpath(filename).lower()
     # filename = filename.lower()
@@ -268,10 +246,8 @@ def remove_all_tags(filename):
     conn.close()
     TAGS_CACHE[filename] = []
 
-
 def clear_tags_cache():
     TAGS_CACHE = {}
-
 
 def get_all_files_from_db():
     conn = sqlite3.connect(DB_FILE)
@@ -279,7 +255,6 @@ def get_all_files_from_db():
     files = [f[0] for f in c.execute("SELECT filepath FROM files")]
     conn.close()
     return files
-
 
 def get_all_tags():
     conn = sqlite3.connect(DB_FILE)
@@ -289,7 +264,6 @@ def get_all_tags():
     conn.close()
     return tags
 
-
 def get_all_tags_by_group_id(id):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -297,7 +271,6 @@ def get_all_tags_by_group_id(id):
             for f in c.execute("SELECT name FROM tags WHERE group_id=?", (id,))]
     conn.close()
     return tags
-
 
 def get_all_tag_groups():
     conn = sqlite3.connect(DB_FILE)
@@ -307,7 +280,6 @@ def get_all_tag_groups():
     conn.close()
     return groups
 
-
 def get_tag_groups(filename):
     filename = os.path.normpath(filename).lower()
     conn = sqlite3.connect(DB_FILE)
@@ -316,7 +288,6 @@ def get_tag_groups(filename):
         "SELECT name from tag_groups WHERE id in (SELECT tags.group_id FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id)", (filename,))]
     conn.close()
     return tags
-
 
 def get_files_by_tags(tags: []):
     if tags == []:
@@ -332,7 +303,6 @@ def get_files_by_tags(tags: []):
         return []
     return all_files
 
-
 def get_files_by_tag(tag):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -341,12 +311,8 @@ def get_files_by_tag(tag):
     conn.close()
     return files
 
-# print(get_files_by_tags(['Chains of Sanity','forever']))
-
-
 def remove_tag(filename, tag):
     remove_tags(filename, [tag])
-
 
 def delete_tag(tag):  # Removes tag from the database
     conn = sqlite3.connect(DB_FILE)
@@ -356,7 +322,6 @@ def delete_tag(tag):  # Removes tag from the database
     c.execute("DELETE FROM tags WHERE name = ?", (tag,))
     conn.commit()
     conn.close()
-
 
 def delete_group(group_id, keep_tags):
     conn = sqlite3.connect(DB_FILE)
@@ -374,8 +339,6 @@ def delete_group(group_id, keep_tags):
     conn.close()
 
 # returns all tags and groups with metadata - used for tag model generation
-
-
 def get_tags_and_groups():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -399,7 +362,6 @@ def get_tags_and_groups():
     conn.close()
     return tree
 
-
 def create_group(name, widget_type=0, name_shown=1):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -417,7 +379,6 @@ def create_group(name, widget_type=0, name_shown=1):
     conn.close()
     return group_id
 
-
 def set_group_type(group, widget_type):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -425,7 +386,6 @@ def set_group_type(group, widget_type):
               (widget_type, group))
     conn.commit()
     conn.close()
-
 
 def move_tag_to_group(tag_id, group_id):
     conn = sqlite3.connect(DB_FILE)
@@ -440,7 +400,6 @@ def move_tag_to_group(tag_id, group_id):
               (group_id, count, tag_id))
     conn.commit()
     conn.close()
-
 
 # tags are in format {'name':name,'id':id,'list_order':list_order,'group_id':group_id}
 def move_tag_to_tag(tag1, tag2, position):
@@ -470,7 +429,6 @@ def move_tag_to_tag(tag1, tag2, position):
     conn.commit()
     conn.close()
 
-
 def move_group_to_group(group1, group2, position):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -492,7 +450,6 @@ def move_group_to_group(group1, group2, position):
     conn.commit()
     conn.close()
 
-
 def get_file_tags_by_group(group, filename):
     filename = os.path.normpath(filename).lower()
     conn = sqlite3.connect(DB_FILE)
@@ -506,17 +463,6 @@ def get_file_tags_by_group(group, filename):
             "SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) AND tags.group_id = ?", (filename, group_id))]
     conn.close()
     return tags
-
-# print(get_file_tag_by_group('Default','D:\\DIM\\WinFiles\\Downloads\\1.png'))
-# print(get_file_tags_by_group('Project','D:\\DIM\\WinFiles\\Downloads\\1.png'))
-# print(resolve_path("abc/<type>/<group:Rating>/sdf/345", "D:\\DIM\\WinFiles\\Downloads\\1.png"))
-
-# import unicodedata
-# title = u"⭐️⭐️"
-# path = unicodedata.normalize('NFKD', title).encode('utf8')
-# os.mkdir(path)
-# encode('ascii', 'replace'))
-
 
 def check_files():  # TBD need to notify user about lost files (not just log this)!!
     files = get_all_files_from_db()
@@ -539,130 +485,3 @@ def check_files():  # TBD need to notify user about lost files (not just log thi
                 c.execute("DELETE FROM files WHERE filepath = ?", (f,))
         conn.commit()
         conn.close()
-
-# def export_tags(dirname): #TBD revise this, add recursion
-#     try:
-#         if Path(dirname).is_dir():
-#             result = {}
-#             files = os.listdir(dirname)
-#             for f in files:
-#                 fullname = os.path.join(dirname,f)
-#                 tags = get_tags(fullname)
-#                 if tags:
-#                     result[f] = tags
-#             json_file = os.path.join(dirname, str(Path(dirname).name) + '.json')
-#             with open(json_file, 'w') as jf:
-#                 jsondump(result, jf, indent=4)
-#             return(str(json_file))
-#     except Exception as e:
-#         logging.exception(f'exception {e}')
-
-# def import_tags(dirname, tagsfile):
-#     if Path(dirname).is_dir():
-#         tags_imported = 0
-#         files_tagged = 0
-#         try:
-#             with open(tagsfile, 'r') as f:
-#                 filetags = jsonload(f)
-#         except Exception as e:
-#             logging.exception(f'exception {e}')
-#             logging.error('Error on parsing the tag file')
-#             return
-#         if filetags:
-#             settings = load_settings(SETTINGS_FILE)
-#             for k in filetags.keys():
-#                 fullname = os.path.join(dirname, k)
-#                 if Path(fullname).exists():
-#                     set_tags(fullname, filetags[k])
-#                     files_tagged+=1
-#                     if not set(filetags[k]).issubset(set(settings['tags'])):
-#                         tags = (t for t in filetags[k] if t not in settings['tags'])
-#                         for t in tags:
-#                             settings['tags'].append(t)
-#                             tags_imported+=1
-#         if tags_imported>0:
-#             save_settings(SETTINGS_FILE, settings)
-#         return "Files tagged: "+str(files_tagged)+", new tags imported: "+str(tags_imported)
-
-#     else:
-#         logging.error(str(dirname) + ' is not a valid folder')
-
-    # def migrate_db():
-#     conn = sqlite3.connect(DB_FILE)
-#     c = conn.cursor()
-#     c.execute("PRAGMA user_version")
-#     pragma = c.fetchone()[0]
-#     #logging.info("Database version:" + str(pragma))
-#     if (not pragma) or (pragma == 0):
-#         try:
-#             logging.info("Migration from 0 to 1")
-#             tags = load_settings(SETTINGS_FILE)['tags']
-#             db_tags = [f[0] for f in c.execute("SELECT name FROM tags")]
-#             logging.info("Adding missing tags from settings file")
-#             for t in [t for t in tags if t not in db_tags]:
-#                 logging.info("Adding "+t)
-#                 c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-#                 #create_tag(t)
-
-#             settings = load_settings()
-#             settings['tags'] = []
-#             save_settings(SETTINGS_FILE, settings)
-
-#             c.execute("ALTER TABLE tags ADD COLUMN list_order INTEGER NOT NULL DEFAULT 1")
-#             i=1
-#             for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-#                 c.execute("UPDATE tags set list_order = ? WHERE name = ?", (i,t))
-#                 i+=1
-#             #c.execute("DROP TABLE tags")
-#             #c.execute("CREATE TABLE tags (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL UNIQUE)")
-
-#             c.execute("PRAGMA user_version = 1")
-#             logging.info("Database updated to version 1")
-#             pragma = 1
-#             # conn.commit()
-#         except Exception as e:
-#             logging.exception(e)
-
-#     if pragma == 1:
-#         try:
-#             logging.info("Migration from 1 to 2")
-#             logging.info("Adding color column")
-#             c.execute("ALTER TABLE tags ADD COLUMN color INTEGER")
-#             # i=1
-#             # for t in [f[0] for f in c.execute("SELECT name FROM tags")]:
-#             #     c.execute("UPDATE tags set color = ? WHERE name = ?", (i,t))
-#             #     i+=1
-
-#             c.execute("PRAGMA user_version = 2")
-#             logging.info("Database updated to version 2")
-#             pragma = 2
-#         except Exception as e:
-#             logging.exception(e)
-
-#     if pragma == 2:
-#         try:
-#             logging.info("Migration from 2 to 3")
-#             logging.info("Adding groups table")
-#             c.execute("CREATE TABLE tag_groups (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL UNIQUE, list_order INTEGER NOT NULL, widget_type INTEGER NOT NULL DEFAULT 0, name_shown INTEGER DEFAULT 1)")
-#             c.execute("INSERT INTO tag_groups VALUES (1, 'Default', 1, 0, 0)")
-#             c.execute("ALTER TABLE tags ADD COLUMN group_id INTEGER NOT NULL DEFAULT 1")
-#             for t in [f[0] for f in c.execute("SELECT id FROM tags")]:
-#                 c.execute("UPDATE tags set group_id = 1 WHERE id = ?", (t,))
-#             c.execute("PRAGMA user_version = 3")
-#             logging.info("Database updated to version 3")
-#             pragma = 3
-#         except Exception as e:
-#             logging.exception(e)
-
-
-#     conn.commit()
-#     conn.close()
-if not Path(DB_FILE).exists():
-    logging.info(r"Database doesn't exist, creating")
-    try:
-        init_db()
-        # migrate_db()
-    except Exception as e:
-        logging.exception(e)
-
-check_files()  # TBD - remove this in the future?

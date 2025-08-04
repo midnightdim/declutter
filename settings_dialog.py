@@ -4,7 +4,7 @@ import sys
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
 from PySide6.QtCore import Qt
 # , get_startup_shortcut_path
-from declutter_lib import load_settings, save_settings, SETTINGS_FILE
+from declutter.config import load_settings, save_settings, SETTINGS_FILE
 # import winreg
 # Everything imported below is needed for startup shortcut creation, maybe there's a more elegant solution
 # import win32com.client

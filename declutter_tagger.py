@@ -1,10 +1,13 @@
 import os
 import sys
 import subprocess
+from os.path import normpath, isfile, isdir
+from pathlib import Path
+from send2trash import send2trash
 from PySide6.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QAction
 from PySide6.QtWidgets import (
     QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QFrame, QLineEdit, QMessageBox,
-    QWidgetAction, QHBoxLayout, QLabel, QCheckBox, QFileDialog, QAbstractSlider, QComboBox, QInputDialog
+    QWidgetAction, QHBoxLayout, QLabel, QCheckBox, QFileDialog, QComboBox, QInputDialog
 )
 from PySide6.QtCore import (
     QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QMimeData, QMimeDatabase
@@ -13,10 +16,18 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from ui_tagger_window import Ui_taggerWindow
 from tags_dialog import TagsDialog, generate_tag_model
-from declutter_lib import *
-from os.path import normpath, isfile, isdir
-from pathlib import Path
-from send2trash import send2trash
+from declutter.config import (
+    SETTINGS_FILE, load_settings, save_settings, ALL_TAGGED_TEXT
+)
+from declutter.rules import get_files_affected_by_rule
+from declutter.tags import (
+    tag_get_color, set_tags, get_tags, get_tags_by_group_ids, add_tag, remove_tags, remove_all_tags, 
+    clear_tags_cache, get_all_tags_by_group_id, remove_tag, get_tags_and_groups
+)
+from declutter.file_utils import (
+    get_file_type
+)
+
 # from datetime import datetime
 from file_system_model_lite import FileSystemModelLite
 from condition_dialog import ConditionDialog
@@ -178,8 +189,7 @@ class TaggerWindow(QMainWindow):
 
             self.ui.treeView.setModel(self.sorting_model)
             # self.ui.treeView.setModel(self.model)
-            self.ui.treeView.setRootIndex(
-                self.sorting_model.mapFromSource(self.model.index(path)))
+            self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path, 0)))
             # self.ui.treeView.setRootIndex(self.model.index(path))
             # self.ui.treeView.header().resizeSection(0,350)
             self.model.fileRenamed.connect(self.tag_renamed_file)
@@ -438,7 +448,7 @@ class TaggerWindow(QMainWindow):
         # self.ui.treeView.setModel(self.model)
 
         self.ui.treeView.setRootIndex(
-            self.sorting_model.mapFromSource(self.model.index(path)))
+            self.sorting_model.mapFromSource(self.model.index(path, 0)))
         self.ui.treeView.header().resizeSection(0, 350)
         # self.ui.treeView.setRootIndex(self.model.index(path))
         # self.model.setIconProvider(QFileIconProvider())
@@ -662,7 +672,7 @@ class TaggerWindow(QMainWindow):
     #             all_tags.append(t)
     #     self.sorting_model.filter_tags = all_tags
     #     self.update_treeview()
-
+    
     # def select_tags(self):
     #     tags_dialog = QDialog()
     #     tags_dialog.setWindowTitle("Select Tags")
@@ -770,7 +780,7 @@ class TaggerWindow(QMainWindow):
             # TBD reuse this in a function
             self.model.setRootPath(normpath(file_path))
             self.ui.treeView.setRootIndex(
-                self.sorting_model.mapFromSource(self.model.index(file_path)))
+                self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
             # self.ui.pathEdit.setText(file_path)
             self.ui.pathEdit.setText(normpath(self.model.filePath(
                 self.sorting_model.mapToSource(self.ui.treeView.rootIndex()))))
@@ -809,8 +819,7 @@ class TaggerWindow(QMainWindow):
             # TBD reuse this in a function
             self.model.setRootPath(normpath(file_path))
             if self.sorting_model:
-                self.ui.treeView.setRootIndex(
-                    self.sorting_model.mapFromSource(self.model.index(file_path)))
+                self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
             self.ui.pathEdit.setText(file_path)
             self.settings['current_folder'] = file_path
             save_settings(SETTINGS_FILE, self.settings)

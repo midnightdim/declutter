@@ -9,7 +9,8 @@ from typing import Any, List, Union
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QDateTime, QLocale, QFileInfo, QMimeDatabase, Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QFileSystemModel, QAbstractItemView
-from declutter_lib import get_files_by_tag, get_tags, tag_get_color, get_all_files_from_db, get_actual_filename
+from declutter.tags import get_files_by_tag, get_tags, tag_get_color, get_all_files_from_db
+from declutter.file_utils import get_actual_filename
 
 FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
 

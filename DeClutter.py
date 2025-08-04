@@ -1,4 +1,11 @@
 import sys
+from copy import deepcopy
+from time import time
+import os
+import logging
+from datetime import datetime
+import webbrowser
+import requests
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
     QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea,
@@ -9,25 +16,13 @@ from rule_edit_window import RuleEditWindow
 from settings_dialog import SettingsDialog
 from ui_rules_window import Ui_rulesWindow
 from ui_list_dialog import Ui_listDialog
-from copy import deepcopy
-from time import time
-import os
-import logging
-from datetime import datetime
-import requests
-import webbrowser
-from declutter_lib import (
-    SETTINGS_FILE, APP_FOLDER, VERSION, LOG_FILE, load_settings, save_settings, get_rule_by_id, apply_all_rules, apply_rule, 
-    re, glob, DB_FILE, ALL_TAGGED_TEXT, resolve_path, get_files_affected_by_rule, get_files_affected_by_rule_folder, 
-    get_nonexistent_path, get_actual_filename, jsonload, jsondump, copy2, move, copytree, rmtree, send2trash, 
-    Path, fnmatch, get_file_type, get_file_time, convert_to_days, get_folder_size, get_size, get_rule_by_name, 
-    advanced_copy, copy_file_or_dir, remove_file_or_dir, advanced_move, TAGS_CACHE, init_db, tag_set_color, 
-    tag_get_color, create_tag, move_tag, rename_group, rename_tag, set_tags, get_tags, get_tags_by_group_ids, 
-    add_tags, add_tag, remove_tags, remove_all_tags, clear_tags_cache, get_all_files_from_db, get_all_tags, 
-    get_all_tags_by_group_id, get_all_tag_groups, get_tag_groups, get_files_by_tags, get_files_by_tag, remove_tag, 
-    delete_tag, delete_group, get_tags_and_groups, create_group, set_group_type, move_tag_to_group, move_tag_to_tag, 
-    move_group_to_group, get_file_tags_by_group, check_files, user_data_dir
+from declutter.config import (
+    SETTINGS_FILE, VERSION, LOG_FILE, load_settings, save_settings
 )
+from declutter.rules import (
+    apply_all_rules, apply_rule, get_rule_by_id
+)
+
 from declutter_tagger import TaggerWindow
 
 

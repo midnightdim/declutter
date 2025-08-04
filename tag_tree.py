@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QDialog, QWidget, QHBoxLayout, QVBoxLayout
-from declutter_lib import move_tag_to_group, move_tag_to_tag, move_group_to_group
+from declutter.tags import move_tag_to_group, move_tag_to_tag, move_group_to_group
 
 def get_tree_selection_level(index):
     level = 0

@@ -1,31 +1,18 @@
-# Contains the core logic of DeClutter app
-from json import (load as jsonload, dump as jsondump)
-import os
 import re
-import glob
-from time import time
-from shutil import copy2, move, copytree, rmtree
-from pathlib import Path
-import logging
 from fnmatch import fnmatch
+import logging
+import os
+from pathlib import Path
+from shutil import copytree, rmtree
+from time import time
 from send2trash import send2trash
-from declutter_lib_core import SETTINGS_FILE, APP_FOLDER, VERSION, load_settings, save_settings, get_file_type, get_file_time, convert_to_days, get_folder_size, get_size, get_rule_by_name, get_rule_by_id, advanced_copy, copy_file_or_dir, remove_file_or_dir, advanced_move
-from declutter_lib_tags import move_group_to_group, move_tag, move_tag_to_tag, move_tag_to_group, get_all_tag_groups, get_tags_and_groups, TAGS_CACHE, init_db, tag_set_color, tag_get_color, create_group, create_tag, remove_all_tags, remove_tag, remove_tags, rename_group, rename_tag, set_group_type, set_tags, load_settings, save_settings, get_tags, get_all_tags_by_group_id, get_all_tags_by_group_id, get_tags_by_group_ids, add_tag, add_tags, clear_tags_cache, get_all_files_from_db, get_all_tags, get_tag_groups, get_files_by_tags, get_files_by_tag, delete_tag, delete_group, get_file_tags_by_group, check_files, user_data_dir
-
-# import ctypes as _ctypes
-# from ctypes.wintypes import HWND as _HWND, HANDLE as _HANDLE,DWORD as _DWORD,LPCWSTR as _LPCWSTR,MAX_PATH as _MAX_PATH
-# from ctypes import create_unicode_buffer as _cub
-
-# VERSION = '1.12.1'
-# APP_FOLDER = os.path.join(os.getenv('APPDATA'), "DeClutter")
-LOG_FILE = os.path.join(APP_FOLDER, "DeClutter.log")
-DB_FILE = os.path.join(APP_FOLDER, "DeClutter.db")
-# SETTINGS_FILE = os.path.join(APP_FOLDER, "settings.json")
-ALL_TAGGED_TEXT = 'All tagged files and folders'
-
-logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a+')],
-                    format="%(asctime)-15s %(levelname)-8s %(message)s")
-
+from .tags import add_tags, remove_tags
+from .config import SETTINGS_FILE
+from .config import load_settings, ALL_TAGGED_TEXT
+from .file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
+                         advanced_move, get_file_type, get_actual_filename)
+from .tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
+                   check_files, get_all_files_from_db)
 
 def apply_rule(rule, dryrun=False):
     report = {'copied': 0, 'moved': 0, 'moved to subfolder': 0, 'deleted': 0,
@@ -406,74 +393,15 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                 get_files_affected_by_rule_folder(rule, fullname, out_files)
     return out_files
 
+def get_rule_by_name(name):
+    settings = load_settings(SETTINGS_FILE)
+    for r in settings['rules']:
+        if r['name'] == name:
+            return r
 
-def get_nonexistent_path(src, dst):
-    if not os.path.exists(dst):  # based on how we call it we should never get here
-        return dst
-    filename, file_extension = os.path.splitext(dst)
-    match = re.findall(r"^(.+)\s\((\d+)\)$", filename)
-    i = 1
-    if match:  # filename already has (i) in it
-        filename = match[0][0]
-        i = int(match[0][1])+1
-
-    new_fname = "{} ({}){}".format(filename, i, file_extension)
-    while os.path.exists(new_fname):
-        if get_size(src) == get_size(new_fname):
-            return False
-        i += 1
-        new_fname = "{} ({}){}".format(filename, i, file_extension)
-    return new_fname
-
-# else:
-#     try:
-#         migrate_db()
-#     except Exception as e:
-#         logging.exception(e)
-
-
-def get_actual_filename(name):
-    dirs = name.split('\\')
-    # disk letter
-    test_name = [dirs[0].upper()]
-    for d in dirs[1:]:
-        test_name += ["%s[%s]" % (d[:-1], d[-1])]
-    res = ""
-    try:
-        res = glob.glob('\\'.join(test_name))
-    except Exception as e:
-        logging.exception(e)
-    if not res:
-        # File not found
-        # TBD this is a bit dangerous - will affect symlinks
-        return os.path.normpath(Path(name).resolve())
-    return os.path.normpath(res[0])
-
-# def get_actual_filename2(path):
-#     path = os.path.normpath(path).lower()
-#     parts = path.split(os.sep)
-#     result = parts[0].upper()
-#     # check that root actually exists
-#     if not os.path.exists(result):
-#         return
-#     for part in parts[1:]:
-#         actual = next((item for item in os.listdir(result) if item.lower() == part), None)
-#         if actual is None:
-#             # path doesn't exist
-#             return
-#         result += os.sep + actual
-#     return result
-
-# def get_startup_shortcut_path():
-#     _SHGetFolderPath = _ctypes.windll.shell32.SHGetFolderPathW
-#     _SHGetFolderPath.argtypes = [_HWND, _ctypes.c_int, _HANDLE, _DWORD, _LPCWSTR]
-#     auPathBuffer = _cub(_MAX_PATH)
-#     exit_code=_SHGetFolderPath(0, 24, 0, 0, auPathBuffer) # 24 is the code for Startup folder for All Users
-#     # print(auPathBuffer.value)
-
-#     # pythoncom.CoInitialize() # remove the '#' at the beginning of the line if running in a thread.
-#     return os.path.join(auPathBuffer.value, 'DeClutter.lnk')
-
-
-# check_files()
-# init_db()
+def get_rule_by_id(rule_id, rules=[]):
+    if not rules:
+        rules = load_settings(SETTINGS_FILE)['rules']
+    for r in rules:
+        if int(r['id']) == rule_id:
+            return r

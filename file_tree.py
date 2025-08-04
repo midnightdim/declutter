@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDrag
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMainWindow, QWidget, QHBoxLayout, QApplication
-from declutter_lib import get_tags, set_tags, remove_all_tags
+from declutter.tags import get_tags, set_tags, remove_all_tags
 from os import path
 from pathlib import Path
 import logging

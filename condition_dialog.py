@@ -1,14 +1,11 @@
 import sys
-# from PySide2.QtUiTools import loadUiType
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import QItemSelectionModel
 from ui_condition_dialog import Ui_Condition
-# from declutter_lib import load_settings, get_tags_and_groups, get_all_tag_groups
-from declutter_lib import load_settings, get_all_tag_groups, get_tags_and_groups
+from declutter.config import load_settings
+from declutter.tags import get_all_tag_groups, get_tags_and_groups
 from tags_dialog import generate_tag_model
-# from PySide6.QtGui import
-
 
 class ConditionDialog(QDialog):
     def __init__(self):

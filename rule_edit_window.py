@@ -8,7 +8,9 @@ from ui_rule_edit_window import Ui_RuleEditWindow
 from condition_dialog import ConditionDialog
 
 from tags_dialog import generate_tag_model
-from declutter_lib import get_files_affected_by_rule, get_tags_and_groups, ALL_TAGGED_TEXT
+from declutter.rules import get_files_affected_by_rule
+from declutter.tags import get_tags_and_groups
+from declutter.config import ALL_TAGGED_TEXT
 
 class RuleEditWindow(QDialog):
     def __init__(self):
