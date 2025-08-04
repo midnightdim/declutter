@@ -1,19 +1,12 @@
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from declutter_lib import *
-
-# def create_tree_data(tree):
-#     model = QStandardItemModel()
-#     generate_tag_model(model, get_tags_and_groups())
-#     tree.setModel(model)
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QDialog, QWidget, QHBoxLayout, QVBoxLayout
+from declutter_lib import move_tag_to_group, move_tag_to_tag, move_group_to_group
 
 def get_tree_selection_level(index):
     level = 0
     while index.parent().isValid():
         index = index.parent()
         level += 1
-
     return level
 
 class TagTree(QTreeView):
@@ -24,156 +17,62 @@ class TagTree(QTreeView):
     def initUI(self):
         self.setHeaderHidden(True)
         self.setColumnHidden(1, True)
-        self.setSelectionMode(self.SingleSelection)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setDragDropMode(QAbstractItemView.InternalMove)
         # self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        # self.expandAll()
-
-    # def paintEvent(self,event):
-    #     position = self.dropIndicatorPosition()
-    #     self.setDropIndicatorShown(position == QAbstractItemView.BelowItem or position == QAbstractItemView.AboveItem)
-    #     super().paintEvent(event)
-
-#     setDropIndicatorShown( position == QAbstractItemView::BelowItem || position == QAbstractItemView::AboveItem );
-#     base_t::paintEvent( event );
-#     setDropIndicatorShown( true );
-# }
 
     def dragMoveEvent(self, event):
-        tree = event.source()        
-        # sParent: str = ""
-        par_ix = tree.selectedIndexes()[0]
-        # if par_ix.isValid():
-        #     sParent = par_ix.data()
-        #     print("par. item: ", sParent, get_tree_selection_level(par_ix))
+        tree = event.source()
+        par_ix = tree.selectedIndexes()[0] if tree.selectedIndexes() else None
+        if not par_ix or not par_ix.isValid():
+            event.ignore()
+            return
 
         to_index = self.indexAt(event.pos())
-        # print( self.item to_index)
-        # print(to_index.data(Qt.UserRole))
-        # print(to_index.parent == par_ix)
-        # print('selected',par_ix)
-        # print('target',to_index)
-        # print('parent',par_ix.parent())
-        # print(to_index == par_ix.parent())
-        # if to_index.isValid():
-        #     print("to:", to_index.data(), get_tree_selection_level(to_index))
-
         super().dragMoveEvent(event)
         position = self.dropIndicatorPosition()
-        # print(position)
-        #  or not ((sParent and get_tree_selection_level(par_ix) < get_tree_selection_level(to_index)) or (sParent=="" and get_tree_selection_level(to_index)==0))
-        # sParent == "" - it's a group, <>"" - tag
-        # print('sparent:',sParent)
-        # print('par_ix',get_tree_selection_level(par_ix))
-        # print('to_index',get_tree_selection_level(to_index))
 
-        # disallow dropping groups into tags
-        # disallow dropping groups into groups, tags into tags - allow only placement on one level
-        # allow dropping tags only into groups
-        # disallow dropping tag to its parent group
         if (get_tree_selection_level(par_ix) < get_tree_selection_level(to_index)) or \
-            (get_tree_selection_level(par_ix) == get_tree_selection_level(to_index) and position != QAbstractItemView.BelowItem and position != QAbstractItemView.AboveItem) or \
-            (get_tree_selection_level(par_ix) > get_tree_selection_level(to_index) and position != QAbstractItemView.OnItem) or to_index == par_ix.parent():
-            event.ignore()    
-
-        # if (position != QAbstractItemView.BelowItem and position != QAbstractItemView.AboveItem and not sParent):
-        #     event.ignore()
-    
+           (get_tree_selection_level(par_ix) == get_tree_selection_level(to_index) and position != QAbstractItemView.BelowItem and position != QAbstractItemView.AboveItem) or \
+           (get_tree_selection_level(par_ix) > get_tree_selection_level(to_index) and position != QAbstractItemView.OnItem) or to_index == par_ix.parent():
+            event.ignore()
 
     def dropEvent(self, event):
-        # tree = event.source() 
         to_index = self.indexAt(event.pos())
         position = self.dropIndicatorPosition()
 
-        par_ix = self.selectedIndexes()[0]
-        # if par_ix.isValid():
-        #     sParent = par_ix.data()
-        #     print("moved: ", sParent, get_tree_selection_level(par_ix))
-
-        to_index = self.indexAt(event.pos())
-        # if to_index.isValid():
-        #     print("to:", to_index.data(), get_tree_selection_level(to_index))
-        # print(position)
+        par_ix = self.selectedIndexes()[0] if self.selectedIndexes() else None
+        if not par_ix or not par_ix.isValid():
+            return
 
         where = to_index.data(Qt.UserRole)
         what = par_ix.data(Qt.UserRole)
-        # print('moving',what['name'],'to',where['name'])
-        
-        if what['type'] == 'tag' and where['type'] == 'group':            
-            move_tag_to_group(what['id'],where['id'])
-            # what['group_id'] = where['id']
-            # self.model().itemFromIndex(par_ix).setData(what,Qt.UserRole)
-            # print(self.model().itemFromIndex(par_ix).data(Qt.UserRole))
+
+        if what['type'] == 'tag' and where['type'] == 'group':
+            move_tag_to_group(what['id'], where['id'])
         elif what['type'] == 'tag' and where['type'] == 'tag':
-            move_tag_to_tag(what,where,int(position))
+            move_tag_to_tag(what, where, int(position))
         elif what['type'] == 'group' and where['type'] == 'group':
-            move_group_to_group(what,where,int(position))
-            # what['group_id'] = where['group_id']
-            # print('where group_id',where['group_id'])
-            # self.model().itemFromIndex(par_ix).setData(what,Qt.UserRole)
-            # print(self.model().itemFromIndex(par_ix).data(Qt.UserRole))
-            # print("---")
-            # move_tag_to_tag(what,where,int(position)) # 1 - above, 2 - below
-            # new_list_order = where['list_order'] if int(position)==1 else where['list_order']+1
-            # what['list_order'] = new_list_order
-            # print(int(position))
-            # print(new_list_order)
-            # print(self.indexBelow(to_index).data(Qt.UserRole))
-            # if not(int(position) == 2 and self.indexBelow(to_index).isValid() and self.indexBelow(to_index).data(Qt.UserRole)['type'] == 'tag' and \
-            #     self.indexBelow(to_index).data(Qt.UserRole)['list_order']>new_list_order):
-                # print('have to move')
-        
-        # if we have to increase the ids of all elements below
-        # if not(int(position) == 2 and self.indexBelow(to_index).isValid() and self.indexBelow(to_index).data(Qt.UserRole)['type'] == 'tag' and \
-        #     self.indexBelow(to_index).data(Qt.UserRole)['list_order']>new_list_order):
-        #     print('have to move')
-
-        # print(what, where)
-
-        # for i in range(0,self.model().rowCount()):
-        #     print(self.model().item(i).text()) 
-        # print('------')
+            move_group_to_group(what, where, int(position))
 
         super().dropEvent(event)
         self.setExpanded(to_index, True)
-        
-        # for i in range(0,self.model().rowCount()):
-        #     print(self.model().item(i).text()) 
 
-        # to_index = self.model().index(0,0)
-
-        # while to_index.isValid(): # and self.indexBelow(to_index).data(Qt.UserRole)['type'] == 'tag':
-        #     # print(to_index.data(Qt.UserRole)['type'],to_index.data(Qt.UserRole)['name'],to_index.data(Qt.UserRole)['id'])
-        #     if to_index.data(Qt.UserRole)['type'] == 'tag':
-        #         print(to_index.data(),to_index.data(Qt.UserRole)['group_id'])
-        #     to_index = self.indexBelow(to_index)
-        # print("---------------")
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.initUI()        
+class TagsDialog(QDialog):
+    def __init__(self, tag_model, parent=None):
+        super().__init__(parent)
+        self.tag_model = tag_model  # Store the passed-in model
+        self.initUI()
 
     def initUI(self):
-        centralwidget = QWidget()
-        self.setCentralWidget(centralwidget)
+        self.setWindowTitle("Manage Tags")  # Optional: Add a title for clarity
 
-        hBox = QHBoxLayout(centralwidget)        
+        layout = QVBoxLayout(self)  # Use vertical layout for dialog simplicity
 
-        self.treeView = TreeView(centralwidget)       
+        self.treeView = TagTree(self)
+        self.treeView.setModel(self.tag_model)  # Set the passed-in model here
+        self.treeView.expandAll()  # Expand after model is set
 
-        hBox.addWidget(self.treeView)
+        layout.addWidget(self.treeView)
 
-
-if __name__ == "__main__":
-    app = QApplication([])
-    window = MainWindow()
-    create_tree_data(window.treeView)
-    # window.treeView.expand(window.treeView.model().index(0, 0))  # expand the System-Branch
-    # window.treeView.setDragDropMode(QAbstractItemView.InternalMove)
-    window.treeView.expandAll()
-    window.setGeometry(400, 400, 500, 400)
-    window.show()
-
-    app.exec_()
+        self.setGeometry(400, 400, 500, 400)  # Or use self.resize(500, 400)

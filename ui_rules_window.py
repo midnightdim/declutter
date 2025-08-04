@@ -3,15 +3,24 @@
 ################################################################################
 ## Form generated from reading UI file 'rules_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QGridLayout,
+    QHBoxLayout, QHeaderView, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QTableWidget, QTableWidgetItem, QToolBar, QVBoxLayout,
+    QWidget)
 import DeClutter_rc
 
 class Ui_rulesWindow(object):
@@ -19,18 +28,18 @@ class Ui_rulesWindow(object):
         if not rulesWindow.objectName():
             rulesWindow.setObjectName(u"rulesWindow")
         rulesWindow.resize(1028, 491)
-        sizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(rulesWindow.sizePolicy().hasHeightForWidth())
         rulesWindow.setSizePolicy(sizePolicy)
         icon = QIcon()
-        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         rulesWindow.setWindowIcon(icon)
         self.actionAdd = QAction(rulesWindow)
         self.actionAdd.setObjectName(u"actionAdd")
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionAdd.setIcon(icon1)
         self.actionOpen_log_file = QAction(rulesWindow)
         self.actionOpen_log_file.setObjectName(u"actionOpen_log_file")
@@ -39,22 +48,22 @@ class Ui_rulesWindow(object):
         self.actionDelete = QAction(rulesWindow)
         self.actionDelete.setObjectName(u"actionDelete")
         icon2 = QIcon()
-        icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionDelete.setIcon(icon2)
         self.actionExecute = QAction(rulesWindow)
         self.actionExecute.setObjectName(u"actionExecute")
         icon3 = QIcon()
-        icon3.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionExecute.setIcon(icon3)
         self.actionMove_up = QAction(rulesWindow)
         self.actionMove_up.setObjectName(u"actionMove_up")
         icon4 = QIcon()
-        icon4.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionMove_up.setIcon(icon4)
         self.actionMove_down = QAction(rulesWindow)
         self.actionMove_down.setObjectName(u"actionMove_down")
         icon5 = QIcon()
-        icon5.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon5.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionMove_down.setIcon(icon5)
         self.actionSettings = QAction(rulesWindow)
         self.actionSettings.setObjectName(u"actionSettings")
@@ -65,7 +74,7 @@ class Ui_rulesWindow(object):
         self.actionOpen_Tagger = QAction(rulesWindow)
         self.actionOpen_Tagger.setObjectName(u"actionOpen_Tagger")
         icon6 = QIcon()
-        icon6.addFile(u":/images/icons/tags.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon6.addFile(u":/images/icons/tags.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionOpen_Tagger.setIcon(icon6)
         self.centralwidget = QWidget(rulesWindow)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -102,7 +111,7 @@ class Ui_rulesWindow(object):
 
         self.horizontalLayout.addWidget(self.moveDown)
 
-        self.horizontalSpacer = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
@@ -145,7 +154,7 @@ class Ui_rulesWindow(object):
         rulesWindow.setMenuBar(self.menubar)
         self.toolBar = QToolBar(rulesWindow)
         self.toolBar.setObjectName(u"toolBar")
-        rulesWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
+        rulesWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolBar)
 
         self.menubar.addAction(self.menuOptions_2.menuAction())
         self.menubar.addAction(self.menuOptions.menuAction())

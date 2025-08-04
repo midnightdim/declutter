@@ -3,17 +3,24 @@
 ################################################################################
 ## Form generated from reading UI file 'condition_dialog.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
+    QDialogButtonBox, QHBoxLayout, QHeaderView, QLabel,
+    QLayout, QLineEdit, QSizePolicy, QSpacerItem,
+    QVBoxLayout, QWidget)
 
 from tag_tree import TagTree
-
 import DeClutter_rc
 
 class Ui_Condition(object):
@@ -22,13 +29,13 @@ class Ui_Condition(object):
             Condition.setObjectName(u"Condition")
         Condition.setWindowModality(Qt.ApplicationModal)
         Condition.resize(417, 334)
-        sizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Condition.sizePolicy().hasHeightForWidth())
         Condition.setSizePolicy(sizePolicy)
         icon = QIcon()
-        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         Condition.setWindowIcon(icon)
         self.horizontalLayout = QHBoxLayout(Condition)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -39,7 +46,7 @@ class Ui_Condition(object):
         self.horizontalLayout_4.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.label = QLabel(Condition)
         self.label.setObjectName(u"label")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
@@ -54,7 +61,7 @@ class Ui_Condition(object):
         self.conditionCombo.addItem("")
         self.conditionCombo.addItem("")
         self.conditionCombo.setObjectName(u"conditionCombo")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.conditionCombo.sizePolicy().hasHeightForWidth())
@@ -62,7 +69,7 @@ class Ui_Condition(object):
 
         self.horizontalLayout_4.addWidget(self.conditionCombo)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer)
 
@@ -129,7 +136,7 @@ class Ui_Condition(object):
 
         self.ageLayout.addWidget(self.ageUnitsCombo)
 
-        self.ageSpacer = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.ageSpacer = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.ageLayout.addItem(self.ageSpacer)
 
@@ -165,7 +172,7 @@ class Ui_Condition(object):
 
         self.sizeLayout.addWidget(self.sizeUnitsCombo)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.sizeLayout.addItem(self.horizontalSpacer_2)
 
@@ -200,7 +207,7 @@ class Ui_Condition(object):
 
         self.horizontalLayout_7.addWidget(self.tagGroupsCombo)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_3)
 
@@ -215,7 +222,7 @@ class Ui_Condition(object):
 
         self.horizontalLayout_8.addWidget(self.tagsView)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_4)
 
@@ -248,14 +255,14 @@ class Ui_Condition(object):
 
         self.horizontalLayout_2.addWidget(self.typeCombo)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_5)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_2)
 

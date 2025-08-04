@@ -1,0 +1,6 @@
+cx_Freeze
+PySide6
+send2trash
+appdirs
+autopep8
+requests

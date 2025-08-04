@@ -3,17 +3,25 @@
 ################################################################################
 ## Form generated from reading UI file 'rule_edit_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QComboBox,
+    QDialog, QDialogButtonBox, QFormLayout, QFrame,
+    QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QListWidget, QListWidgetItem, QPushButton,
+    QSizePolicy, QSpacerItem, QWidget)
 
 from tag_tree import TagTree
-
 
 class Ui_RuleEditWindow(object):
     def setupUi(self, RuleEditWindow):
@@ -21,7 +29,7 @@ class Ui_RuleEditWindow(object):
             RuleEditWindow.setObjectName(u"RuleEditWindow")
         RuleEditWindow.setWindowModality(Qt.ApplicationModal)
         RuleEditWindow.resize(694, 571)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(RuleEditWindow.sizePolicy().hasHeightForWidth())
@@ -62,7 +70,7 @@ class Ui_RuleEditWindow(object):
         self.label_3 = QLabel(RuleEditWindow)
         self.label_3.setObjectName(u"label_3")
 
-        self.formLayout_5.setWidget(0, QFormLayout.LabelRole, self.label_3)
+        self.formLayout_5.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_3)
 
         self.formLayout_6 = QFormLayout()
         self.formLayout_6.setObjectName(u"formLayout_6")
@@ -72,15 +80,15 @@ class Ui_RuleEditWindow(object):
         self.conditionSwitchComboBox.addItem("")
         self.conditionSwitchComboBox.setObjectName(u"conditionSwitchComboBox")
 
-        self.formLayout_6.setWidget(0, QFormLayout.LabelRole, self.conditionSwitchComboBox)
+        self.formLayout_6.setWidget(0, QFormLayout.ItemRole.LabelRole, self.conditionSwitchComboBox)
 
         self.label_4 = QLabel(RuleEditWindow)
         self.label_4.setObjectName(u"label_4")
 
-        self.formLayout_6.setWidget(0, QFormLayout.FieldRole, self.label_4)
+        self.formLayout_6.setWidget(0, QFormLayout.ItemRole.FieldRole, self.label_4)
 
 
-        self.formLayout_5.setLayout(0, QFormLayout.FieldRole, self.formLayout_6)
+        self.formLayout_5.setLayout(0, QFormLayout.ItemRole.FieldRole, self.formLayout_6)
 
 
         self.gridLayout.addLayout(self.formLayout_5, 3, 0, 1, 1)
@@ -98,7 +106,7 @@ class Ui_RuleEditWindow(object):
         self.actionComboBox.addItem("")
         self.actionComboBox.addItem("")
         self.actionComboBox.setObjectName(u"actionComboBox")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.actionComboBox.sizePolicy().hasHeightForWidth())
@@ -118,7 +126,7 @@ class Ui_RuleEditWindow(object):
 
         self.targetFolderEdit = QLineEdit(RuleEditWindow)
         self.targetFolderEdit.setObjectName(u"targetFolderEdit")
-        sizePolicy2 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.targetFolderEdit.sizePolicy().hasHeightForWidth())
@@ -141,7 +149,7 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_2.addWidget(self.renameEdit)
 
-        self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
@@ -163,22 +171,22 @@ class Ui_RuleEditWindow(object):
         self.conditionAddButton = QPushButton(RuleEditWindow)
         self.conditionAddButton.setObjectName(u"conditionAddButton")
 
-        self.formLayout_7.setWidget(0, QFormLayout.LabelRole, self.conditionAddButton)
+        self.formLayout_7.setWidget(0, QFormLayout.ItemRole.LabelRole, self.conditionAddButton)
 
         self.conditionRemoveButton = QPushButton(RuleEditWindow)
         self.conditionRemoveButton.setObjectName(u"conditionRemoveButton")
 
-        self.formLayout_7.setWidget(1, QFormLayout.LabelRole, self.conditionRemoveButton)
+        self.formLayout_7.setWidget(1, QFormLayout.ItemRole.LabelRole, self.conditionRemoveButton)
 
         self.conditionSaveButton = QPushButton(RuleEditWindow)
         self.conditionSaveButton.setObjectName(u"conditionSaveButton")
 
-        self.formLayout_7.setWidget(2, QFormLayout.LabelRole, self.conditionSaveButton)
+        self.formLayout_7.setWidget(2, QFormLayout.ItemRole.LabelRole, self.conditionSaveButton)
 
         self.conditionLoadButton = QPushButton(RuleEditWindow)
         self.conditionLoadButton.setObjectName(u"conditionLoadButton")
 
-        self.formLayout_7.setWidget(3, QFormLayout.LabelRole, self.conditionLoadButton)
+        self.formLayout_7.setWidget(3, QFormLayout.ItemRole.LabelRole, self.conditionLoadButton)
 
 
         self.gridLayout.addLayout(self.formLayout_7, 4, 1, 1, 1)
@@ -215,7 +223,7 @@ class Ui_RuleEditWindow(object):
 
         self.sourceListWidget = QListWidget(RuleEditWindow)
         self.sourceListWidget.setObjectName(u"sourceListWidget")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy3.setHorizontalStretch(200)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.sourceListWidget.sizePolicy().hasHeightForWidth())
@@ -225,7 +233,7 @@ class Ui_RuleEditWindow(object):
 
         self.tagsView = TagTree(RuleEditWindow)
         self.tagsView.setObjectName(u"tagsView")
-        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.tagsView.sizePolicy().hasHeightForWidth())
@@ -238,17 +246,17 @@ class Ui_RuleEditWindow(object):
         self.folderAddButton = QPushButton(RuleEditWindow)
         self.folderAddButton.setObjectName(u"folderAddButton")
 
-        self.formLayout_3.setWidget(0, QFormLayout.LabelRole, self.folderAddButton)
+        self.formLayout_3.setWidget(0, QFormLayout.ItemRole.LabelRole, self.folderAddButton)
 
         self.sourceRemoveButton = QPushButton(RuleEditWindow)
         self.sourceRemoveButton.setObjectName(u"sourceRemoveButton")
 
-        self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.sourceRemoveButton)
+        self.formLayout_3.setWidget(2, QFormLayout.ItemRole.LabelRole, self.sourceRemoveButton)
 
         self.allTaggedAddButton = QPushButton(RuleEditWindow)
         self.allTaggedAddButton.setObjectName(u"allTaggedAddButton")
 
-        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.allTaggedAddButton)
+        self.formLayout_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.allTaggedAddButton)
 
 
         self.gridLayout.addLayout(self.formLayout_3, 2, 1, 1, 1)
@@ -272,7 +280,7 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_7.addWidget(self.overwriteComboBox)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_4)
 
@@ -289,7 +297,7 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer)
 
@@ -312,7 +320,7 @@ class Ui_RuleEditWindow(object):
 
         self.gridLayout_2.addLayout(self.horizontalLayout_8, 6, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer, 5, 0, 1, 1)
 
@@ -334,7 +342,7 @@ class Ui_RuleEditWindow(object):
 
         self.horizontalLayout_3.addWidget(self.newestLabel)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
@@ -343,8 +351,8 @@ class Ui_RuleEditWindow(object):
 
         self.line = QFrame(RuleEditWindow)
         self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.HLine)
-        self.line.setFrameShadow(QFrame.Sunken)
+        self.line.setFrameShape(QFrame.Shape.HLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
 
         self.gridLayout_2.addWidget(self.line, 2, 0, 1, 1)
 

@@ -1,6 +1,6 @@
 # DeClutter
 
-DeClutter is a desktop application built on PySide2. 
+DeClutter is a desktop application built on PySide6. 
 It has 2 main features:
 - automated files processing based on rules
 - tagger: a simple file manager that allows tagging files and folders with user defined tags

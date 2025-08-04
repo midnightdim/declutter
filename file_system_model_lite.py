@@ -1,13 +1,14 @@
 import os.path as osp
 from os.path import normpath
 from pathlib import Path
-import posixpath, mimetypes
+import posixpath
+import mimetypes
 import time
 from typing import Any, List, Union
 
-from PySide2.QtGui import QColor
-from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, QDateTime, QLocale, QFileInfo, QMimeDatabase, Signal
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QFileSystemModel, QAbstractItemView
+from PySide6.QtGui import QColor
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QDateTime, QLocale, QFileInfo, QMimeDatabase, Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QFileSystemModel, QAbstractItemView
 from declutter_lib import get_files_by_tag, get_tags, tag_get_color, get_all_files_from_db, get_actual_filename
 
 FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
@@ -24,6 +25,7 @@ FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
 #         #File not found
 #         return None
 #     return res[0]
+
 
 class _FileSystemModelLiteItem(object):
     """Represents a single node (drive, folder or file) in the tree"""
@@ -76,6 +78,7 @@ class _FileSystemModelLiteItem(object):
     def parent_item(self) -> FSMItemOrNone:
         return self._parent
 
+
 class FileSystemModelLite(QAbstractItemModel):
     # data_loaded = Signal(int)
 
@@ -83,21 +86,20 @@ class FileSystemModelLite(QAbstractItemModel):
         super().__init__(parent, **kwargs)
 
         self._icon_provider = QFileIconProvider()
-        
+
         self._root_item = _FileSystemModelLiteItem(
             ["Name", "Size", "Type", "Date Modified", "Tags"]
         )
         self._setup_model_data(file_list, self._root_item)
-
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if not index.isValid():
             return None
 
         item: _FileSystemModelLiteItem = index.internalPointer()
-        if role == Qt.DisplayRole and index.column()<4:
+        if role == Qt.DisplayRole and index.column() < 4:
             return item.data(index.column())
-        elif role == Qt.DisplayRole and index.column()==4:
+        elif role == Qt.DisplayRole and index.column() == 4:
             return ', '.join(get_tags(normpath(item.path())))
         elif index.column() == 0 and role == Qt.DecorationRole:
             return self._icon_provider.icon(item.icon())
@@ -218,7 +220,8 @@ class FileSystemModelLite(QAbstractItemModel):
                     icon = QFileInfo(full_path)
 
                 # item = _FileSystemModelLiteItem(data, _file_record["path"], icon=icon, parent=_parent)
-                item = _FileSystemModelLiteItem(data, full_path, icon=icon, parent=_parent)
+                item = _FileSystemModelLiteItem(
+                    data, full_path, icon=icon, parent=_parent)
                 _parent.append_child(item)
 
             if len(_file_record["bits"]):
@@ -230,23 +233,23 @@ class FileSystemModelLite(QAbstractItemModel):
             # if not actual:
             #     actual = str(Path(file).resolve()) # TBD this is dangerous in case of symlinks
             # file = actual
-            
+
             # print(file,get_actual_filename(file))
             # print(osp.getmtime(file))
             # print(int(osp.getmtime(file)*1000))
             # print(file)
-            time = QDateTime().fromMSecsSinceEpoch(int(osp.getmtime(file)*1000))
+            time = QDateTime().fromMSecsSinceEpoch(int(osp.getmtime(file) * 1000))
             # time
             # print(time)
             # print(file,get_tags(file))
             file_record = {
-                "path" : file,
+                "path": file,
                 # "size": sizeof_fmt(osp.getsize(file)),
                 "size": QLocale().formattedDataSize(osp.getsize(file)),
                 # "modified_at": time.strftime(
                 #     "%a, %d %b %Y %H:%M:%S %Z", time.localtime(osp.getmtime(file))
                 # ),
-                "modified_at": time.toString(Qt.SystemLocaleDate),
+                "modified_at": time.toString(QLocale.system().dateTimeFormat(QLocale.ShortFormat)),
                 # "type": mimetypes.guess_type(file)[0],
                 "type": db.mimeTypeForFile(file).comment(),
                 "tags": ", ".join(get_tags(normpath(file)))
@@ -277,7 +280,7 @@ class Widget(QWidget):
         # ]
         # file_list = get_files_by_tag('concert')
         file_list = get_all_files_from_db()
-        # file_list.extend(get_files_by_tag('trash'))        
+        # file_list.extend(get_files_by_tag('trash'))
         self._fileSystemModel = FileSystemModelLite(file_list, self)
 
         layout = QVBoxLayout(self)
@@ -286,25 +289,25 @@ class Widget(QWidget):
         self._treeView.setModel(self._fileSystemModel)
         self._treeView.setSortingEnabled(True)
         self._treeView.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self._treeView.header().resizeSection(0,350)
+        self._treeView.header().resizeSection(0, 350)
         self._treeView.expandAll()
         layout.addWidget(self._treeView)
 
 # print(QMimeDatabase().mimeTypeForFile("C:\\windows-version.txt"))
 
 # print(QFileInfo('d:\\dim\\winfiles\\downloads').canonicalFilePath())
-# from PySide2.QtCore import QDir
 # print(QDir.fromNativeSeparators('d:\\dim\\winfiles\\downloads'))
 # print(QDir('d:\\dim\\winfiles\\downloads'))
 
 # print(QDir('d:\\dim\\winfiles').entryList(('downloads'), sort = QDir.IgnoreCase))
 
+
 if __name__ == "__main__":
     from sys import argv, exit
-    from PySide2.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
 
     a = QApplication(argv)
     w = Widget()
     w.setGeometry(200, 200, 1000, 600)
     w.show()
-    exit(a.exec_())
+    exit(a.exec())

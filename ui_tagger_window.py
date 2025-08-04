@@ -3,18 +3,28 @@
 ################################################################################
 ## Form generated from reading UI file 'tagger_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QApplication, QComboBox, QDial, QDockWidget,
+    QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QMainWindow, QMenu, QMenuBar, QPushButton,
+    QScrollArea, QSizePolicy, QSpacerItem, QStatusBar,
+    QVBoxLayout, QWidget)
 
-from slider import Slider
 from file_tree import FileTree
-
+from slider import Slider
 import DeClutter_rc
 
 class Ui_taggerWindow(object):
@@ -23,7 +33,7 @@ class Ui_taggerWindow(object):
             taggerWindow.setObjectName(u"taggerWindow")
         taggerWindow.resize(1302, 817)
         icon = QIcon()
-        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/images/DeClutter.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         taggerWindow.setWindowIcon(icon)
         self.actionManage_Tags = QAction(taggerWindow)
         self.actionManage_Tags.setObjectName(u"actionManage_Tags")
@@ -62,7 +72,7 @@ class Ui_taggerWindow(object):
 
         self.treeView = FileTree(self.centralwidget)
         self.treeView.setObjectName(u"treeView")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.treeView.sizePolicy().hasHeightForWidth())
@@ -97,18 +107,17 @@ class Ui_taggerWindow(object):
         taggerWindow.setStatusBar(self.statusbar)
         self.tagsDockWidget = QDockWidget(taggerWindow)
         self.tagsDockWidget.setObjectName(u"tagsDockWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.tagsDockWidget.sizePolicy().hasHeightForWidth())
         self.tagsDockWidget.setSizePolicy(sizePolicy1)
         self.tagsDockWidget.setMinimumSize(QSize(180, 500))
         self.tagsDockWidget.setStyleSheet(u"")
-        self.tagsDockWidget.setFeatures(QDockWidget.AllDockWidgetFeatures)
         self.tagsDockWidget.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
-        sizePolicy2 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.dockWidgetContents.sizePolicy().hasHeightForWidth())
@@ -119,7 +128,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.tagsScrollArea = QScrollArea(self.dockWidgetContents)
         self.tagsScrollArea.setObjectName(u"tagsScrollArea")
-        sizePolicy3 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.tagsScrollArea.sizePolicy().hasHeightForWidth())
@@ -141,7 +150,7 @@ class Ui_taggerWindow(object):
 
         self.gridLayout_3.addLayout(self.tagsLayout, 0, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer, 1, 0, 1, 1)
 
@@ -150,7 +159,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_2.addWidget(self.tagsScrollArea, 0, 0, 1, 1)
 
         self.tagsDockWidget.setWidget(self.dockWidgetContents)
-        taggerWindow.addDockWidget(Qt.LeftDockWidgetArea, self.tagsDockWidget)
+        taggerWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.tagsDockWidget)
         self.mediaDockWidget = QDockWidget(taggerWindow)
         self.mediaDockWidget.setObjectName(u"mediaDockWidget")
         self.mediaDockWidgetContent = QWidget()
@@ -165,7 +174,7 @@ class Ui_taggerWindow(object):
         self.mediaPlayButton = QPushButton(self.mediaDockWidgetContent)
         self.mediaPlayButton.setObjectName(u"mediaPlayButton")
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.mediaPlayButton.setIcon(icon1)
 
         self.horizontalLayout_2.addWidget(self.mediaPlayButton)
@@ -208,7 +217,7 @@ class Ui_taggerWindow(object):
         self.gridLayout_5.addLayout(self.gridLayout_4, 0, 0, 1, 1)
 
         self.mediaDockWidget.setWidget(self.mediaDockWidgetContent)
-        taggerWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mediaDockWidget)
+        taggerWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.mediaDockWidget)
         self.tagsFilterDockWidget = QDockWidget(taggerWindow)
         self.tagsFilterDockWidget.setObjectName(u"tagsFilterDockWidget")
         sizePolicy1.setHeightForWidth(self.tagsFilterDockWidget.sizePolicy().hasHeightForWidth())
@@ -219,7 +228,7 @@ class Ui_taggerWindow(object):
         self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
         self.gridLayout_7 = QGridLayout(self.dockWidgetContents_2)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_7.addItem(self.verticalSpacer_2, 2, 0, 1, 1)
 
@@ -244,7 +253,7 @@ class Ui_taggerWindow(object):
 
         self.tagsFilterLabel = QLabel(self.dockWidgetContents_2)
         self.tagsFilterLabel.setObjectName(u"tagsFilterLabel")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.tagsFilterLabel.sizePolicy().hasHeightForWidth())
@@ -252,7 +261,7 @@ class Ui_taggerWindow(object):
 
         self.horizontalLayout_4.addWidget(self.tagsFilterLabel)
 
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_7)
 
@@ -260,10 +269,10 @@ class Ui_taggerWindow(object):
         self.gridLayout_7.addLayout(self.horizontalLayout_4, 0, 0, 1, 1)
 
         self.tagsFilterDockWidget.setWidget(self.dockWidgetContents_2)
-        taggerWindow.addDockWidget(Qt.RightDockWidgetArea, self.tagsFilterDockWidget)
+        taggerWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.tagsFilterDockWidget)
         self.filtersDockWidget = QDockWidget(taggerWindow)
         self.filtersDockWidget.setObjectName(u"filtersDockWidget")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.filtersDockWidget.sizePolicy().hasHeightForWidth())
@@ -293,7 +302,7 @@ class Ui_taggerWindow(object):
 
         self.conditionListWidget = QListWidget(self.dockWidgetContents_4)
         self.conditionListWidget.setObjectName(u"conditionListWidget")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.conditionListWidget.sizePolicy().hasHeightForWidth())
@@ -307,7 +316,7 @@ class Ui_taggerWindow(object):
         self.filterButtonsLayout.setObjectName(u"filterButtonsLayout")
         self.filterAddButton = QPushButton(self.dockWidgetContents_4)
         self.filterAddButton.setObjectName(u"filterAddButton")
-        sizePolicy7 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy7.setHorizontalStretch(0)
         sizePolicy7.setVerticalStretch(0)
         sizePolicy7.setHeightForWidth(self.filterAddButton.sizePolicy().hasHeightForWidth())
@@ -320,7 +329,7 @@ class Ui_taggerWindow(object):
 
         self.filterRemoveButton = QPushButton(self.dockWidgetContents_4)
         self.filterRemoveButton.setObjectName(u"filterRemoveButton")
-        sizePolicy8 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy8 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy8.setHorizontalStretch(0)
         sizePolicy8.setVerticalStretch(0)
         sizePolicy8.setHeightForWidth(self.filterRemoveButton.sizePolicy().hasHeightForWidth())
@@ -338,12 +347,12 @@ class Ui_taggerWindow(object):
 
         self.verticalLayout_3.addLayout(self.filterButtonsLayout)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_3.addItem(self.verticalSpacer_3)
 
         self.filtersDockWidget.setWidget(self.dockWidgetContents_4)
-        taggerWindow.addDockWidget(Qt.RightDockWidgetArea, self.filtersDockWidget)
+        taggerWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.filtersDockWidget)
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
