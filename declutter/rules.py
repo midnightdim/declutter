@@ -6,12 +6,12 @@ from pathlib import Path
 from shutil import copytree, rmtree
 from time import time
 from send2trash import send2trash
-from .tags import add_tags, remove_tags
-from .config import SETTINGS_FILE
-from .config import load_settings, ALL_TAGGED_TEXT
-from .file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
+from declutter.tags import add_tags, remove_tags
+from declutter.config import SETTINGS_FILE
+from declutter.config import load_settings, ALL_TAGGED_TEXT
+from declutter.file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
                          advanced_move, get_file_type, get_actual_filename)
-from .tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
+from declutter.tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
                    check_files, get_all_files_from_db)
 
 def apply_rule(rule, dryrun=False):

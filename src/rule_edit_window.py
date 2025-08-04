@@ -3,11 +3,11 @@ from os.path import normpath
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication,  QDialog,  QFileDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import QItemSelectionModel
-from .ui.ui_list_dialog import Ui_listDialog
-from .ui.ui_rule_edit_window import Ui_RuleEditWindow
+from src.ui.ui_list_dialog import Ui_listDialog
+from src.ui.ui_rule_edit_window import Ui_RuleEditWindow
 from src.condition_dialog import ConditionDialog
 
-from .tags_dialog import generate_tag_model
+from src.tags_dialog import generate_tag_model
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import get_tags_and_groups
 from declutter.config import ALL_TAGGED_TEXT
@@ -22,7 +22,7 @@ class RuleEditWindow(QDialog):
 
         self.rule = {}
         self.updated = False
-        # self.loadRule(self.rule)
+        
 
         self.ui.folderAddButton.clicked.connect(self.add_folder)
         self.ui.sourceRemoveButton.clicked.connect(self.delete_source)
@@ -44,14 +44,14 @@ class RuleEditWindow(QDialog):
         self.ui.tagsView.clicked.connect(self.tags_selection_changed)
 
         self.ui.advancedButton.clicked.connect(self.show_advanced)
-        # self.ui.buttonBox.clicked.connect(self.process)
+        
 
         self.ui.ignoreNewestCheckBox.setVisible(False)
         self.ui.numberNewestEdit.setVisible(False)
         self.ui.newestLabel.setVisible(False)
         self.ui.line.setVisible(False)
 
-        # self.ui.tagAddButton.setVisible(False)
+        
         self.ui.conditionLoadButton.setVisible(False)
         self.ui.conditionSaveButton.setVisible(False)
 
@@ -87,8 +87,7 @@ class RuleEditWindow(QDialog):
         if self.condition_window.condition:
             self.rule['conditions'].append(self.condition_window.condition)
             self.refresh_conditions()
-        # print(self.rule['conditions'])
-        # print(self.condition_window.condition)
+        
 
     def delete_condition(self, cond):
         del self.rule['conditions'][self.ui.conditionListWidget.selectedIndexes()[
@@ -98,18 +97,10 @@ class RuleEditWindow(QDialog):
     def edit_condition(self, cond):
         c = self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(
             cond).row()]
-        # print(self.ui.conditionListWidget.indexFromItem(cond).row())
-        self.condition_window = ConditionDialog()
-        self.condition_window.load_condition(c)
-        self.condition_window.exec()
-        # self.condition_window.show()
-        # print(self.condition_window.condition)
-        # print(self.rule)
+        
         self.refresh_conditions()
 
-    # def refresh_sources(self):
-    #     self.ui.sourceListWidget.clear()
-    #     self.ui.sourceListWidget.addItems(self.rule['folders'])
+    
 
     def refresh_conditions(self):
         conds = []
@@ -160,10 +151,10 @@ class RuleEditWindow(QDialog):
         self.rule['target_subfolder'] = self.ui.subfolderEdit.text()
         self.rule['name_pattern'] = self.ui.renameEdit.text()
         self.rule['overwrite_switch'] = self.ui.overwriteComboBox.currentText()
-        # print([index.data() for index in self.ui.tagsView.selectedIndexes()])
+        
         self.rule['tags'] = [index.data()
                              for index in self.ui.tagsView.selectedIndexes()]
-        # self.rule['tags'] = [self.ui.tagsView.item(row).text() for row in range(0,self.ui.tagsView.count()) if self.ui.tagsView.item(row).isSelected()]
+        
         self.rule['ignore_newest'] = self.ui.ignoreNewestCheckBox.isChecked()
         self.rule['ignore_N'] = self.ui.numberNewestEdit.text()
 
@@ -195,9 +186,7 @@ class RuleEditWindow(QDialog):
             super(RuleEditWindow, self).accept()
 
     def test_rule(self):
-        # msgBox = QMessageBox.information(self,"Some title","Files and folders affected by this rule:")
-        # msgBox.setDetailedText("details go here")
-        # reply = msgBox.exec()
+        
 
         self.update_rule_from_ui()
 
@@ -216,19 +205,18 @@ class RuleEditWindow(QDialog):
 
     def load_rule(self, rule):
         self.rule = rule
-        # self.rule = rule.copy()
-        # self.rule_init = rule
+        
         self.ui.ruleNameEdit.setText(rule['name'])
         self.ui.sourceListWidget.addItems(rule['folders'])
         self.ui.enabledCheckBox.setChecked(rule['enabled'])
         self.ui.recursiveCheckBox.setChecked(rule['recursive'])
-        # print(self.rule['condition_switch'])
+        
         self.ui.conditionSwitchComboBox.setCurrentText(
             rule['condition_switch'])
 
         self.refresh_conditions()
 
-        # self.ui.conditionListWidget.addItems(conds)
+        
         self.ui.actionComboBox.setCurrentIndex(
             self.ui.actionComboBox.findText(rule['action']))
         self.ui.targetFolderEdit.setText(rule['target_folder'])
@@ -253,9 +241,7 @@ class RuleEditWindow(QDialog):
         self.ui.selectedTagsLabel.setText(
             'Selected tags: '+','.join(rule['tags']))
 
-        # for index in self.ui.tagsView.setSelection()
-        #     if self.ui.tagsView.item(row).text() in rule['tags']:
-        #         self.ui.tagsView.item(row).setSelected(True)
+        
         self.action_change()
 
         self.ui.ignoreNewestCheckBox.setChecked(rule['ignore_newest'])
@@ -297,7 +283,7 @@ class RuleEditWindow(QDialog):
             if normpath(directory) not in self.rule['folders']:
                 self.rule['folders'].append(normpath(directory))
                 self.ui.sourceListWidget.addItem(normpath(directory))
-            # self.refresh_sources()
+
 
     def add_all_tagged(self):
         if not 'folders' in self.rule.keys():
@@ -305,14 +291,14 @@ class RuleEditWindow(QDialog):
         if ALL_TAGGED_TEXT not in self.rule['folders']:
             self.rule['folders'].append(ALL_TAGGED_TEXT)
             self.ui.sourceListWidget.addItem(ALL_TAGGED_TEXT)
-        # self.refresh_sources()
+
 
     def delete_source(self):
         del self.rule['folders'][self.ui.sourceListWidget.selectedIndexes()[
             0].row()]
         self.ui.sourceListWidget.takeItem(
             self.ui.sourceListWidget.currentRow())
-        # self.refresh_sources()
+
 
 
 if __name__ == "__main__":

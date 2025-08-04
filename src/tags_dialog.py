@@ -1,11 +1,8 @@
 import sys
-# from PySide2.QtUiTools import loadUiType
-
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QInputDialog, QLineEdit, QColorDialog, QPushButton, QComboBox, QDialogButtonBox, QVBoxLayout
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QColor, QStandardItemModel, QStandardItem, QIcon
-from .ui.ui_tags_dialog import Ui_tagsDialog
-# from .tag_tree import get_tree_selection_level
+from src.ui.ui_tags_dialog import Ui_tagsDialog
 from declutter.tags import (
     get_all_tags, get_tags_and_groups, rename_tag, set_group_type, rename_group, tag_get_color, tag_set_color, create_tag, create_group, delete_tag, delete_group
 )
@@ -16,78 +13,26 @@ class TagsDialog(QDialog):
         super(TagsDialog, self).__init__()
         self.ui = Ui_tagsDialog()
         self.ui.setupUi(self)
-        # self.model = QStandardItemModel()
+        
         self.model = model
-        # self.print_model()
-        # addItems(self.model, get_tags_and_groups())
+        
         self.ui.addButton.clicked.connect(self.add_tag)
         self.ui.removeButton.clicked.connect(self.remove)
         self.ui.addGroupButton.clicked.connect(self.add_group)
-        # self.ui.moveUpButton.clicked.connect(self.move_up)
-        # self.ui.moveDownButton.clicked.connect(self.move_down)
+        
         self.ui.colorButton.clicked.connect(self.set_color)
-        # self.ui.tagsList.doubleClicked.connect(self.rename_tag)
+        
         self.ui.treeView.doubleClicked.connect(self.rename)
-        # self.model.dataChanged.connect(self.data_changed)
-        # self.model.rowsMoved.connect(self.rows_moved)
+        
 
-        # self.model.itemChanged.connect(self.item_changed) # TBD this can be used for in-place editing
+        
         self.ui.treeView.setModel(self.model)
         self.ui.treeView.expandAll()
         self.ui.treeView.setExpandsOnDoubleClick(False)
 
-        # self.load_tags()
+        
 
-    # def print_model(self):
-    #     for i in range(0,self.model.rowCount()):
-    #     # i = 0
-    #     # for group in data.keys():
-    #         group = self.model.item(i).data(Qt.UserRole)
-    #         print('group:',group['name'])
-    #         for k in range(0,self.model.item(i).rowCount()):
-    #             tag = self.model.item(i).child(k).data(Qt.UserRole)
-    #             print('tag:',tag['name'])
-
-    # def data_changed(self,left,right,vector):
-    #     print('data changed')
-    #     print(left,right,vector)
-    #     print(self.model.itemFromIndex(left).text())
-    #     print(self.model.itemFromIndex(right).text())
-    #     # lists all top level items
-    #     print(self.model.rowCount())
-    #     for i in range(0,self.model.rowCount()):
-    #         print(self.model.item(i).text())
-
-    # def rows_moved(self, parent, start, end, destination, row):
-    #     print('rows moved')
-    #     print(self.model.itemFromIndex(parent).text(), start, end, self.model.itemFromIndex(destination).text(), row)
-
-    # def item_changed(self, item):  # TBD this can be used for in-place editing
-    #     item_data = item.data(Qt.UserRole)
-    #     par = item.parent()
-    #     par_data = par.data(Qt.UserRole) if par else {}
-    #     if (item.text() != item_data['name']):
-    #         print('renamed from',item_data['name'])
-    #         # for i in range(0,par.rowCount()):
-    #         #     print(i,par.child(i).text())
-    #     elif item_data['type'] == 'tag' and item_data['group_id'] != par_data['id']:
-    #         print('tag moved to group',par_data['name'])
-    #         # for i in range(0,par.rowCount()):
-    #         #     print(i,par.child(i).text())
-    #     elif item_data['type'] == 'tag' and item_data['group_id'] == par_data['id']:
-    #         print('tag moved inside the group')
-    #         # for i in range(0,par.rowCount()):
-    #         #     print(i,par.child(i).text())
-    #         #     print(i,par.child(i))
-    #             # print(i,par.child(i).data(Qt.UserRole))
-    #     elif item_data['type'] == 'group':
-    #         print('group moved')
-
-    #     self.ui.treeView
-    #     # # lists all top level items
-    #     # print(self.model.rowCount())
-    #     # for i in range(0,self.model.rowCount()):
-    #     #     print(self.model.item(i).text())
+    
 
     def rename(self):
         cur_item = self.ui.treeView.currentIndex().data(Qt.UserRole)
@@ -117,13 +62,13 @@ class TagsDialog(QDialog):
             group = cur_item['name']
             other_groups = [self.model.item(i).data(
                 Qt.UserRole)['name'] for i in range(self.model.rowCount())]
-            # print(other_groups)
+            
             other_groups.remove(group)
 
             group_dialog = GroupDialog(group)
-            # print(group_dialog.lineEdit.text())
+            
             if group_dialog.exec():
-                # print(group_dialog.comboBox.currentIndex())
+                
                 newgroup = group_dialog.lineEdit.text()
                 widget_type = group_dialog.comboBox.currentIndex()
                 set_group_type(group, widget_type)
@@ -131,17 +76,16 @@ class TagsDialog(QDialog):
                 self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
                     cur_item, Qt.UserRole)
 
-                # newgroup, ok = QInputDialog.getText(self, "Rename group",
-                #     "Enter new name:", QLineEdit.Normal, group)
+                
                 if newgroup != '' and newgroup != group:
                     if newgroup in other_groups:
                         QMessageBox.information(
                             self, "Can't do that", "Another group with this name already exists. Please choose a different name.")
                     else:
                         rename_group(group, newgroup)
-                        # print('renaming')
+                        
                         cur_item['name'] = newgroup
-                        # cur_item['widget_type'] = widget_type
+                        
                         self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
                             cur_item, Qt.UserRole)
                         self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
@@ -149,9 +93,9 @@ class TagsDialog(QDialog):
 
     def set_color(self):
         if self.ui.treeView.currentIndex().data(Qt.UserRole)['type'] == 'tag':
-            # tag = self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).text()
+            
             tag = self.ui.treeView.currentIndex().data()
-            # print(tag)
+            
             cur_color = None
             if tag_get_color(tag):
                 cur_color = QColor()
@@ -162,10 +106,10 @@ class TagsDialog(QDialog):
             if color.isValid():
                 self.ui.treeView.model().itemFromIndex(
                     self.ui.treeView.currentIndex()).setData(color, Qt.BackgroundRole)
-                # self.ui.tagsList.itemFromIndex(self.ui.tagsList.selectedIndexes()[0]).setBackground(color)
+                
                 tag_set_color(tag, color.rgba())
                 tag_data = self.ui.treeView.currentIndex().data(Qt.UserRole)
-                # print(tag_data)
+                
                 tag_data['color'] = color.rgba()
                 self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
                     tag_data, Qt.UserRole)
@@ -227,10 +171,10 @@ class TagsDialog(QDialog):
                 self.reload_model()
 
     def reload_model(self):
-        # self.ui.tagsList.clear()
+        
         self.model.clear()
         generate_tag_model(self.model, get_tags_and_groups())
-        # self.ui.treeView.setModel(self.model)
+        
         self.ui.treeView.expandAll()
 
 # generates the model used in tagger dock widget, tags selection for filtering and tags manager
@@ -260,8 +204,7 @@ def generate_tag_model(model, data, groups_selectable=True):
                 tag_item.setEditable(False)
                 # tag_item.setCheckable(True)
                 item.appendRow(tag_item)
-                # for f in get_files_by_tag(tag['name']):
-                #     tag_item.appendRow(QStandardItem(f))
+                
 
 
 class GroupDialog(QDialog):
@@ -301,8 +244,4 @@ if __name__ == "__main__":
 
     window = TagsDialog()
     window.show()
-    # window = GroupDialog("test")
-    # print(window.exec_())
-    # print(window.lineEditA.text())
-
     sys.exit(app.exec())

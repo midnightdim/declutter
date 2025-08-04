@@ -1,21 +1,31 @@
 from cx_Freeze import setup, Executable
 import sys
+import os
 
-# exclude unneeded packages. More could be added. Has to be changed for
-# other programs.
-build_exe_options = {"excludes": ["tkinter", "PyQt5", "PySide6", "pandas", "matplotlib", "PySide2.Qt5WebEngineCore",
-                                  "scipy", "numpy"],
-                     "include_files": ["DeClutter.ico", "DeClutter.iss"],
-                     "optimize": 2}
+build_exe_options = {
+    "excludes": [
+        "tkinter", "pandas", "matplotlib",
+        "scipy", "numpy"
+    ],
+    "packages": ["os", "sys", "collections", "PySide6", "declutter", "requests", "certifi", "charset_normalizer"],
+    "include_files": [
+        os.path.join("assets", "DeClutter.ico"),
+        os.path.join("scripts", "DeClutter.iss")
+    ],
+    "optimize": 2,
+    "include_msvcr": True
+}
 
-# Information about the program and build command. Has to be adjusted for
-# other programs
 setup(
-    name="DeClutter",                           # Name of the program
-    version="1.12.2",                           # Version number
-    description="DeClutter: file organizer",    # Description
-    options={"build_exe": build_exe_options},  # <-- the missing line
-    executables=[Executable("DeClutter.py",     # Executable python file
-                            base=("Win32GUI" if sys.platform == "win32"
-                                  else None))],
+    name="DeClutter",
+    version="1.31.1",
+    description="DeClutter: file organizer",
+    options={"build_exe": build_exe_options},
+    executables=[
+        Executable(
+            os.path.join("src", "DeClutter.py"),
+            base="Win32GUI" if sys.platform == "win32" else None,
+            icon=os.path.join("assets", "DeClutter.ico")
+        )
+    ],
 )

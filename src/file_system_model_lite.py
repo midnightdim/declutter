@@ -1,9 +1,6 @@
 import os.path as osp
 from os.path import normpath
-from pathlib import Path
 import posixpath
-import mimetypes
-import time
 from typing import Any, List, Union
 
 from PySide6.QtGui import QColor
@@ -13,20 +10,6 @@ from declutter.tags import get_files_by_tag, get_tags, tag_get_color, get_all_fi
 from declutter.file_utils import get_actual_filename
 
 FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
-
-# import glob
-# def get_actual_filename(name):
-#     dirs = name.split('\\')
-#     # disk letter
-#     test_name = [dirs[0].upper()]
-#     for d in dirs[1:]:
-#         test_name += ["%s[%s]" % (d[:-1], d[-1])]
-#     res = glob.glob('\\'.join(test_name))
-#     if not res:
-#         #File not found
-#         return None
-#     return res[0]
-
 
 class _FileSystemModelLiteItem(object):
     """Represents a single node (drive, folder or file) in the tree"""

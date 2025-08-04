@@ -4,7 +4,7 @@ import re
 from shutil import copy2, copytree, move, rmtree
 from pathlib import Path
 from fnmatch import fnmatch
-from .config import load_settings
+from declutter.config import load_settings
 import logging
 
 def get_file_time(filename, date_type=0):

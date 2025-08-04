@@ -1,7 +1,7 @@
 import sys
+import os
 from copy import deepcopy
 from time import time
-import os
 import logging
 from datetime import datetime
 import webbrowser
@@ -12,10 +12,10 @@ from PySide6.QtWidgets import (
     QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
 )
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
-from .rule_edit_window import RuleEditWindow
-from .settings_dialog import SettingsDialog
-from .ui.ui_rules_window import Ui_rulesWindow
-from .ui.ui_list_dialog import Ui_listDialog
+from src.rule_edit_window import RuleEditWindow
+from src.settings_dialog import SettingsDialog
+from src.ui.ui_rules_window import Ui_rulesWindow
+from src.ui.ui_list_dialog import Ui_listDialog
 from declutter.config import (
     SETTINGS_FILE, VERSION, LOG_FILE, load_settings, save_settings
 )
@@ -23,7 +23,7 @@ from declutter.rules import (
     apply_all_rules, apply_rule, get_rule_by_id
 )
 
-from .declutter_tagger import TaggerWindow
+from src.declutter_tagger import TaggerWindow
 
 
 class RulesWindow(QMainWindow):
@@ -53,7 +53,7 @@ class RulesWindow(QMainWindow):
         self.ui.deleteRule.clicked.connect(self.delete_rule)
         self.ui.applyRule.clicked.connect(self.apply_rule)
         # self.ui.moveUp.clicked.connect(self.start_thread)
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
+        self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.trayIcon.messageClicked.connect(self.message_clicked)
         self.trayIcon.activated.connect(self.tray_activated)
         self.trayIcon.setToolTip(
@@ -93,8 +93,7 @@ class RulesWindow(QMainWindow):
         self.instanced_thread.start()
         self.instanced_thread.version.connect(self.suggest_download)
 
-    # def not_implemented_yet(self):
-    #     QMessageBox.information(self,"Sorry", "This feature is not implemented yet!")
+    
     def suggest_download(self, version):
         if version and version > str(load_settings()['version']):
             reply = QMessageBox.question(self, "New version: " + version,
@@ -322,7 +321,7 @@ class RulesWindow(QMainWindow):
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-        self.trayIcon.setIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
+        self.trayIcon.setIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.trayIcon.setVisible(True)
         self.trayIcon.show()
 
@@ -345,14 +344,12 @@ class RulesWindow(QMainWindow):
                 QSystemTrayIcon.Information,
                 15000,
             )
-        # logging.debug("Details"+str(details))
+        
         self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
 
-
 class service_signals(QObject):
     signal1 = Signal(str, list)
-
 
 class declutter_service(QThread):
     def __init__(self, parent=None):
@@ -360,8 +357,7 @@ class declutter_service(QThread):
         self.signals = service_signals()
         self.signals.signal1.connect(parent.show_tray_message)
         self.starting_seconds = time()
-        # self.settings = load_settings(SETTINGS_FILE)
-
+        
     def run(self):
         print("Processing rules...", datetime.now())
         details = []
@@ -373,7 +369,6 @@ class declutter_service(QThread):
         if len(msg) > 0:
             msg = "Processed files and folders:\n" + msg
         self.signals.signal1.emit(msg, details)
-
 
 class new_version_checker(QThread):
     version = Signal(str)
@@ -390,20 +385,18 @@ class new_version_checker(QThread):
         except Exception as e:
             logging.exception(f'exception {e}')
 
-
 def main():
     app = QApplication(sys.argv)
     QApplication.setQuitOnLastWindowClosed(False)
 
     logging.info("DeClutter started")
-    app.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
+    app.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
 
     window = RulesWindow()
     window.show()
     # window.showMinimized()
     window.setWindowTitle('DeClutter (beta) ' + VERSION)
     sys.exit(app.exec())
-
 
 if __name__ == '__main__':
     main()

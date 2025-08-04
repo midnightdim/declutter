@@ -14,8 +14,8 @@ from PySide6.QtCore import (
 )
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
-from .ui.ui_tagger_window import Ui_taggerWindow
-from .tags_dialog import TagsDialog, generate_tag_model
+from src.ui.ui_tagger_window import Ui_taggerWindow
+from src.tags_dialog import TagsDialog, generate_tag_model
 from declutter.config import (
     SETTINGS_FILE, load_settings, save_settings, ALL_TAGGED_TEXT
 )
@@ -29,8 +29,8 @@ from declutter.file_utils import (
 )
 
 # from datetime import datetime
-from .file_system_model_lite import FileSystemModelLite
-from .condition_dialog import ConditionDialog
+from src.file_system_model_lite import FileSystemModelLite
+from src.condition_dialog import ConditionDialog
 # from qt_material import apply_stylesheet
 
 

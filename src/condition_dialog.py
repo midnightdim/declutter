@@ -2,10 +2,10 @@ import sys
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import QItemSelectionModel
-from .ui.ui_condition_dialog import Ui_Condition
+from src.ui.ui_condition_dialog import Ui_Condition
 from declutter.config import load_settings
 from declutter.tags import get_all_tag_groups, get_tags_and_groups
-from .tags_dialog import generate_tag_model
+from src.tags_dialog import generate_tag_model
 
 class ConditionDialog(QDialog):
     def __init__(self):
@@ -22,13 +22,7 @@ class ConditionDialog(QDialog):
         self.ui.tagsView.expandAll()
         self.ui.tagsView.clicked.connect(self.tags_selection_changed)
 
-        # for t in get_all_tags():
-        #     self.ui.tagsList.addItem(t)
-        #     color = tag_get_color(t)
-        #     if color:
-        #         self.ui.tagsList.item(self.ui.tagsList.count()-1).setBackground(QColor(color))
-
-        # self.loadCondition()
+        
         self.ui.typeCombo.insertItems(
             0, list(load_settings()['file_types'].keys()))
         self.update_visibility()
@@ -56,7 +50,7 @@ class ConditionDialog(QDialog):
         self.ui.ageCombo.setVisible(state == "date")
         self.ui.age.setVisible(state == "date")
         self.ui.ageUnitsCombo.setVisible(state == "date")
-        # self.ui.ageSpacer.setVisible(state == "date")
+        
         self.ui.sizeLabel.setVisible(state == "size")
         self.ui.sizeCombo.setVisible(state == "size")
         self.ui.size.setVisible(state == "size")
@@ -129,13 +123,7 @@ class ConditionDialog(QDialog):
                     self.ui.typeSwitchCombo.findText(cond['file_type_switch']))
                 self.ui.typeCombo.setCurrentIndex(
                     self.ui.typeCombo.findText(cond['file_type']))
-                # for row in range(0,self.ui.tagsList.count()):
-                #     if self.ui.tagsView.item(row).text() in cond['tags']:
-                #         self.ui.tagsView.item(row).setSelected(True)
-
-                # for tagItem in self.ui.tagsList.items():
-                #     print(tagItem.text())
-                # for tag in cond['tags']:
+                
     def accept(self):
         error = ""
         self.condition['type'] = self.ui.conditionCombo.currentText()
