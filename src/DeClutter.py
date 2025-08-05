@@ -399,10 +399,10 @@ class new_version_checker(QThread):
 
     def run(self):
         try:
-            url = 'https://declutter.codetzar.com/latest_version.txt'
-            r = requests.get(url)
-            self.version.emit(r.text.strip())
-
+            response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
+            if response.status_code == 200:
+                latest_version = response.json()["tag_name"]
+                self.version.emit(latest_version.strip())
         except Exception as e:
             logging.exception(f'exception {e}')
 
