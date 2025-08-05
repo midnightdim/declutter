@@ -98,12 +98,21 @@ class RulesWindow(QMainWindow):
         """Suggests downloading a new version of the application if available."""
         if version and version > str(load_settings()['version']):
             reply = QMessageBox.question(self, "New version: " + version,
-                                         r"There's a new version of DeClutter available. Download now?",
-                                         QMessageBox.Yes | QMessageBox.No)
+                r"There's a new version of DeClutter available. Download now?",
+                QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
                 try:
-                    webbrowser.open(
-                        'https://declutter.codetzar.com/DeClutter.latest.exe')
+                    # Get the download URL from the latest release
+                    response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
+                    if response.status_code == 200:
+                        release_data = response.json()
+                        # Find the Windows executable asset
+                        for asset in release_data.get('assets', []):
+                            if asset['name'].endswith('.exe') and 'Windows' in asset['name']:
+                                webbrowser.open(asset['browser_download_url'])
+                                return
+                    # Fallback to releases page if no specific asset found
+                    webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
                 except Exception as e:
                     logging.exception(f'exception {e}')
 
