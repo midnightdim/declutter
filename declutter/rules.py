@@ -217,7 +217,6 @@ def apply_all_rules(settings):
     details = []
     for rule in settings['rules']:
         # TBD doesn't look optimal / had to use load_settings for testing, should be just settings
-        print(rule['name'], rule['enabled'])  # for debugging
         rule_report, rule_details = apply_rule(rule, load_settings()['dryrun'])
         report = {k: report.get(k, 0) + rule_report.get(k, 0)
                   for k in set(report) | set(rule_report)}

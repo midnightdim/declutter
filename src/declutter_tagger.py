@@ -437,11 +437,10 @@ class TaggerWindow(QMainWindow):
 
     def open_file_from_recent(self, action):
         """Opens a recently accessed folder when selected from the menu."""
+        self.ui.sourceComboBox.setCurrentText("Folder")
+        self.update_ui()
         self.ui.pathEdit.setText(normpath(action.data()))
         self.change_path()
-        self.ui.sourceComboBox.setCurrentText("Folder")
-        # TBD: self.sorting_model.mode = "Folder" - this line is commented out, check if it's needed
-        self.update_ui()
 
     def update_ui(self):
         """Updates the UI elements based on the selected source mode (Folder/Tagged)."""
