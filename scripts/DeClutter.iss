@@ -20,7 +20,7 @@ OutputBaseFilename={#MyAppName}-{#MyAppVersion}-Windows-x64
 
 [Files]
 Source: "{#MyAppName}.exe"; DestDir: "{app}"
-Source: "python38.dll"; DestDir: "{app}"
+Source: "python313.dll"; DestDir: "{app}"
 Source: "python3.dll"; DestDir: "{app}"
 Source: "{#MyAppName}.ico"; DestDir: "{app}"
 Source: "lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
