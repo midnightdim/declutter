@@ -37,7 +37,7 @@ class TaggerWindow(QMainWindow):
         super(TaggerWindow, self).__init__(parent)
         self.ui = Ui_taggerWindow()
         self.ui.setupUi(self)
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), '..', 'assets', 'DeClutter.ico')))
+        self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.player = QMediaPlayer()
         self._audio_output = QAudioOutput()
         self.player.setAudioOutput(self._audio_output)
