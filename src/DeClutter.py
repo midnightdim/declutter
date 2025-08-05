@@ -96,25 +96,27 @@ class RulesWindow(QMainWindow):
     
     def suggest_download(self, version):
         """Suggests downloading a new version of the application if available."""
-        if version and version > str(load_settings()['version']):
-            reply = QMessageBox.question(self, "New version: " + version,
-                r"There's a new version of DeClutter available. Download now?",
-                QMessageBox.Yes | QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                try:
-                    # Get the download URL from the latest release
-                    response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
-                    if response.status_code == 200:
-                        release_data = response.json()
-                        # Find the Windows executable asset
-                        for asset in release_data.get('assets', []):
-                            if asset['name'].endswith('.exe') and 'Windows' in asset['name']:
-                                webbrowser.open(asset['browser_download_url'])
-                                return
-                    # Fallback to releases page if no specific asset found
-                    webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
-                except Exception as e:
-                    logging.exception(f'exception {e}')
+        if version:
+            try:
+                from packaging.version import Version
+                
+                current_version = Version(load_settings()['version'])
+                # Normalize GitHub version (remove 'v' prefix if present)
+                latest_version = Version(version.lstrip('v'))
+                
+                if latest_version > current_version:
+                    reply = QMessageBox.question(self, f"New version: {latest_version}",
+                        r"There's a new version of DeClutter available. Download now?",
+                        QMessageBox.Yes | QMessageBox.No)
+                    if reply == QMessageBox.Yes:
+                        try:
+                            webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
+                        except Exception as e:
+                            logging.exception(f'exception {e}')
+            except ImportError:
+                logging.error("packaging library not available for version comparison")
+            except Exception as e:
+                logging.exception(f'Version comparison failed: {e}')
 
     def tray_activated(self, reason):
         """Handles activation of the system tray icon."""

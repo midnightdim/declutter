@@ -1,7 +1,7 @@
 REM Run this from project root
 python setup.py build
 
-copy win_build_files_to_delete.txt build\exe.win-amd64-3.13\lib\PySide6\files_to_delete.txt
+copy scripts\win_build_files_to_delete.txt build\exe.win-amd64-3.13\lib\PySide6\files_to_delete.txt
 
 REM copy DeClutter.ico build\exe.win-amd64-3.13\DeClutter.ico
 REM copy DeClutter.iss build\exe.win-amd64-3.13\DeClutter.iss

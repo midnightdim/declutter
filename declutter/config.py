@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=
 
 def load_settings(settings_file=SETTINGS_FILE):
     """Loads application settings from a JSON file. If the file does not exist, it creates a default settings file."""
+    
     if not os.path.isfile(settings_file):
         settings = {
             'version': VERSION,
@@ -46,15 +47,14 @@ def load_settings(settings_file=SETTINGS_FILE):
             logging.exception(f'exception {e}')
             logging.error('Error loading settings file')
             pass
-        
+
         # Ensure all expected keys exist, providing default values if missing
-        settings.setdefault('version', VERSION)
         settings.setdefault('current_folder', '')
         settings.setdefault('current_drive', '')
         settings.setdefault('folders', [])
         settings.setdefault('tags', [])
         settings.setdefault('rules', [])
-        settings.setdefault('recent_folders', []) # TBD implement a better initialization
+        settings.setdefault('recent_folders', [])
         settings.setdefault('rule_exec_interval', 300)
         settings.setdefault('dryrun', False)
         settings.setdefault('date_type', 0)
@@ -63,7 +63,13 @@ def load_settings(settings_file=SETTINGS_FILE):
             'Video': '*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv',
             'Image': '*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'
         })
+        
+        if settings.get('version') != VERSION:
+            settings['version'] = VERSION
+            save_settings(settings_file, settings)
+    
     return settings
+
 
 def save_settings(settings_file, settings):
     if not Path(settings_file).parent.is_dir():

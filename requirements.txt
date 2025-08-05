@@ -4,3 +4,4 @@ send2trash
 appdirs
 autopep8
 requests
+packaging
