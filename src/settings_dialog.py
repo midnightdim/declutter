@@ -1,6 +1,4 @@
 import sys
-# from PySide2.QtUiTools import loadUiType
-# 
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
 from PySide6.QtCore import Qt
 from declutter.config import load_settings, save_settings, SETTINGS_FILE
@@ -12,7 +10,6 @@ class SettingsDialog(QDialog):
     def __init__(self):
         super(SettingsDialog, self).__init__()
         self.ui = Ui_settingsDialog()
-        
         self.ui.setupUi(self)
         self.initialize()
 
@@ -30,12 +27,9 @@ class SettingsDialog(QDialog):
             self.ui.fileTypesTable.setItem(
                 i, 1, QTableWidgetItem(self.settings['file_types'][f]))
 
-            
+            # TBD: This increment is inside the loop, which is correct, but the comment was misleading.
             i += 1
 
-        
-
-        
         self.ui.addFileTypeButton.clicked.connect(self.add_new_file_type)
         
         self.ui.fileTypesTable.cellChanged.connect(
@@ -62,7 +56,6 @@ class SettingsDialog(QDialog):
     
 
     def cell_changed(self, row, col):
-        # print('cell changed')
         if col == 0:
             settings = load_settings()
             new_value = self.ui.fileTypesTable.item(row, 0).text()
@@ -85,7 +78,6 @@ class SettingsDialog(QDialog):
                         for k in range(len(settings['rules'][i]['conditions'])):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
-                                print('updating value')
                                 settings['rules'][i]['conditions'][k]['file_type'] = new_value
                     save_settings(SETTINGS_FILE, settings)
                     self.settings = settings
@@ -99,7 +91,7 @@ class SettingsDialog(QDialog):
                                 count += 1
                     used_in_rules = "\nIt's used in " + \
                         str(count)+" condition(s) (which won't be removed)." if count > 0 else ""
-                    
+                    # TBD remove orphaned conditions
                     reply = QMessageBox.question(self, "Warning",
                                                  "This will delete the format. Are you sure?"+used_in_rules,
                                                  QMessageBox.Yes | QMessageBox.No)
@@ -114,6 +106,7 @@ class SettingsDialog(QDialog):
     
 
     def add_new_file_type(self):
+        """Adds a new empty row to the file types table for a new file type entry."""
         self.ui.fileTypesTable.insertRow(self.ui.fileTypesTable.rowCount())
         
 
@@ -133,12 +126,9 @@ class SettingsDialog(QDialog):
         self.settings['rule_exec_interval'] = float(
             self.ui.ruleExecIntervalEdit.text())*60
         self.settings['style'] = self.ui.styleComboBox.currentText()
-        
-
-        
 
         self.settings['file_types'] = {}
-        
+        # TBD add validation
         for i in range(self.ui.fileTypesTable.rowCount()):
             if self.ui.fileTypesTable.item(i, 0) and self.ui.fileTypesTable.item(i, 0).text():
                 self.settings['file_types'][self.ui.fileTypesTable.item(

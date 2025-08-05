@@ -28,9 +28,9 @@ def convert_to_days(value, units):
     elif units == 'weeks':
         return value * 7
     elif units == 'months':
-        return value * 30.43  # TBD vN this is a bit rough
+        return value * 30.43  # TBD implement a better conversion
     elif units == 'years':
-        return value * 365.25  # TBD vN this is a bit rough
+        return value * 365.25  # TBD same here
 
 def get_folder_size(start_path):
     total_size = 0
@@ -45,10 +45,9 @@ def get_size(filepath):
     if Path(filepath).is_dir():
         return get_folder_size(filepath)
     elif Path(filepath).is_file():
-        # print(os.path.getsize(filepath))
         return os.path.getsize(filepath)
     else:
-        return 0  # TBD maybe return an error?
+        return 0  # TBD add error handling
     
 def get_file_type(path):
     settings = load_settings()
@@ -81,17 +80,13 @@ def remove_file_or_dir(filepath):
         return False
 
 
-# copy = False means move = TBD improve this
 def advanced_move(source_path, target_path, overwrite=False, copy=False):
-    # print('advanced move')
-    # print(source_path)
-    # print(target_path)
-    # print(overwrite)
-    # print(copy)
+    """Moves or copies a file/directory from source_path to target_path with overwrite options."""
+    # copy = False means move; TBD improve this
     if not os.path.exists(source_path):
         return False
     if not os.path.exists(target_path):
-        # p Target path doesnt exist, simply moving/copying
+        # Target path doesn't exist, simply moving/copying
         try:
             if not Path(target_path).parent.exists():
                 os.makedirs(Path(target_path).parent)
@@ -104,14 +99,10 @@ def advanced_move(source_path, target_path, overwrite=False, copy=False):
             logging.exception(e)
             return False
     else:
-        # print('sps ' + str(get_size(source_path)))
-        # print('tps ' + str(get_size(target_path)))
-        # file/folder with the same size exists
         if get_size(source_path) == get_size(target_path):
-            # print('its file/dir with the same size, skipping')
-            # remove_file_or_dir(source_path)
+            # File/folder with the same size exists
             if not copy:
-                # if we're moving the file/folder and it's already there just delete the source file/folder
+                # If moving and already exists, delete the source file/folder
                 remove_file_or_dir(source_path)
                 return target_path
             else:
@@ -166,7 +157,6 @@ def get_nonexistent_path(src, dst):
 
 def get_actual_filename(name):
     dirs = name.split('\\')
-    # disk letter
     test_name = [dirs[0].upper()]
     for d in dirs[1:]:
         test_name += ["%s[%s]" % (d[:-1], d[-1])]

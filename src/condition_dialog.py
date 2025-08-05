@@ -40,6 +40,9 @@ class ConditionDialog(QDialog):
             'Selected tags: '+', '.join(selected_tags))
 
     def update_visibility(self):
+        """
+        Updates the visibility of UI elements based on the selected condition type.
+        """
         state = self.ui.conditionCombo.currentText()
         self.ui.nameLabel.setVisible(state == "name")
         self.ui.nameCombo.setVisible(state == "name")
@@ -50,7 +53,6 @@ class ConditionDialog(QDialog):
         self.ui.ageCombo.setVisible(state == "date")
         self.ui.age.setVisible(state == "date")
         self.ui.ageUnitsCombo.setVisible(state == "date")
-        
         self.ui.sizeLabel.setVisible(state == "size")
         self.ui.sizeCombo.setVisible(state == "size")
         self.ui.size.setVisible(state == "size")
@@ -67,6 +69,9 @@ class ConditionDialog(QDialog):
         self.ui.typeSwitchCombo.setVisible(state == "type")
 
     def update_tags_visibility(self):
+        """
+        Updates the visibility of tag-related UI elements based on the selected tag condition.
+        """
         state = self.ui.tagsCombo.currentText()
         self.ui.tagLabel2.setVisible(state not in (
             'no tags', 'any tags', 'tags in group'))
@@ -77,6 +82,9 @@ class ConditionDialog(QDialog):
         self.ui.tagGroupsCombo.setVisible(state == 'tags in group')
 
     def load_condition(self, cond={}):
+        """
+        Loads a condition into the dialog, populating the UI elements with the condition's data.
+        """
         self.condition = cond
         if cond:
             self.ui.conditionCombo.setCurrentIndex(
@@ -111,7 +119,6 @@ class ConditionDialog(QDialog):
                 for i in range(self.ui.tagsView.model().rowCount()):
                     for k in range(self.ui.tagsView.model().item(i).rowCount()):
                         if self.ui.tagsView.model().item(i).child(k).text() in cond['tags']:
-                            # print(self.ui.tagsView.model().item(i).child(k).text())
                             self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(
                                 self.ui.tagsView.model().item(i).child(k)), QItemSelectionModel.Select)
 

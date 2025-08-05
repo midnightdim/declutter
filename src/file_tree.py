@@ -40,10 +40,10 @@ class FileTree(QTreeView):
                     if event.dropAction() == Qt.MoveAction:
                         action = 'moved'
                         remove_all_tags(old_path)
-                    print("File {}: {} to {}, {} tags {}".format(
-                        action, old_path, new_path, action, tags))
-                    logging.debug("File {}: {} to {}, {} tags {}".format(
-                        action, old_path, new_path, action, tags))
+                    # print("File {}: {} to {}, {} tags {}".format(
+                    #     action, old_path, new_path, action, tags))
+                    # logging.debug("File {}: {} to {}, {} tags {}".format(
+                    #     action, old_path, new_path, action, tags))
 
         super().dropEvent(event)
 

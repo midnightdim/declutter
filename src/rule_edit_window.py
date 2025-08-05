@@ -21,7 +21,7 @@ class RuleEditWindow(QDialog):
         self.ui.buttonBox.rejected.connect(self.reject)
 
         self.rule = {}
-        self.updated = False
+        self.updated = False # TBD: Check if this flag is still necessary or used consistently
         
 
         self.ui.folderAddButton.clicked.connect(self.add_folder)
@@ -44,23 +44,15 @@ class RuleEditWindow(QDialog):
         self.ui.tagsView.clicked.connect(self.tags_selection_changed)
 
         self.ui.advancedButton.clicked.connect(self.show_advanced)
-        
 
+        # TBD: These visibility settings might be redundant or could be handled more dynamically
         self.ui.ignoreNewestCheckBox.setVisible(False)
         self.ui.numberNewestEdit.setVisible(False)
         self.ui.newestLabel.setVisible(False)
         self.ui.line.setVisible(False)
 
-        
         self.ui.conditionLoadButton.setVisible(False)
         self.ui.conditionSaveButton.setVisible(False)
-
-        self.ui.allTaggedAddButton.setVisible(False)
-        self.ui.keepTagsCheckBox.setVisible(False)
-        self.ui.actionComboBox.removeItem(5)
-        self.ui.actionComboBox.removeItem(5)
-        self.ui.actionComboBox.removeItem(5)
-        self.ui.targetFolderEdit.setToolTip('<type> will be replaced with file type')
 
         self.ui.ruleNameEdit.setFocus()
 
@@ -97,7 +89,7 @@ class RuleEditWindow(QDialog):
     def edit_condition(self, cond):
         c = self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(
             cond).row()]
-        
+        # TBD: Implement actual editing of the condition in the dialog
         self.refresh_conditions()
 
     
@@ -130,6 +122,7 @@ class RuleEditWindow(QDialog):
         self.ui.conditionListWidget.addItems(conds)
 
     def select_folder(self):
+        """Opens a folder selection dialog and sets the selected path to the appropriate text field."""
         folderField = self.ui.subfolderEdit if self.ui.actionComboBox.currentText(
         ) == "Move to subfolder" else self.ui.targetFolderEdit  # TBD this is a bit dangerous in case of errors
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
@@ -205,6 +198,7 @@ class RuleEditWindow(QDialog):
 
     def load_rule(self, rule):
         self.rule = rule
+        # TBD: Check if this assignment is always necessary or if rule is modified in place
         
         self.ui.ruleNameEdit.setText(rule['name'])
         self.ui.sourceListWidget.addItems(rule['folders'])
@@ -216,7 +210,7 @@ class RuleEditWindow(QDialog):
 
         self.refresh_conditions()
 
-        
+        # TBD: Check if this index finding is efficient for large lists
         self.ui.actionComboBox.setCurrentIndex(
             self.ui.actionComboBox.findText(rule['action']))
         self.ui.targetFolderEdit.setText(rule['target_folder'])
@@ -234,6 +228,7 @@ class RuleEditWindow(QDialog):
         for i in range(self.ui.tagsView.model().rowCount()):
             for k in range(self.ui.tagsView.model().item(i).rowCount()):
                 if self.ui.tagsView.model().item(i).child(k).text() in rule['tags']:
+                    # TBD: This print statement is for debugging and should be removed or replaced with proper logging
                     # print(self.ui.tagsView.model().item(i).child(k).text())
                     self.ui.tagsView.selectionModel().select(self.ui.tagsView.model().indexFromItem(
                         self.ui.tagsView.model().item(i).child(k)), QItemSelectionModel.Select)
@@ -241,7 +236,7 @@ class RuleEditWindow(QDialog):
         self.ui.selectedTagsLabel.setText(
             'Selected tags: '+','.join(rule['tags']))
 
-        
+        # TBD: Check if this action_change call is always necessary here
         self.action_change()
 
         self.ui.ignoreNewestCheckBox.setChecked(rule['ignore_newest'])

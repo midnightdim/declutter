@@ -23,16 +23,10 @@ class TagsDialog(QDialog):
         self.ui.colorButton.clicked.connect(self.set_color)
         
         self.ui.treeView.doubleClicked.connect(self.rename)
-        
-
-        
+        # self.model.itemChanged.connect(self.item_changed) # TBD this can be used for in-place editing
         self.ui.treeView.setModel(self.model)
         self.ui.treeView.expandAll()
-        self.ui.treeView.setExpandsOnDoubleClick(False)
-
-        
-
-    
+        self.ui.treeView.setExpandsOnDoubleClick(False)    
 
     def rename(self):
         cur_item = self.ui.treeView.currentIndex().data(Qt.UserRole)
@@ -41,7 +35,6 @@ class TagsDialog(QDialog):
             newtag, ok = QInputDialog.getText(self, "Rename tag",
                                               "Enter new name:", QLineEdit.Normal, cur_tag)
             if ok and newtag != '' and newtag != cur_tag:
-                # try:
                 merge = False
                 if newtag in get_all_tags():  # TBD use model data instead?
                     merge = QMessageBox.question(self, "Warning",
@@ -55,9 +48,6 @@ class TagsDialog(QDialog):
                         cur_item, Qt.UserRole)
                     self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
                         newtag, Qt.DisplayRole)
-                    # self.load_tags()
-                # except Exception as e:
-                #     logging.exception(f'exception {e}')
         else:  # group
             group = cur_item['name']
             other_groups = [self.model.item(i).data(
@@ -122,7 +112,6 @@ class TagsDialog(QDialog):
                                        "Enter tag name:", QLineEdit.Normal)
         if ok and tag != '':
             create_tag(tag, group_id)
-            # print("creating", tag)
         self.reload_model()  # TBD can do this without reloading model
 
     def add_group(self):
@@ -130,12 +119,10 @@ class TagsDialog(QDialog):
                                          "Enter group name:", QLineEdit.Normal)
         if ok and group != '':
             id = create_group(group)
-            # print("creating", tag)
             gr_item = QStandardItem(group)
             gr_item.setData({'name': group, 'name_shown': group,
                             'type': 'group', 'id': id}, Qt.UserRole)
             self.model.appendRow(gr_item)
-        # self.reload_model()
 
     def remove(self):
         if self.ui.treeView.currentIndex().data(Qt.UserRole)['type'] == 'tag':
@@ -163,11 +150,8 @@ class TagsDialog(QDialog):
                 msgBox.addButton('Cancel', QMessageBox.RejectRole)
 
                 reply = msgBox.exec()
-                # print(reply)
                 if reply != 2:
-                    # print(reply)
                     delete_group(group['id'], not reply)
-                # delete_tag(tag)
                 self.reload_model()
 
     def reload_model(self):
@@ -178,7 +162,6 @@ class TagsDialog(QDialog):
         self.ui.treeView.expandAll()
 
 # generates the model used in tagger dock widget, tags selection for filtering and tags manager
-
 
 def generate_tag_model(model, data, groups_selectable=True):
     for group in data.keys():
@@ -202,7 +185,6 @@ def generate_tag_model(model, data, groups_selectable=True):
                 tag_item.setDropEnabled(False)
                 # TBD can change this in the future to make in-place editing
                 tag_item.setEditable(False)
-                # tag_item.setCheckable(True)
                 item.appendRow(tag_item)
                 
 
@@ -232,7 +214,6 @@ class GroupDialog(QDialog):
         self.setLayout(vbox)
 
     def accept(self):
-        # print('accept')
         return super().accept()
 
     def reject(self):

@@ -27,6 +27,7 @@ from src.declutter_tagger import TaggerWindow
 
 
 class RulesWindow(QMainWindow):
+    """Main application window for managing decluttering rules."""
     def __init__(self):
         super(RulesWindow, self).__init__()
         self.ui = Ui_rulesWindow()
@@ -52,15 +53,15 @@ class RulesWindow(QMainWindow):
         self.ui.rulesTable.cellDoubleClicked.connect(self.edit_rule)
         self.ui.deleteRule.clicked.connect(self.delete_rule)
         self.ui.applyRule.clicked.connect(self.apply_rule)
-        # self.ui.moveUp.clicked.connect(self.start_thread)
         self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.trayIcon.messageClicked.connect(self.message_clicked)
         self.trayIcon.activated.connect(self.tray_activated)
         self.trayIcon.setToolTip(
             "DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
         self.service_run_details = []
-        # self.start_thread()
+        # TBD: self.start_thread() - check if this is needed
 
+        # Hide UI elements related to rule management (TBD: Re-evaluate visibility based on user roles/features)
         self.ui.addRule.setVisible(False)
         self.ui.applyRule.setVisible(False)
         self.ui.deleteRule.setVisible(False)
@@ -85,7 +86,6 @@ class RulesWindow(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
-        # self.connect(timer, SIGNAL("timeout()"), self.start_thread)
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
 
@@ -95,6 +95,7 @@ class RulesWindow(QMainWindow):
 
     
     def suggest_download(self, version):
+        """Suggests downloading a new version of the application if available."""
         if version and version > str(load_settings()['version']):
             reply = QMessageBox.question(self, "New version: " + version,
                                          r"There's a new version of DeClutter available. Download now?",
@@ -107,15 +108,15 @@ class RulesWindow(QMainWindow):
                     logging.exception(f'exception {e}')
 
     def tray_activated(self, reason):
+        """Handles activation of the system tray icon."""
         if reason == QSystemTrayIcon.DoubleClick:
             self.setVisible(True)
 
     def move_rule_up(self):
+        """Moves the selected rule up in the list."""
         rule_idx = self.ui.rulesTable.selectedIndexes()[0].row()
         if rule_idx:
             rule_id = int(self.settings['rules'][rule_idx]['id'])
-            # print("swapping",self.settings['rules'][rule_idx]['name'],"and",self.settings['rules'][rule_idx-1]['name'])
-            # print(self.settings['rules'][rule_idx]['id'])
             self.settings['rules'][rule_idx]['id'] = self.settings['rules'][rule_idx-1]['id']
             self.settings['rules'][rule_idx-1]['id'] = rule_id
 
@@ -136,6 +137,7 @@ class RulesWindow(QMainWindow):
             self.ui.rulesTable.selectRow(rule_idx-1)
 
     def move_rule_down(self):
+        """Moves the selected rule down in the list."""
         rule_idx = self.ui.rulesTable.selectedIndexes()[0].row()
         if rule_idx < self.ui.rulesTable.rowCount()-1:
             rule_id = int(self.settings['rules'][rule_idx]['id'])
@@ -159,10 +161,12 @@ class RulesWindow(QMainWindow):
             self.ui.rulesTable.selectRow(rule_idx+1)
 
     def show_about(self):
+        """Shows the application's About box."""
         QMessageBox.about(self, "About DeClutter", "DeClutter version "+str(VERSION) +
                           "\nhttps://github.com/midnightdim/declutter\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
 
     def show_settings(self):
+        """Shows the settings dialog."""
         settings_window = SettingsDialog()
         if settings_window.exec():
             self.settings = load_settings()
@@ -172,12 +176,15 @@ class RulesWindow(QMainWindow):
                 int(self.settings['rule_exec_interval']*1000))
 
     def change_style(self, style_name):
+        """Changes the application's style."""
         QApplication.setStyle(QStyleFactory.create(style_name))
 
     def open_log_file(self):
+        """Opens the log file."""
         os.startfile(LOG_FILE)
 
     def clear_log_file(self):
+        """Clears the log file."""
         reply = QMessageBox.question(self, "Warning",
                                      "Are you sure you want to clear the log?",
                                      QMessageBox.Yes | QMessageBox.No)
@@ -189,6 +196,7 @@ class RulesWindow(QMainWindow):
                 logging.exception(f'exception {e}')
 
     def message_clicked(self):
+        """Shows a dialog with details about the last service run."""
         msgBox = QDialog(self)
         msgBox.ui = Ui_listDialog()
         msgBox.ui.setupUi(msgBox)
@@ -205,14 +213,16 @@ class RulesWindow(QMainWindow):
         self.service_run_details = []
 
     def start_thread(self):
+        """Starts the declutter service thread if it is not already running."""
         if not self.service_runs:
             self.service_runs = True
             instanced_thread = declutter_service(self)
             instanced_thread.start()
         else:
-            print("Service still running, skipping the scheduled exec")
+            logging.debug("Service still running, skipping the scheduled exec")
 
     def add_rule(self):
+        """Opens the rule edit window to add a new rule."""
         self.rule_window = RuleEditWindow()
         if self.rule_window.exec():
             rule = self.rule_window.rule
@@ -223,6 +233,7 @@ class RulesWindow(QMainWindow):
         self.load_rules()
 
     def edit_rule(self, r, c):
+        """Opens the rule edit window to edit the selected rule."""
         if c == 1:  # Enabled/Disabled is clicked
             self.settings['rules'][r]['enabled'] = not self.settings['rules'][r]['enabled']
             save_settings(SETTINGS_FILE, self.settings)
@@ -236,6 +247,7 @@ class RulesWindow(QMainWindow):
         self.load_rules()
 
     def delete_rule(self):
+        """Deletes the selected rule(s)."""
         del_indexes = [r.row() for r in self.ui.rulesTable.selectedIndexes()]
 
         if del_indexes:
@@ -255,6 +267,7 @@ class RulesWindow(QMainWindow):
                     0, 0, self.ui.rulesTable.rowCount()-1, self.ui.rulesTable.columnCount()-1), False)
 
     def apply_rule(self):
+        """Applies the selected rule."""
         rule = deepcopy(
             self.settings['rules'][self.ui.rulesTable.selectedIndexes()[0].row()])
         rule['enabled'] = True
@@ -275,6 +288,7 @@ class RulesWindow(QMainWindow):
         msgBox.exec()
 
     def load_rules(self):
+        """Loads the rules from the settings file and populates the rules table."""
         self.settings = load_settings()
         self.ui.rulesTable.setRowCount(len(self.settings['rules']))
         i = 0
@@ -299,6 +313,7 @@ class RulesWindow(QMainWindow):
             QAbstractScrollArea.AdjustToContents)
 
     def create_actions(self):
+        """Creates the actions for the tray icon menu."""
         self.showRulesWindow = QAction("Rules", self)
         self.showRulesWindow.triggered.connect(self.showNormal)
 
@@ -312,6 +327,7 @@ class RulesWindow(QMainWindow):
         self.quitAction.triggered.connect(QApplication.quit)
 
     def create_tray_icon(self):
+        """Creates the system tray icon and its context menu."""
         self.trayIconMenu = QMenu(self)
         self.trayIconMenu.addAction(self.showRulesWindow)
         self.trayIconMenu.addAction(self.showTaggerWindow)
@@ -326,17 +342,20 @@ class RulesWindow(QMainWindow):
         self.trayIcon.show()
 
     def setVisible(self, visible):
+        """Sets the visibility of the main window and updates the tray icon actions accordingly."""
         self.minimizeAction.setEnabled(visible)
         self.maximizeAction.setEnabled(not self.isMaximized())
         self.restoreAction.setEnabled(self.isMaximized() or not visible)
         super().setVisible(visible)
 
     def show_tagger(self):
+        """Shows the tagger window."""
         self.tagger.show()
-        self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution
+        self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution  # TBD this doesn't look like the best solution
 
     @Slot(str, list)
     def show_tray_message(self, message, details):
+        """Shows a message in the system tray."""
         if message:
             self.trayIcon.showMessage(
                 "DeClutter",
@@ -352,6 +371,7 @@ class service_signals(QObject):
     signal1 = Signal(str, list)
 
 class declutter_service(QThread):
+    """A QThread subclass for running DeClutter rules in the background."""
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.signals = service_signals()
@@ -359,7 +379,7 @@ class declutter_service(QThread):
         self.starting_seconds = time()
         
     def run(self):
-        print("Processing rules...", datetime.now())
+        # TBD: Add more detailed logging for rule processing
         details = []
         report, details = apply_all_rules(load_settings())
         msg = ""
@@ -371,6 +391,7 @@ class declutter_service(QThread):
         self.signals.signal1.emit(msg, details)
 
 class new_version_checker(QThread):
+    """A QThread subclass for checking for new versions of DeClutter."""
     version = Signal(str)
 
     def __init__(self, parent=None):
@@ -386,6 +407,7 @@ class new_version_checker(QThread):
             logging.exception(f'exception {e}')
 
 def main():
+    """Main function to run the application."""
     app = QApplication(sys.argv)
     QApplication.setQuitOnLastWindowClosed(False)
 
@@ -394,7 +416,6 @@ def main():
 
     window = RulesWindow()
     window.show()
-    # window.showMinimized()
     window.setWindowTitle('DeClutter (beta) ' + VERSION)
     sys.exit(app.exec())
 

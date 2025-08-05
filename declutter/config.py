@@ -17,23 +17,25 @@ logging.basicConfig(level=logging.DEBUG, handlers=[logging.FileHandler(filename=
                     format="%(asctime)-15s %(levelname)-8s %(message)s")
 
 def load_settings(settings_file=SETTINGS_FILE):
-    # startup_path = get_startup_shortcut_path()
+    """Loads application settings from a JSON file. If the file does not exist, it creates a default settings file."""
     if not os.path.isfile(settings_file):
-        settings = {}
-        settings['version'] = VERSION
-        settings['current_folder'] = ''
-        settings['current_drive'] = ''
-        settings['folders'] = []
-        settings['tags'] = []
-        # settings['filter_tags'] = []
-        settings['rules'] = []
-        settings['recent_folders'] = []
-        settings['rule_exec_interval'] = 300
-        settings['dryrun'] = False
-        # settings['tag_filter_mode'] = "any"
-        settings['date_type'] = 0
-        # settings['launch_on_startup'] = os.path.exists(startup_path)
-        # settings['view_show_filter'] = False
+        settings = {
+            'version': VERSION,
+            'current_folder': '',
+            'current_drive': '',
+            'folders': [],
+            'tags': [],
+            'rules': [],
+            'recent_folders': [],
+            'rule_exec_interval': 300,
+            'dryrun': False,
+            'date_type': 0,
+            'file_types': {
+                'Audio': '*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma',
+                'Video': '*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv',
+                'Image': '*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'
+            }
+        }
         save_settings(settings_file, settings)
     else:
         settings = {}
@@ -42,32 +44,25 @@ def load_settings(settings_file=SETTINGS_FILE):
                 settings = jsonload(f)
         except Exception as e:
             logging.exception(f'exception {e}')
-            logging.error('No settings file found')
+            logging.error('Error loading settings file')
             pass
-        settings['version'] = VERSION
-        settings['recent_folders'] = settings['recent_folders'] if 'recent_folders' in settings.keys(
-        ) else []  # TBD implement a better initialization
-        settings['current_drive'] = settings['current_drive'] if 'current_drive' in settings.keys(
-        ) else ""
-        settings['current_folder'] = settings['current_folder'] if 'current_folder' in settings.keys() else ""
-        settings['folders'] = settings['folders'] if 'folders' in settings.keys() else [
-        ]
-        settings['tags'] = settings['tags'] if 'tags' in settings.keys() else [
-        ]
-        # settings['filter_tags'] = settings['filter_tags'] if 'filter_tags' in settings.keys() else []
-        settings['rules'] = settings['rules'] if 'rules' in settings.keys() else [
-        ]
-        settings['rule_exec_interval'] = settings['rule_exec_interval'] if 'rule_exec_interval' in settings.keys() else 300
-        settings['dryrun'] = settings['dryrun'] if 'dryrun' in settings.keys() else False
-        # settings['tag_filter_mode'] = settings['tag_filter_mode'] if 'tag_filter_mode' in settings.keys() else "any"
-        settings['date_type'] = settings['date_type'] if 'date_type' in settings.keys(
-        ) else 0
-        # settings['view_show_filter'] = settings['view_show_filter'] if 'view_show_filter' in settings.keys() else False
-        default_formats = {'Audio': '*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma',
-                           'Video': '*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv',
-                           'Image': '*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'}
-        settings['file_types'] = settings['file_types'] if 'file_types' in settings.keys(
-        ) else default_formats
+        
+        # Ensure all expected keys exist, providing default values if missing
+        settings.setdefault('version', VERSION)
+        settings.setdefault('current_folder', '')
+        settings.setdefault('current_drive', '')
+        settings.setdefault('folders', [])
+        settings.setdefault('tags', [])
+        settings.setdefault('rules', [])
+        settings.setdefault('recent_folders', []) # TBD implement a better initialization
+        settings.setdefault('rule_exec_interval', 300)
+        settings.setdefault('dryrun', False)
+        settings.setdefault('date_type', 0)
+        settings.setdefault('file_types', {
+            'Audio': '*.aac,*.aiff,*.ape,*.flac,*.m4a,*.m4b,*.m4p,*.mp3,*.ogg,*.oga,*.mogg,*.wav,*.wma',
+            'Video': '*.3g2,*.3gp,*.amv,*.asf,*.avi,*.flv,*.gif,*.gifv,*.m4v,*.mkv,*.mov,*.qt,*.mp4,*.m4v,*.mpg,*.mp2,*.mpeg,*.mpe,*.mpv,*.mts,*.m2ts,*.ts,*.ogv,*.webm,*.wmv,*.yuv',
+            'Image': '*.jpg,*.jpeg,*.exif,*.tif,*.bmp,*.png,*.webp'
+        })
     return settings
 
 def save_settings(settings_file, settings):

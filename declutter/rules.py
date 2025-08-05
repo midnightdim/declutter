@@ -42,8 +42,6 @@ def apply_rule(rule, dryrun=False):
                                         msg = "Replaced " + str(result) + " with " + f
                                     report['copied'] += 1
                             else:
-                                # if not Path(target.parent).is_dir(): #not sure if this is needed - not needed because copytree creates the full tree
-                                #     os.makedirs(target.parent)
                                 if not dryrun:
                                     # TBD will probably crash if target exists!
                                     result = copytree(f, target)
@@ -53,12 +51,8 @@ def apply_rule(rule, dryrun=False):
                         else:
                             if target.is_file() and os.stat(target).st_size == os.stat(f).st_size:  # TBD comparing sizes may be not enough
                                 msg = "File " + f + " already exists in the target location and has the same size, skipping"
-                                # result = target
                             else:
                                 if not dryrun:
-                                    # if not Path(target.parent).is_dir():
-                                    #     os.makedirs(target.parent)
-                                    # result = copy2(f, target)
                                     result = advanced_copy(
                                         f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 else:
@@ -69,25 +63,18 @@ def apply_rule(rule, dryrun=False):
                         if rule['keep_tags']:
                             tags = get_tags(f)
                             if set_tags(result, tags):
-                                # logging.info("Copied tags for " + f)
                                 msg += ", tags copied too"
                             else:
                                 msg += ", tags not copied"
-                                # logging.info("not copying tags for " + f)
                     except Exception as e:
                         logging.exception(f'exception {e}')
                 elif rule['action'] == 'Move':
                     if not dryrun:
                         tags = get_tags(f)
                         target_folder = resolve_path(rule['target_folder'], p)
-                        # print(p)
-                        # print(target_folder)
                         target = Path(target_folder) / str(p).replace(':', '') if ('keep_folder_structure' in rule.keys(
                         ) and rule['keep_folder_structure']) else Path(target_folder) / p.name
                         try:
-                            # if not Path(target.parent).is_dir():
-                            #     os.makedirs(target.parent)
-                            # result = move(f, target)
                             result = advanced_move(
                                 f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                             if result:
@@ -98,7 +85,6 @@ def apply_rule(rule, dryrun=False):
                                 if rule['keep_tags'] and tags:
                                     set_tags(result, tags)
                                     # if Path(get_tag_file_path(f)).is_file(): # TBD bring this back for sidecar files
-                                    #     os.remove(get_tag_file_path(f))
                                     msg += ", with tags"
                         except Exception as e:
                             logging.exception(f'exception {e}')
@@ -112,15 +98,10 @@ def apply_rule(rule, dryrun=False):
                         # TBD what if there are multiple replace tokens?
                         rep = re.findall("<replace:(.*):(.*)>", newname)
                         newname = re.sub("<replace(.*?)>", '', newname)
-                        # print(rep)
                         for r in rep:
                             newname = newname.replace(r[0], r[1])
-                        # print(newname)
                         if not dryrun:
                             try:
-                                # os.chdir(p.parent)
-                                # os.rename(p.name, newname) #TBD what if file exists?
-                                # print('renaming ' + str(p) + ' to ' + str(Path(p.parent) / newname))
                                 result = advanced_move(p, Path(
                                     p.parent) / newname, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 if result:
@@ -150,11 +131,9 @@ def apply_rule(rule, dryrun=False):
                         logging.error(
                             "Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
-                    # print('here')
                     tags = get_tags(f)
                     target_subfolder = resolve_path(
                         rule['target_subfolder'], p)
-                    # print(f,tags,target_subfolder)
                     if p.parent.name != target_subfolder:  # check if we're not already in the subfolder
                         # target = Path(rule['target_subfolder']) / p.name
                         if not dryrun:
@@ -170,7 +149,6 @@ def apply_rule(rule, dryrun=False):
                                 if rule['keep_tags'] and tags:
                                     set_tags(result, tags)
                                     msg += ", with tags"
-                            # print("going to copy" + f + " to " + rule['target_folder'])
                         else:
                             msg = "Moved " + f + " to subfolder: " + \
                                 str(target_subfolder)
@@ -228,7 +206,6 @@ def resolve_path(target_folder, path):
     rep = re.findall("(<group:(.*?)>)", target_folder)
     for r in rep:
         group_tags = get_file_tags_by_group(r[1], path)
-        # print(group_tags)
         final_path = final_path.replace(
             r[0], group_tags[0] if group_tags else 'None')
 
@@ -239,9 +216,9 @@ def apply_all_rules(settings):
     report = {}
     details = []
     for rule in settings['rules']:
-        # TBD vN doesn't look optimal / had to use load_settings for testing, should be just settings
+        # TBD doesn't look optimal / had to use load_settings for testing, should be just settings
+        print(rule['name'], rule['enabled'])  # for debugging
         rule_report, rule_details = apply_rule(rule, load_settings()['dryrun'])
-        # print(rule_report)
         report = {k: report.get(k, 0) + rule_report.get(k, 0)
                   for k in set(report) | set(rule_report)}
         details.extend(rule_details)
@@ -281,7 +258,7 @@ def get_files_affected_by_rule(rule, allow_empty_conditions=False):
         return result
     else:
         return sorted(list(set(found)))  # returning only unique results
-    # return found
+
 
 
 def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
@@ -301,20 +278,15 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                 for c in rule['conditions']:
                     condition_met = False
                     if c['type'] == 'tags':
-                        # print(fullname)
                         tags = get_tags(fullname)
-                        # print(tags)
                         common_tags = [
                             value for value in tags if value in c['tags']]
-                        # print(common_tags)
                         if c['tag_switch'] == 'any':
-                            # or better bool(common_tags)?
+                            # TBD or better bool(common_tags)?
                             condition_met = len(common_tags) > 0
                         elif c['tag_switch'] == 'all':
-                            # print(tags,common_tags)
                             condition_met = set(common_tags) == set(
                                 c['tags']) and tags  # tags must be not empty
-                            # print(condition_met)
                         elif c['tag_switch'] == 'none':
                             condition_met = common_tags == []
                         elif c['tag_switch'] == 'no tags':
@@ -322,11 +294,9 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                         elif c['tag_switch'] == 'any tags':
                             condition_met = len(tags) > 0
                         elif c['tag_switch'] == 'tags in group':
-                            # print(get_tag_groups(fullname))
                             condition_met = c['tag_group'] in get_tag_groups(
                                 fullname)
-                        # if condition_met:
-                        #     print(fullname,tags,common_tags,c['tag_switch'])
+
                     elif c['type'] == 'date':
                         try:
                             settings = load_settings(SETTINGS_FILE)
@@ -338,8 +308,6 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                                     condition_met = True
                         except Exception as e:
                             logging.exception(e)
-                    # elif c['type'] == 'newest N' and os.path.isfile(fullname): # TBD delete this!
-                    #     condition_met = True
                     elif c['type'] == 'size' and os.path.isfile(fullname):
                         factor = {'B': 1, 'KB': 1024 ** 1, 'MB': 1024 **
                                   2, 'GB': 1024 ** 3, 'TB': 1024 ** 4}
@@ -365,9 +333,6 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                         condition_met = (get_file_type(fullname) == c['file_type']) == (
                             c['file_type_switch'] == 'is')
 
-                    # if condition_met:
-                    #     print(c['type'] + ' condition met for ' + fullname)
-
                     if rule['condition_switch'] == 'any':
                         conditions_met = conditions_met or condition_met
                         if conditions_met:
@@ -381,8 +346,6 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
                         if not conditions_met:
                             break
 
-            # print(fullname)
-            # print(conditions_met)
             if conditions_met:
                 out_files.append(os.path.normpath(fullname))
 

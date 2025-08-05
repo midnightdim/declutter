@@ -64,9 +64,8 @@ class _FileSystemModelLiteItem(object):
 
 
 class FileSystemModelLite(QAbstractItemModel):
-    # data_loaded = Signal(int)
-
     def __init__(self, file_list: List[str], parent=None, **kwargs):
+        """Initializes the FileSystemModelLite with a list of files."""
         super().__init__(parent, **kwargs)
 
         self._icon_provider = QFileIconProvider()
@@ -155,25 +154,16 @@ class FileSystemModelLite(QAbstractItemModel):
         return parent_item.child_count()
 
     def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
-        return 5
-        # for some reason it crashes on the code below when called from declutter_tagger
-        # if parent.isValid():
-        #     return parent.internalPointer().column_count()
-        # return self._root_item.column_count()
+        if parent.isValid():
+            return parent.internalPointer().column_count()
+        return self._root_item.column_count()
 
     def _setup_model_data(
         self, file_list: List[str], parent: "_FileSystemModelLiteItem"
     ):
         def _add_to_tree(_file_record, _parent: "_FileSystemModelLiteItem", root=False):
-            # print(_file_record["bits"])
+            """Recursively adds file records to the tree structure."""
             item_name = _file_record["bits"].pop(0)
-            # print(item_name, _file_record["bits"])
-            # print(item_name, _parent._path, _file_record['bits'])
-            # print(item_name)
-            # full_path = '\\'.join(_parent._path.split('\\')[:-len(_file_record['bits'])]) # this is awkward
-            # print(item_name,full_path,_file_record["bits"])
-            # full_path = ''
-            # print(item_name,_parent._path,_file_record["bits"])
             for child in _parent.child_items:
                 if item_name == child.data(0):
                     item = child
@@ -181,10 +171,8 @@ class FileSystemModelLite(QAbstractItemModel):
             else:
                 data = [item_name, "", "", "", ""]
                 if root:
-                    # icon = QFileIconProvider.Drive
                     icon = QFileInfo(item_name)
                     full_path = item_name
-                    # print(item_name)
                 elif len(_file_record["bits"]) == 0:
                     full_path = _file_record['path']
                     icon = QFileInfo(_file_record['path'])
@@ -194,16 +182,11 @@ class FileSystemModelLite(QAbstractItemModel):
                         _file_record["type"],
                         _file_record["modified_at"],
                         _file_record["tags"]
-                        # _file_record["path"]
                     ]
                 else:
-                    # print(_file_record)
-                    # icon = QFileIconProvider.Folder
-                    # print(full_path)
                     full_path = _parent._path+"\\"+item_name
                     icon = QFileInfo(full_path)
 
-                # item = _FileSystemModelLiteItem(data, _file_record["path"], icon=icon, parent=_parent)
                 item = _FileSystemModelLiteItem(
                     data, full_path, icon=icon, parent=_parent)
                 _parent.append_child(item)
@@ -213,28 +196,13 @@ class FileSystemModelLite(QAbstractItemModel):
 
         db = QMimeDatabase()
         for file in file_list:
-            # actual = get_actual_filename(file)
-            # if not actual:
-            #     actual = str(Path(file).resolve()) # TBD this is dangerous in case of symlinks
-            # file = actual
+            # TBD: if not actual: actual = str(Path(file).resolve()) # this is dangerous in case of symlinks
 
-            # print(file,get_actual_filename(file))
-            # print(osp.getmtime(file))
-            # print(int(osp.getmtime(file)*1000))
-            # print(file)
             time = QDateTime().fromMSecsSinceEpoch(int(osp.getmtime(file) * 1000))
-            # time
-            # print(time)
-            # print(file,get_tags(file))
             file_record = {
                 "path": file,
-                # "size": sizeof_fmt(osp.getsize(file)),
                 "size": QLocale().formattedDataSize(osp.getsize(file)),
-                # "modified_at": time.strftime(
-                #     "%a, %d %b %Y %H:%M:%S %Z", time.localtime(osp.getmtime(file))
-                # ),
                 "modified_at": time.toString(QLocale.system().dateTimeFormat(QLocale.ShortFormat)),
-                # "type": mimetypes.guess_type(file)[0],
                 "type": db.mimeTypeForFile(file).comment(),
                 "tags": ", ".join(get_tags(normpath(file)))
             }
@@ -249,22 +217,14 @@ class FileSystemModelLite(QAbstractItemModel):
 
             file_record["bits"] = bits
             _add_to_tree(file_record, parent, drive)
-        # self.data_loaded.emit(1)
-        # print('signal emitted')
 
 
 class Widget(QWidget):
+    """A simple widget to demonstrate the FileSystemModelLite."""
     def __init__(self, parent=None, **kwargs):
         super().__init__(parent, **kwargs)
 
-        # file_list = [
-        #     "/var/log/boot.log",
-        #     "/var/lib/mosquitto/mosquitto.db",
-        #     "/tmp/some.pdf",
-        # ]
-        # file_list = get_files_by_tag('concert')
         file_list = get_all_files_from_db()
-        # file_list.extend(get_files_by_tag('trash'))
         self._fileSystemModel = FileSystemModelLite(file_list, self)
 
         layout = QVBoxLayout(self)
@@ -276,14 +236,6 @@ class Widget(QWidget):
         self._treeView.header().resizeSection(0, 350)
         self._treeView.expandAll()
         layout.addWidget(self._treeView)
-
-# print(QMimeDatabase().mimeTypeForFile("C:\\windows-version.txt"))
-
-# print(QFileInfo('d:\\dim\\winfiles\\downloads').canonicalFilePath())
-# print(QDir.fromNativeSeparators('d:\\dim\\winfiles\\downloads'))
-# print(QDir('d:\\dim\\winfiles\\downloads'))
-
-# print(QDir('d:\\dim\\winfiles').entryList(('downloads'), sort = QDir.IgnoreCase))
 
 
 if __name__ == "__main__":

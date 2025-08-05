@@ -120,19 +120,12 @@ def rename_tag(old_tag, new_tag):
     save_settings(SETTINGS_FILE, settings)
 
 def set_tags(filename, tags):  # TBD optimize this
-    # print('set_tags',filename,tags)
     filename = os.path.normpath(filename).lower()
-    # filename_lower = filename.lower() # this may be redundant, I'm being extra cautios here
-    # print(filename_lower)
-    # print('setting tags',filename,tags)
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
-        # print(filename)
-        # c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename_lower,))
         c.execute("SELECT id from files WHERE filepath = ?", (filename,))
         row = c.fetchone()
-        # print(row)
         if row is None:
             c.execute("INSERT INTO files VALUES (null, ?)", (filename,))
             file_id = c.lastrowid
@@ -144,14 +137,11 @@ def set_tags(filename, tags):  # TBD optimize this
             c.execute("SELECT id from tags WHERE name = ?", (t,))
             row = c.fetchone()
             if row is None:
-                # c.execute("INSERT INTO tags VALUES (null, ?)", (t,))
-                # tag_id = c.lastrowid
                 tag_id = create_tag(t)
             else:
                 tag_id = row[0]
             c.execute("INSERT INTO file_tags VALUES (?,?,?)",
                       (file_id, tag_id, datetime.now()))
-            # print('inserting tags for {}, {}'.format(file_id,tag_id))
         conn.commit()
         conn.close()
         TAGS_CACHE[filename] = tags
@@ -164,16 +154,10 @@ def get_tags(filename):
     filename = os.path.normpath(filename).lower()
     if filename in TAGS_CACHE.keys():
         return TAGS_CACHE[filename]
-    # filename = filename.lower()
-    # print(type(filename))
-    # print('getting tags for ' + filename)
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE LOWER(filepath) = ?) order by tags.group_id, tags.list_order", (str(filename),))]
     tags = [f[0] for f in c.execute(
         "SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) order by tags.group_id, tags.list_order", (filename,))]
-    # print(filename)
-    # print(tags)
     if not tags:
         c.execute("DELETE FROM files WHERE filepath = ?", (filename,))
         conn.commit()
@@ -205,7 +189,6 @@ def add_tag(filename, tag):
 
 def remove_tags(filename, tags):
     filename = os.path.normpath(filename).lower()
-    # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT id from files WHERE filepath = ?", (filename,))
@@ -220,7 +203,6 @@ def remove_tags(filename, tags):
         tag_id = c.fetchone()[0]  # TBD this may lead to crash
         c.execute(
             "DELETE FROM file_tags WHERE file_tags.file_id = ? AND file_tags.tag_id = ?", (file_id, tag_id))
-    # tags = [f[0] for f in c.execute("SELECT tags.name FROM file_tags JOIN tags on tag_id = tags.id WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?)", (filename,))]
     conn.commit()
     conn.close()
     if filename in TAGS_CACHE.keys():
@@ -228,13 +210,10 @@ def remove_tags(filename, tags):
 
 def remove_all_tags(filename):
     filename = os.path.normpath(filename).lower()
-    # filename = filename.lower()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # c.execute("SELECT id from files WHERE LOWER(filepath) = ?", (filename,))
     c.execute("SELECT id from files WHERE filepath = ?", (filename,))
     row = c.fetchone()
-    # print(row)
     if row is None:
         return
     else:
@@ -327,10 +306,8 @@ def delete_group(group_id, keep_tags):
     c = conn.cursor()
     c.execute("DELETE FROM tag_groups WHERE id = ?", (group_id,))
     if keep_tags:
-        # print('moving tags to default group')
         c.execute("UPDATE tags set group_id = 1 WHERE group_id = ?", (group_id,))
     else:
-        # print('deleting tags and tagged files')
         c.execute(
             "DELETE FROM file_tags WHERE file_tags.tag_id IN (SELECT id from tags WHERE group_id = ?)", (group_id,))
         c.execute("DELETE FROM tags WHERE group_id = ?", (group_id,))
@@ -345,7 +322,6 @@ def get_tags_and_groups():
         "SELECT id, name, list_order, widget_type, name_shown FROM tag_groups ORDER BY list_order")
     tree = {}
     for g in groups.fetchall():
-        # print(g)
         tree[g[1]] = {'id': g[0], 'list_order': g[2], 'widget_type': g[3],
                       'name_shown': g[4], 'type': 'group', 'name': g[1]}
         tags = c.execute(
@@ -354,10 +330,6 @@ def get_tags_and_groups():
         for t in tags.fetchall():
             tree[g[1]]['tags'].append(
                 {'type': 'tag', 'id': t[0], 'name': t[1], 'list_order': t[2], 'color': t[3], 'group_id': g[0]})
-        # print(tags.fetchall())
-    # print(tree)
-    # c.execute("DELETE FROM tags WHERE name = ?", (tag,))
-    # conn.commit()
     conn.close()
     return tree
 
@@ -404,23 +376,15 @@ def move_tag_to_group(tag_id, group_id):
 def move_tag_to_tag(tag1, tag2, position):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # print(tag1,tag2)
     c.execute("SELECT list_order,group_id from tags WHERE id = ?",
               (tag2['id'],))
     row = c.fetchone()
     new_list_order = row[0] if int(position) == 1 else row[0]+1
     group = row[1]
-    # print('group',group)
-    # print('new_list_order',new_list_order)
-    # if tag1['group_id'] != tag2['group_id']:
-    #     # print('different group, moving')
-    #     c.execute("UPDATE tags set group_id = ? WHERE id = ?", (tag2['group_id'], tag1['id']))
-    #     conn.commit()
     c.execute("SELECT id from tags WHERE (group_id,list_order) = (?,?)",
               (group, new_list_order))
     row = c.fetchone()
     if row is not None:
-        # print('incrementing list_order')
         c.execute("UPDATE tags set list_order = list_order+1 WHERE group_id = ? and list_order >= ?",
                   (group, new_list_order))
     c.execute("UPDATE tags set (list_order,group_id) = (?,?) WHERE id = ?",
@@ -435,13 +399,10 @@ def move_group_to_group(group1, group2, position):
               (group2['id'],))
     row = c.fetchone()
     new_list_order = row[0] if int(position) == 1 else row[0]+1
-    # print(new_list_order)
     c.execute("SELECT id from tag_groups WHERE list_order = ?",
               (new_list_order,))
     row = c.fetchone()
     if row is not None:
-        # print(row[0])
-        # print('incrementing list_order')
         c.execute(
             "UPDATE tag_groups set list_order = list_order+1 WHERE list_order >= ?", (new_list_order,))
     c.execute("UPDATE tag_groups set list_order = ? WHERE id = ?",
@@ -470,7 +431,6 @@ def check_files():  # TBD need to notify user about lost files (not just log thi
         c = conn.cursor()
         for f in files:
             if os.path.exists(f):
-                # actual = get_actual_filename(f)
                 actual = os.path.normpath(f).lower()
                 if not actual:
                     # TBD this is incorrect in case of symlinks

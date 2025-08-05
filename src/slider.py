@@ -2,9 +2,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QSlider, QStyleOptionSlider, QStyle, QAbstractSlider
 
 class Slider(QSlider):
+    """Custom QSlider that allows setting value by clicking on the groove and handles key press events."""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.value_changed_by_user = False
+        self.value_changed_by_user = False # TBD: Check if this flag is actively used and necessary
 
     def mousePressEvent(self, event):
         super(Slider, self).mousePressEvent(event)
