@@ -221,22 +221,47 @@ class TaggerWindow(QMainWindow):
                 if event.key() == Qt.Key_Delete:
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     self.player.stop()
+
                     if event.modifiers() == Qt.ShiftModifier:
+                        # Confirm permanent deletion
+                        count = len(indexes)
+                        reply = QMessageBox.question(
+                            self,
+                            "Delete files",
+                            f"Permanently delete {count} item(s)? This cannot be undone.",
+                            QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.No
+                        )
+                        if reply != QMessageBox.Yes:
+                            return True
+
                         for index in indexes:
-                            self.model.remove(
-                                self.sorting_model.mapToSource(index))
-                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(
-                                index)) if self.sorting_model else self.model.filePath(index)))
-                        self.ui.statusbar.showMessage(
-                            str(len(indexes))+" item(s) deleted")
+                            src_index = self.sorting_model.mapToSource(index) if self.sorting_model else index
+                            # capture path for tag cleanup before removing the row
+                            try:
+                                path = os.path.normpath(self.model.filePath(src_index))
+                            except Exception:
+                                path = ''
+                            self.model.remove(src_index)
+                            if path:
+                                remove_all_tags(path)
+                        self.ui.statusbar.showMessage(str(len(indexes)) + " item(s) deleted")
                     else:
                         for index in indexes:
-                            send2trash(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(
-                                index)) if self.sorting_model else self.model.filePath(index)))
-                            remove_all_tags(os.path.normpath(self.model.filePath(self.sorting_model.mapToSource(
-                                index)) if self.sorting_model else self.model.filePath(index)))
-                        self.ui.statusbar.showMessage(
-                            str(len(indexes))+" item(s) sent to trash")
+                            src_index = self.sorting_model.mapToSource(index) if self.sorting_model else index
+                            try:
+                                path = os.path.normpath(self.model.filePath(src_index))
+                            except Exception:
+                                path = ''
+                            if path:
+                                try:
+                                    send2trash(path)
+                                except Exception:
+                                    pass
+                                remove_all_tags(path)
+                        self.ui.statusbar.showMessage(str(len(indexes)) + " item(s) sent to trash")
+                    return True
+
                 elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     urls = [QUrl(self.model.filePath(self.sorting_model.mapToSource(
