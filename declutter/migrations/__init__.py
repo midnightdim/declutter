@@ -4,6 +4,7 @@ import json
 import logging
 import sqlite3
 
+# We keep a single consolidated migration to v2
 LATEST_SCHEMA_VERSION = 2
 
 
@@ -20,7 +21,7 @@ def run(conn: sqlite3.Connection):
     if current != LATEST_SCHEMA_VERSION:
         logging.info(f"DB schema at version {current}, expected {LATEST_SCHEMA_VERSION}.")
 
-    # Ensure version key exists at least (value is overwritten in db.ensure_db)
+    # Ensure 'version' key exists (value is overwritten by db.ensure_db())
     conn.execute(
         "INSERT INTO settings(key, value) VALUES (?, ?) "
         "ON CONFLICT(key) DO NOTHING",

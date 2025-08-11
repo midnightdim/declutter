@@ -108,11 +108,12 @@ class TaggerWindow(QMainWindow):
         self.rule['condition_switch'] = self.ui.filterConditionSwitchCombo.currentText()
         if mode == 'Tagged':
             self.rule['folders'] = [ALL_TAGGED_TEXT]
-            self.sorting_model = None
-            self.model = FileSystemModelLite(
-                get_files_affected_by_rule(self.rule, True), self)
-            self.model.sort(0)
-            self.ui.treeView.setModel(self.model)
+            paths = get_files_affected_by_rule(self.rule, True)
+            self.model = FileSystemModelLite(paths, self)
+            self.sorting_model = QSortFilterProxyModel(self)
+            self.sorting_model.setSourceModel(self.model)
+            self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+            self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setSortingEnabled(True)
             self.ui.treeView.expandAll()
             self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)

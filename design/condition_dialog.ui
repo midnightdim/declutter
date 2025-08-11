@@ -388,6 +388,12 @@
        </item>
        <item>
         <widget class="QComboBox" name="typeSwitchCombo">
+         <property name="minimumSize">
+          <size>
+           <width>60</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>50</width>
@@ -399,6 +405,12 @@
            <width>0</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
+         </property>
+         <property name="minimumContentsLength">
+          <number>5</number>
          </property>
          <item>
           <property name="text">

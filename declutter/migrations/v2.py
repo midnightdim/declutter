@@ -12,9 +12,19 @@ from . import set_schema_version
 
 def migration_2(conn: sqlite3.Connection):
     c = conn.cursor()
-    logging.info("Running migration to schema v2")
+    logging.info("Running migration to schema v2 (final consolidated schema)")
 
-    # Create new tables
+    # Normalize/extend existing core tables as needed
+
+    # files: add hash column if missing
+    try:
+        cols = [row["name"] for row in c.execute("PRAGMA table_info(files)").fetchall()]
+        if "hash" not in cols:
+            c.execute("ALTER TABLE files ADD COLUMN hash TEXT")
+    except Exception as e:
+        logging.exception(f"Failed to ensure files.hash column: {e}")
+
+    # New tables (idempotent)
     c.execute("""
         CREATE TABLE IF NOT EXISTS file_types (
             id INTEGER PRIMARY KEY,
@@ -72,6 +82,28 @@ def migration_2(conn: sqlite3.Connection):
     """)
     conn.commit()
 
+    # Ensure recent_folders has minimal schema (recreate if older schema with added_at exists)
+    try:
+        cols = [row["name"] for row in c.execute("PRAGMA table_info(recent_folders)").fetchall()]
+        if "added_at" in cols:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS recent_folders_new (
+                    id INTEGER PRIMARY KEY,
+                    path TEXT UNIQUE NOT NULL,
+                    list_order INTEGER NOT NULL
+                )
+            """)
+            c.execute("""
+                INSERT INTO recent_folders_new(id, path, list_order)
+                SELECT id, path, list_order FROM recent_folders
+                ORDER BY list_order, id
+            """)
+            c.execute("DROP TABLE recent_folders")
+            c.execute("ALTER TABLE recent_folders_new RENAME TO recent_folders")
+            conn.commit()
+    except Exception as e:
+        logging.exception(f"Failed to normalize recent_folders schema: {e}")
+
     # Import legacy settings.json if present
     legacy = None
     try:
@@ -83,7 +115,7 @@ def migration_2(conn: sqlite3.Connection):
 
     if legacy:
         _import_legacy(conn, legacy)
-        # Archive legacy file
+        # Archive legacy file after successful migration
         try:
             ts = time.strftime("%Y%m%d-%H%M%S")
             backup = SETTINGS_FILE + f".migrated-{ts}"
@@ -112,7 +144,7 @@ def _import_legacy(conn: sqlite3.Connection, s: dict):
             (k, json.dumps(v)),
         )
 
-    # file_types dict -> rows
+    # file_types dict -> rows (preserve order)
     file_types = s.get('file_types', {})
     order = 1
     for name, patterns in file_types.items():
@@ -127,7 +159,10 @@ def _import_legacy(conn: sqlite3.Connection, s: dict):
 
     # recent_folders ordered list
     recent = s.get('recent_folders', [])
-    conn.execute("DELETE FROM recent_folders")
+    try:
+        conn.execute("DELETE FROM recent_folders")
+    except Exception:
+        pass
     order = 1
     for path in recent:
         try:
@@ -210,6 +245,7 @@ def _ensure_tag_and_get_id(conn: sqlite3.Connection, tag_name: str) -> int:
     row = conn.execute("SELECT id FROM tags WHERE name=?", (tag_name,)).fetchone()
     if row:
         return row["id"]
+    # Append to default group (group_id=1)
     mrow = conn.execute("SELECT COALESCE(MAX(list_order), 0) AS m FROM tags WHERE group_id=1").fetchone()
     next_order = (mrow["m"] if mrow else 0) + 1
     conn.execute(
