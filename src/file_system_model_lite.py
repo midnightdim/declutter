@@ -2,12 +2,12 @@ import os.path as osp
 from os.path import normpath
 import posixpath
 from typing import Any, List, Union
+import logging
 
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QDateTime, QLocale, QFileInfo, QMimeDatabase, Signal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QFileSystemModel, QAbstractItemView
-from declutter.tags import get_files_by_tag, get_tags, tag_get_color, get_all_files_from_db
-from declutter.file_utils import get_actual_filename
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QAbstractItemView
+from declutter.tags import get_tags, tag_get_color, get_all_files_from_db
 
 FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
 
@@ -196,28 +196,31 @@ class FileSystemModelLite(QAbstractItemModel):
 
         db = QMimeDatabase()
         for file in file_list:
+            if not osp.exists(file):
+                continue
             # TBD: if not actual: actual = str(Path(file).resolve()) # this is dangerous in case of symlinks
+            try:
+                time = QDateTime().fromMSecsSinceEpoch(int(osp.getmtime(file) * 1000))
+                file_record = {
+                    "path": file,
+                    "size": QLocale().formattedDataSize(osp.getsize(file)),
+                    "modified_at": time.toString(QLocale.system().dateTimeFormat(QLocale.ShortFormat)),
+                    "type": db.mimeTypeForFile(file).comment(),
+                    "tags": ", ".join(get_tags(normpath(file)))
+                }
 
-            time = QDateTime().fromMSecsSinceEpoch(int(osp.getmtime(file) * 1000))
-            file_record = {
-                "path": file,
-                "size": QLocale().formattedDataSize(osp.getsize(file)),
-                "modified_at": time.toString(QLocale.system().dateTimeFormat(QLocale.ShortFormat)),
-                "type": db.mimeTypeForFile(file).comment(),
-                "tags": ", ".join(get_tags(normpath(file)))
-            }
+                drive = True
+                if "\\" in file:
+                    file = posixpath.join(*file.split("\\"))
+                bits = file.split("/")
+                if len(bits) > 1 and bits[0] == "":
+                    bits[0] = "/"
+                    drive = False
 
-            drive = True
-            if "\\" in file:
-                file = posixpath.join(*file.split("\\"))
-            bits = file.split("/")
-            if len(bits) > 1 and bits[0] == "":
-                bits[0] = "/"
-                drive = False
-
-            file_record["bits"] = bits
-            _add_to_tree(file_record, parent, drive)
-
+                file_record["bits"] = bits
+                _add_to_tree(file_record, parent, drive)
+            except Exception as e:
+                logging.exception(f"Failed to get properties for a file: {e}")
 
 class Widget(QWidget):
     """A simple widget to demonstrate the FileSystemModelLite."""

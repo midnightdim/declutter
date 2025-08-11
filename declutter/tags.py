@@ -194,8 +194,8 @@ def get_tags(filename):
         "WHERE file_tags.file_id = (SELECT id from files WHERE filepath = ?) "
         "order by tags.group_id, tags.list_order", (filename,))]
     if not tags:
-        # Keep files row; do not delete silently—file may have moved and be reconciled later
-        pass
+        c.execute("DELETE FROM files WHERE filepath = ?", (filename,))
+        conn.commit()
     conn.close()
     TAGS_CACHE[filename] = tags
     return tags

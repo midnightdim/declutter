@@ -117,6 +117,7 @@ class TaggerWindow(QMainWindow):
             self.sorting_model = QSortFilterProxyModel(self)
             self.sorting_model.setSourceModel(self.model)
             self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+            self.ui.treeView.setItemsExpandable(True)
             self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setSortingEnabled(True)
             self.ui.treeView.expandAll()

@@ -3,9 +3,6 @@ from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMainWindow, QWidget
 from declutter.tags import get_tags, set_tags, remove_all_tags
 from os import path
 from pathlib import Path
-import logging
-
-
 class FileTree(QTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -27,7 +24,6 @@ class FileTree(QTreeView):
             ) if not path.isdir(target_folder) else target_folder
             if self.parent().parent().player:
                 self.parent().parent().player.stop()
-                self.parent().parent().playlist.clear()
             for url in event.mimeData().urls():
                 old_path = path.normpath(url.toLocalFile())
                 tags = get_tags(old_path)
