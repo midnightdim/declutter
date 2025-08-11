@@ -142,7 +142,7 @@ class RulesWindow(QMainWindow):
                 rule['id'] = i  # renumbering rules
                 self.settings['rules'].append(rule)
 
-            save_settings(SETTINGS_FILE, self.settings)
+            save_settings(self.settings)
             self.load_rules()
             self.ui.rulesTable.selectRow(rule_idx-1)
 
@@ -166,7 +166,7 @@ class RulesWindow(QMainWindow):
                 rule['id'] = i  # renumbering rules
                 self.settings['rules'].append(rule)
 
-            save_settings(SETTINGS_FILE, self.settings)
+            save_settings(self.settings)
             self.load_rules()
             self.ui.rulesTable.selectRow(rule_idx+1)
 
@@ -239,21 +239,21 @@ class RulesWindow(QMainWindow):
             rule['id'] = max([int(r['id']) for r in self.settings['rules']
                              if 'id' in r.keys()])+1 if self.settings['rules'] else 1
             self.settings['rules'].append(rule)
-        save_settings(SETTINGS_FILE, self.settings)
+        save_settings(self.settings)
         self.load_rules()
 
     def edit_rule(self, r, c):
         """Opens the rule edit window to edit the selected rule."""
         if c == 1:  # Enabled/Disabled is clicked
             self.settings['rules'][r]['enabled'] = not self.settings['rules'][r]['enabled']
-            save_settings(SETTINGS_FILE, self.settings)
+            save_settings(self.settings)
         else:
             rule = deepcopy(self.settings['rules'][r])
             self.rule_window = RuleEditWindow()
             self.rule_window.load_rule(rule)
             if self.rule_window.exec():
                 self.settings['rules'][r] = self.rule_window.rule
-        save_settings(SETTINGS_FILE, self.settings)
+        save_settings(self.settings)
         self.load_rules()
 
     def delete_rule(self):

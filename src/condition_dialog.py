@@ -3,7 +3,7 @@ from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox
 from PySide6.QtCore import QItemSelectionModel
 from src.ui.ui_condition_dialog import Ui_Condition
-from declutter.config import load_settings
+from declutter.store import load_settings
 from declutter.tags import get_all_tag_groups, get_tags_and_groups
 from src.tags_dialog import generate_tag_model
 

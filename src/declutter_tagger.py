@@ -16,7 +16,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from src.ui.ui_tagger_window import Ui_taggerWindow
 from src.tags_dialog import TagsDialog, generate_tag_model
-from declutter.config import (SETTINGS_FILE, ALL_TAGGED_TEXT)
+from declutter.config import ALL_TAGGED_TEXT
 from declutter.store import load_settings, save_settings
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import (
@@ -512,7 +512,7 @@ class TaggerWindow(QMainWindow):
                 self.settings['recent_folders'].insert(0, file_path)
                 if len(self.settings['recent_folders']) > 15:
                     del self.settings['recent_folders'][-1]
-                save_settings(SETTINGS_FILE, self.settings)
+                save_settings(self.settings)
 
     def manage_tags(self):
         self.tags_dialog = TagsDialog(self.tag_model)
@@ -541,7 +541,7 @@ class TaggerWindow(QMainWindow):
             self.settings['recent_folders'].insert(0, file_path)
             if len(self.settings['recent_folders']) > 15:
                 del self.settings['recent_folders'][-1]
-            save_settings(SETTINGS_FILE, self.settings)
+            save_settings(self.settings)
         elif isfile(file_path):
             open_file(file_path)
 

@@ -135,7 +135,7 @@ class SettingsDialog(QDialog):
                 self.settings['file_types'][self.ui.fileTypesTable.item(
                     i, 0).text()] = self.ui.fileTypesTable.item(i, 1).text()
 
-        save_settings(SETTINGS_FILE, self.settings)
+        save_settings(self.settings)
         super(SettingsDialog, self).accept()
 
     def change_style(self, style_name):
