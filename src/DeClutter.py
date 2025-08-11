@@ -298,29 +298,23 @@ class RulesWindow(QMainWindow):
         msgBox.exec()
 
     def load_rules(self):
-        """Loads the rules from the settings file and populates the rules table."""
+        """Loads settings (including rules) from the store and populates the rules table."""
         self.settings = load_settings()
-        self.ui.rulesTable.setRowCount(len(self.settings['rules']))
-        i = 0
-        rules = [(int(r['id']), r)
-                 for r in self.settings['rules'] if 'id' in r.keys()]
+
+        rules = [(int(r['id']), r) for r in self.settings['rules'] if 'id' in r]
         rules.sort(key=lambda y: y[0])
 
-        for id, rule in rules:
-            newItem = QTableWidgetItem(rule['name'])
-            self.ui.rulesTable.setItem(i, 0, newItem)
-            newItem = QTableWidgetItem(
-                "Enabled" if rule['enabled'] else "Disabled")
-            self.ui.rulesTable.setItem(i, 1, newItem)
-            newItem = QTableWidgetItem(rule['action'])
-            self.ui.rulesTable.setItem(i, 2, newItem)
-            newItem = QTableWidgetItem(','.join(rule['folders']))
-            self.ui.rulesTable.setItem(i, 3, newItem)
-            i += 1
+        self.ui.rulesTable.setRowCount(len(rules))
+        for i, (_, rule) in enumerate(rules):
+            self.ui.rulesTable.setItem(i, 0, QTableWidgetItem(rule['name']))
+            self.ui.rulesTable.setItem(i, 1, QTableWidgetItem("Enabled" if rule['enabled'] else "Disabled"))
+            self.ui.rulesTable.setItem(i, 2, QTableWidgetItem(rule['action']))
+            self.ui.rulesTable.setItem(i, 3, QTableWidgetItem(','.join(rule['folders'])))
+
         self.ui.rulesTable.setColumnWidth(0, 200)
         self.ui.rulesTable.setColumnWidth(1, 80)
-        self.ui.rulesTable.setSizeAdjustPolicy(
-            QAbstractScrollArea.AdjustToContents)
+        self.ui.rulesTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+
 
     def create_actions(self):
         """Creates the actions for the tray icon menu."""
