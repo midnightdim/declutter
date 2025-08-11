@@ -3,7 +3,8 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from declutter.config import DB_FILE, load_settings, save_settings, SETTINGS_FILE
+from declutter.config import DB_FILE, SETTINGS_FILE
+from declutter.store import load_settings, save_settings
 
 TAGS_CACHE = {}
 

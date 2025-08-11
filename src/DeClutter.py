@@ -16,9 +16,8 @@ from src.rule_edit_window import RuleEditWindow
 from src.settings_dialog import SettingsDialog
 from src.ui.ui_rules_window import Ui_rulesWindow
 from src.ui.ui_list_dialog import Ui_listDialog
-from declutter.config import (
-    SETTINGS_FILE, VERSION, LOG_FILE, load_settings, save_settings
-)
+from declutter.config import (SETTINGS_FILE, VERSION, LOG_FILE)
+from declutter.store import load_settings, save_settings
 from declutter.rules import (
     apply_all_rules, apply_rule, get_rule_by_id
 )
@@ -421,7 +420,8 @@ def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
     QApplication.setQuitOnLastWindowClosed(False)
-
+    from declutter.store import init_store
+    init_store()
     logging.info("DeClutter started")
     app.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
 

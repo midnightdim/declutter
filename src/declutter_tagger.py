@@ -16,9 +16,8 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from src.ui.ui_tagger_window import Ui_taggerWindow
 from src.tags_dialog import TagsDialog, generate_tag_model
-from declutter.config import (
-    SETTINGS_FILE, load_settings, save_settings, ALL_TAGGED_TEXT
-)
+from declutter.config import (SETTINGS_FILE, ALL_TAGGED_TEXT)
+from declutter.store import load_settings, save_settings
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import (
     tag_get_color, set_tags, get_tags, get_tags_by_group_ids, add_tag, remove_tags, remove_all_tags, 

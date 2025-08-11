@@ -1,7 +1,8 @@
 import sys
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
 from PySide6.QtCore import Qt
-from declutter.config import load_settings, save_settings, SETTINGS_FILE
+from declutter.store import load_settings, save_settings
+from declutter.config import SETTINGS_FILE
 
 from src.ui.ui_settings_dialog import Ui_settingsDialog
 

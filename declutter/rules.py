@@ -7,8 +7,8 @@ from shutil import copytree, rmtree
 from time import time
 from send2trash import send2trash
 from declutter.tags import add_tags, remove_tags
-from declutter.config import SETTINGS_FILE
-from declutter.config import load_settings, ALL_TAGGED_TEXT
+from declutter.config import SETTINGS_FILE, ALL_TAGGED_TEXT
+from declutter.store import load_settings
 from declutter.file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
                          advanced_move, get_file_type, get_actual_filename)
 from declutter.tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
