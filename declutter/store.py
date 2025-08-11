@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import sqlite3
-import time
 from typing import Any, Dict, List, Optional
 
 from declutter.db import get_conn, ensure_db
@@ -16,7 +15,6 @@ def init_store():
 PRIMITIVE_KEYS = {
     'version': VERSION,
     'current_folder': '',
-    'current_drive': '',
     'rule_exec_interval': 300.0,
     'dryrun': False,
     'date_type': 0,

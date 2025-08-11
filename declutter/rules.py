@@ -7,7 +7,7 @@ from shutil import copytree, rmtree
 from time import time
 from send2trash import send2trash
 from declutter.tags import add_tags, remove_tags
-from declutter.config import SETTINGS_FILE, ALL_TAGGED_TEXT
+from declutter.config import ALL_TAGGED_TEXT
 from declutter.store import load_settings
 from declutter.file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
                          advanced_move, get_file_type, get_actual_filename)
@@ -298,7 +298,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
 
                     elif c['type'] == 'date':
                         try:
-                            settings = load_settings(SETTINGS_FILE)
+                            settings = load_settings()
                             if c['age_switch'] == '>=':
                                 if (float(time()) - get_file_time(fullname, settings['date_type']))/(3600*24) >= convert_to_days(float(c['age']), c['age_units']):
                                     condition_met = True
@@ -356,14 +356,14 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
     return out_files
 
 def get_rule_by_name(name):
-    settings = load_settings(SETTINGS_FILE)
+    settings = load_settings()
     for r in settings['rules']:
         if r['name'] == name:
             return r
 
 def get_rule_by_id(rule_id, rules=[]):
     if not rules:
-        rules = load_settings(SETTINGS_FILE)['rules']
+        rules = load_settings()['rules']
     for r in rules:
         if int(r['id']) == rule_id:
             return r

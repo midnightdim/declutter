@@ -2,7 +2,6 @@ import sys
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
 from PySide6.QtCore import Qt
 from declutter.store import load_settings, save_settings
-from declutter.config import SETTINGS_FILE
 
 from src.ui.ui_settings_dialog import Ui_settingsDialog
 
@@ -80,7 +79,7 @@ class SettingsDialog(QDialog):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
                                 settings['rules'][i]['conditions'][k]['file_type'] = new_value
-                    save_settings(SETTINGS_FILE, settings)
+                    save_settings(settings)
                     self.settings = settings
 
                 if new_value == "":
@@ -98,7 +97,7 @@ class SettingsDialog(QDialog):
                                                  QMessageBox.Yes | QMessageBox.No)
                     if reply == QMessageBox.Yes:
                         del settings['file_types'][prev_value]
-                        save_settings(SETTINGS_FILE, settings)
+                        save_settings(settings)
                         self.settings = settings
                         self.ui.fileTypesTable.removeRow(row)
                     else:

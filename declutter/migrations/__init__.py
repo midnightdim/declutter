@@ -2,13 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sqlite3
-import time
 
-from declutter.config import SETTINGS_FILE
-
-# Increment when adding a new migration module (v3, v4, ...)
 LATEST_SCHEMA_VERSION = 2
 
 
@@ -16,6 +11,7 @@ def run(conn: sqlite3.Connection):
     # Ensure core tables exist to hold settings and legacy tags
     _create_core_tables(conn)
     current = _get_schema_version(conn)
+
     if current < 2:
         from .v2 import migration_2
         migration_2(conn)
@@ -24,7 +20,7 @@ def run(conn: sqlite3.Connection):
     if current != LATEST_SCHEMA_VERSION:
         logging.info(f"DB schema at version {current}, expected {LATEST_SCHEMA_VERSION}.")
 
-    # Ensure version key exists at least (value will be overwritten by db.ensure_db)
+    # Ensure version key exists at least (value is overwritten in db.ensure_db)
     conn.execute(
         "INSERT INTO settings(key, value) VALUES (?, ?) "
         "ON CONFLICT(key) DO NOTHING",
@@ -88,7 +84,6 @@ def _get_schema_version(conn: sqlite3.Connection) -> int:
         row = cur.fetchone()
         if not row:
             return 1
-        # value stored as JSON text
         val = json.loads(row["value"])
         return int(val)
     except Exception:

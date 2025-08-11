@@ -16,7 +16,7 @@ from src.rule_edit_window import RuleEditWindow
 from src.settings_dialog import SettingsDialog
 from src.ui.ui_rules_window import Ui_rulesWindow
 from src.ui.ui_list_dialog import Ui_listDialog
-from declutter.config import (SETTINGS_FILE, VERSION, LOG_FILE)
+from declutter.config import VERSION, LOG_FILE
 from declutter.store import load_settings, save_settings
 from declutter.rules import (
     apply_all_rules, apply_rule, get_rule_by_id

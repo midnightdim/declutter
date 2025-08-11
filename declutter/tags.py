@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from declutter.config import DB_FILE, SETTINGS_FILE
+from declutter.config import DB_FILE
 from declutter.store import load_settings, save_settings
 
 TAGS_CACHE = {}
@@ -118,7 +118,7 @@ def rename_tag(old_tag, new_tag):
                 # print('updating condition for',r['name'])
                 c['tags'].remove(old_tag)
                 c['tags'].append(new_tag)
-    save_settings(SETTINGS_FILE, settings)
+    save_settings(settings)
 
 def set_tags(filename, tags):  # TBD optimize this
     filename = os.path.normpath(filename).lower()

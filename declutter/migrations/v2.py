@@ -83,7 +83,7 @@ def migration_2(conn: sqlite3.Connection):
 
     if legacy:
         _import_legacy(conn, legacy)
-        # Archive legacy file after successful migration
+        # Archive legacy file
         try:
             ts = time.strftime("%Y%m%d-%H%M%S")
             backup = SETTINGS_FILE + f".migrated-{ts}"
@@ -96,11 +96,10 @@ def migration_2(conn: sqlite3.Connection):
 
 
 def _import_legacy(conn: sqlite3.Connection, s: dict):
-    # Settings primitives
+    # Settings primitives (current_drive removed as unused)
     primitives = {
         'version': s.get('version'),
         'current_folder': s.get('current_folder', ''),
-        'current_drive': s.get('current_drive', ''),
         'rule_exec_interval': s.get('rule_exec_interval', 300.0),
         'dryrun': s.get('dryrun', False),
         'date_type': s.get('date_type', 0),
@@ -194,13 +193,10 @@ def _insert_rule_row(conn: sqlite3.Connection, rule: dict) -> int:
         conn.execute(
             f"INSERT INTO rules({','.join(cols)}) VALUES ({placeholders})", vals
         )
-        # If we inserted with explicit id, use it
         if vals[0] is not None:
             return int(vals[0])
     except sqlite3.IntegrityError:
-        # Id conflict; fall back to auto-id
         pass
-    # Insert without id
     conn.execute(
         "INSERT INTO rules(name,enabled,action,recursive,condition_switch,keep_tags,keep_folder_structure,"
         "target_folder,target_subfolder,name_pattern,overwrite_switch,ignore_newest,ignore_N) "
@@ -214,7 +210,6 @@ def _ensure_tag_and_get_id(conn: sqlite3.Connection, tag_name: str) -> int:
     row = conn.execute("SELECT id FROM tags WHERE name=?", (tag_name,)).fetchone()
     if row:
         return row["id"]
-    # Append to default group (group_id=1)
     mrow = conn.execute("SELECT COALESCE(MAX(list_order), 0) AS m FROM tags WHERE group_id=1").fetchone()
     next_order = (mrow["m"] if mrow else 0) + 1
     conn.execute(
