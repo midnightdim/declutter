@@ -95,6 +95,9 @@ class TaggerWindow(QMainWindow):
         # Populate initial UI elements
         self.populate()  # TBD can't it be just a part of init()?
 
+    def in_tagged_mode(self):
+        return self.ui.sourceComboBox.currentText() == 'Tagged'
+
     def new_window(self):
         """Opens a new TaggerWindow instance."""
         tagger = TaggerWindow(self)
@@ -106,6 +109,7 @@ class TaggerWindow(QMainWindow):
         mode = self.ui.sourceComboBox.currentText()
         self.player.stop()
         self.rule['condition_switch'] = self.ui.filterConditionSwitchCombo.currentText()
+        self.ui.treeView.setEditTriggers(QAbstractItemView.EditKeyPressed | QAbstractItemView.SelectedClicked)
         if mode == 'Tagged':
             self.rule['folders'] = [ALL_TAGGED_TEXT]
             paths = get_files_affected_by_rule(self.rule, True)
@@ -218,6 +222,7 @@ class TaggerWindow(QMainWindow):
                 if event.key() in (Qt.Key_Return, Qt.Key_Enter):
                     if self.ui.treeView.state() is not QAbstractItemView.EditingState:
                         self.open()
+                    return True
                 if event.key() == Qt.Key_Delete:
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     self.player.stop()
@@ -556,19 +561,23 @@ class TaggerWindow(QMainWindow):
             file_path = normpath(self.model.filePath(index))
         if isdir(file_path):
             self.ui.statusbar.clearMessage()
-            # TBD reuse this in a function
-            self.model.setRootPath(normpath(file_path))
-            if self.sorting_model:
-                self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
-            self.ui.pathEdit.setText(file_path)
-            self.settings['current_folder'] = file_path
-            if file_path in self.settings['recent_folders']:
-                self.settings['recent_folders'].remove(file_path)
-            self.settings['recent_folders'].insert(0, file_path)
-            if len(self.settings['recent_folders']) > 15:
-                del self.settings['recent_folders'][-1]
-            save_settings(self.settings)
-        elif isfile(file_path):
+            if not self.in_tagged_mode():
+                self.model.setRootPath(normpath(file_path))
+                if self.sorting_model:
+                    self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
+                self.ui.pathEdit.setText(file_path)
+                self.settings["current_folder"] = file_path
+                if file_path in self.settings["recent_folders"]:
+                    self.settings["recent_folders"].remove(file_path)
+                self.settings["recent_folders"].insert(0, file_path)
+                if len(self.settings["recent_folders"]) > 15:
+                    del self.settings["recent_folders"][-1]
+                save_settings(self.settings)
+            else:
+                # No-op in Tagged mode for folders
+                pass
+        else:
+            # Open files in the system default application
             open_file(file_path)
 
     def create_folder(self):
