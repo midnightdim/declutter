@@ -11,18 +11,54 @@ workflows:
       cache_paths:
         - ~/.cache/pip
 
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "*"
+          include: true
+          source: true
+
     scripts:
-      - name: Install dependencies
+      - name: Show versions
         script: |
-          set -x
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
-          python3 -m pip install pyinstaller
-          python3 -m pip install Pillow
-      - name: Build the application
+          set -ex
+          sw_vers
+          python3 --version
+          pip3 --version
+
+      - name: Install dependencies (venv + PyInstaller + Pillow)
         script: |
-          set -x
-          sh scripts/build_macos.sh
+          set -ex
+          python3 -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller Pillow
+
+      - name: Build the application (onedir, windowed, .ico auto-convert)
+        script: |
+          set -ex
+          source venv/bin/activate
+          ICON_ARG=""
+          if [ -f assets/DeClutter.ico ]; then
+            ICON_ARG="--icon assets/DeClutter.ico"
+          else
+            ICON_ARG="--icon NONE"
+          fi
+          # Build a macOS .app bundle in onedir (recommended for macOS)
+          pyinstaller --name DeClutter --windowed --onedir $ICON_ARG src/DeClutter.py
+
+      - name: Package artifact (zip the .app)
+        script: |
+          set -ex
+          mkdir -p artifacts
+          APP_PATH="dist/DeClutter.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "App not found at $APP_PATH"; exit 1
+          fi
+          (cd dist && zip -ry ../artifacts/DeClutter-unsigned.zip DeClutter.app)
 
     artifacts:
-      - build/macos/*.dmg
+      - artifacts/*.zip
+      - /tmp/xcodebuild_logs/*.log
