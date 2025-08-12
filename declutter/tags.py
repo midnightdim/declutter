@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import os
 import sqlite3
@@ -7,41 +6,10 @@ from pathlib import Path
 from typing import Optional, List, Tuple
 
 from declutter.config import DB_FILE
+from declutter.file_utils import quick_file_fingerprint
 from declutter.store import load_settings, save_settings
 
 TAGS_CACHE = {}
-
-# ---------- Hashing utilities ----------
-
-CHUNK_SIZE = 128 * 1024  # 128KB
-
-def quick_file_fingerprint(path: str) -> Optional[str]:
-    """
-    Fast, reasonably distinctive fingerprint using stdlib:
-    - Hash file size and small samples from head and tail to avoid full reads for large files.
-    Falls back to hashing the first CHUNK_SIZE if file is too small to have tail.
-    """
-    try:
-        p = Path(path)
-        if not p.is_file():
-            return None
-        size = p.stat().st_size
-
-        h = hashlib.blake2b(digest_size=16)
-        h.update(size.to_bytes(8, 'little'))
-
-        with p.open('rb') as f:
-            head = f.read(CHUNK_SIZE)
-            h.update(head)
-            if size > CHUNK_SIZE * 2:
-                # read tail
-                f.seek(max(size - CHUNK_SIZE, 0))
-                tail = f.read(CHUNK_SIZE)
-                h.update(tail)
-        return h.hexdigest()
-    except Exception as e:
-        logging.exception(f"Failed to hash file {path}: {e}")
-        return None
 
 # ---------- DB helpers ----------
 

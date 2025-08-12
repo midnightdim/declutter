@@ -169,24 +169,27 @@ def apply_rule(rule, dryrun=False):
                         # if get_tag_file_path(f).is_file(): # TBD implement this for sidecar files
                         #     os.remove(get_tag_file_path(f))
                 elif rule['action'] == 'Tag':
-                    # if not dryrun:
-                    if rule['tags'] and not set(rule['tags']).issubset(set(get_tags(f))):
-                        add_tags(f, rule['tags'])
-                        msg = "Tagged " + f + " with " + str(rule['tags'])
-                        report['tagged'] += 1
+                    if not dryrun:
+                        if rule['tags'] and not set(rule['tags']).issubset(set(get_tags(f))):
+                            add_tags(f, rule['tags'])
+                            msg = "Tagged " + f + " with " + str(rule['tags'])
+                            report['tagged'] += 1
                 elif rule['action'] == 'Remove tags':
-                    # if not dryrun:
-                    if rule['tags'] and set(rule['tags']).issubset(set(get_tags(f))):
-                        remove_tags(f, rule['tags'])
-                        msg = "Removed these tags from  " + \
-                            f + ": " + str(rule['tags'])
-                        report['untagged'] += 1
+                    if not dryrun:                    
+                    # Remove only the tags that exist on the file
+                        if rule['tags']:
+                            current_tags = set(get_tags(f))
+                            tags_to_remove = list(current_tags.intersection(rule['tags']))
+                            if tags_to_remove:
+                                remove_tags(f, tags_to_remove)
+                                msg = f"Removed these tags from {f}: {tags_to_remove}"
+                                report['untagged'] += 1
                 elif rule['action'] == 'Clear all tags':
-                    # if not dryrun:
-                    if get_tags(f):
-                        remove_all_tags(f)
-                        msg = "Cleared tags for  " + f
-                        report['cleared tags'] += 1
+                    if not dryrun:
+                        if get_tags(f):
+                            remove_all_tags(f)
+                            msg = "Cleared tags for  " + f
+                            report['cleared tags'] += 1
                 if msg:
                     details.append(msg)
                     logging.debug(msg)

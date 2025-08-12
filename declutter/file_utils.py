@@ -1,11 +1,45 @@
+import hashlib
 import glob
 import os
 import re
 from shutil import copy2, copytree, move, rmtree
 from pathlib import Path
 from fnmatch import fnmatch
+from typing import Optional
 from declutter.store import load_settings
 import logging
+
+# ---------- Hashing utilities ----------
+
+CHUNK_SIZE = 128 * 1024  # 128KB
+
+def quick_file_fingerprint(path: str) -> Optional[str]:
+    """
+    Fast, reasonably distinctive fingerprint using stdlib:
+    - Hash file size and small samples from head and tail to avoid full reads for large files.
+    Falls back to hashing the first CHUNK_SIZE if file is too small to have tail.
+    """
+    try:
+        p = Path(path)
+        if not p.is_file():
+            return None
+        size = p.stat().st_size
+
+        h = hashlib.blake2b(digest_size=16)
+        h.update(size.to_bytes(8, 'little'))
+
+        with p.open('rb') as f:
+            head = f.read(CHUNK_SIZE)
+            h.update(head)
+            if size > CHUNK_SIZE * 2:
+                # read tail
+                f.seek(max(size - CHUNK_SIZE, 0))
+                tail = f.read(CHUNK_SIZE)
+                h.update(tail)
+        return h.hexdigest()
+    except Exception as e:
+        logging.exception(f"Failed to hash file {path}: {e}")
+        return None
 
 def get_file_time(filename, date_type=0):
     if Path(filename).exists():
@@ -82,54 +116,98 @@ def remove_file_or_dir(filepath):
 
 def advanced_move(source_path, target_path, overwrite=False, copy=False):
     """Moves or copies a file/directory from source_path to target_path with overwrite options."""
-    # copy = False means move; TBD improve this
     if not os.path.exists(source_path):
         return False
+
+    # Early-out: if source and target are the same file, skip
+    try:
+        if os.path.samefile(source_path, target_path):
+            return target_path
+    except Exception:
+        if os.path.abspath(source_path) == os.path.abspath(target_path):
+            return target_path
+
     if not os.path.exists(target_path):
-        # Target path doesn't exist, simply moving/copying
+        # Target path doesn't exist — normal move/copy
         try:
             if not Path(target_path).parent.exists():
                 os.makedirs(Path(target_path).parent)
             if copy:
-                res = copy_file_or_dir(source_path, target_path)
+                return copy_file_or_dir(source_path, target_path)
             else:
-                res = move(source_path, target_path)
-            return res
+                return move(source_path, target_path)
         except Exception as e:
             logging.exception(e)
             return False
     else:
+        # Target exists — check size
         if get_size(source_path) == get_size(target_path):
-            # File/folder with the same size exists
-            if not copy:
-                # If moving and already exists, delete the source file/folder
-                remove_file_or_dir(source_path)
+            # Optional hash comparison to confirm identical content
+            try:
+                settings = load_settings()
+                use_hash = settings.get('use_hash_on_conflict', False)
+            except Exception:
+                use_hash = False
+
+            same_content = False
+            if use_hash and Path(source_path).is_file() and Path(target_path).is_file():
+                same_content = (
+                    quick_file_fingerprint(source_path)
+                    == quick_file_fingerprint(target_path)
+                )
+            else:
+                # If hash check is off, assume identical if size matches
+                same_content = True
+
+            if same_content:
+                if not copy:
+                    remove_file_or_dir(source_path)
                 return target_path
             else:
-                return False
+                # Sizes match but content differs — increment or overwrite
+                if overwrite:
+                    try:
+                        remove_file_or_dir(target_path)
+                        if copy:
+                            return copy_file_or_dir(source_path, target_path)
+                        else:
+                            return move(source_path, target_path)
+                    except Exception as e:
+                        logging.exception(e)
+                        return False
+                else:
+                    new_name = get_nonexistent_path(source_path, target_path)
+                    if new_name:
+                        try:
+                            if copy:
+                                return copy_file_or_dir(source_path, new_name)
+                            else:
+                                return move(source_path, new_name)
+                        except Exception as e:
+                            logging.exception(e)
+                            return False
+                    else:
+                        return False
         else:
-            # It's a file/dir with different size
+            # Different size — overwrite or increment
             if overwrite:
                 try:
                     remove_file_or_dir(target_path)
                     if copy:
-                        res = copy_file_or_dir(source_path, target_path)
+                        return copy_file_or_dir(source_path, target_path)
                     else:
-                        res = move(source_path, target_path)
-                    return res
+                        return move(source_path, target_path)
                 except Exception as e:
                     logging.exception(e)
                     return False
             else:
-                # Getting an available name
                 new_name = get_nonexistent_path(source_path, target_path)
                 if new_name:
                     try:
                         if copy:
-                            res = copy_file_or_dir(source_path, new_name)
+                            return copy_file_or_dir(source_path, new_name)
                         else:
-                            res = move(source_path, new_name)
-                        return res
+                            return move(source_path, new_name)
                     except Exception as e:
                         logging.exception(e)
                         return False

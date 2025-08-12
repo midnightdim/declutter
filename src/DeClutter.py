@@ -8,8 +8,16 @@ import webbrowser
 import requests
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
-    QApplication, QSystemTrayIcon, QMenu, QDialog, QTableWidgetItem, QAbstractScrollArea,
-    QTableWidgetSelectionRange, QMainWindow, QMessageBox, QStyleFactory
+    QApplication,
+    QSystemTrayIcon,
+    QMenu,
+    QDialog,
+    QTableWidgetItem,
+    QAbstractScrollArea,
+    QTableWidgetSelectionRange,
+    QMainWindow,
+    QMessageBox,
+    QStyleFactory,
 )
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
 from src.rule_edit_window import RuleEditWindow
@@ -18,15 +26,14 @@ from src.ui.ui_rules_window import Ui_rulesWindow
 from src.ui.ui_list_dialog import Ui_listDialog
 from declutter.config import VERSION, LOG_FILE
 from declutter.store import load_settings, save_settings
-from declutter.rules import (
-    apply_all_rules, apply_rule, get_rule_by_id
-)
+from declutter.rules import apply_all_rules, apply_rule, get_rule_by_id
 
 from src.declutter_tagger import TaggerWindow
 
 
 class RulesWindow(QMainWindow):
     """Main application window for managing decluttering rules."""
+
     def __init__(self):
         super(RulesWindow, self).__init__()
         self.ui = Ui_rulesWindow()
@@ -44,8 +51,8 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
-        if 'style' in self.settings.keys():
-            self.change_style(self.settings['style'])
+        if "style" in self.settings.keys():
+            self.change_style(self.settings["style"])
 
         self.ui.addRule.clicked.connect(self.add_rule)
         self.load_rules()
@@ -56,7 +63,10 @@ class RulesWindow(QMainWindow):
         self.trayIcon.messageClicked.connect(self.message_clicked)
         self.trayIcon.activated.connect(self.tray_activated)
         self.trayIcon.setToolTip(
-            "DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
+            "DeClutter runs every "
+            + str(float(self.settings["rule_exec_interval"] / 60))
+            + " minute(s)"
+        )
         self.service_run_details = []
         # TBD: self.start_thread() - check if this is needed
 
@@ -73,7 +83,7 @@ class RulesWindow(QMainWindow):
         self.ui.actionOpen_log_file.triggered.connect(self.open_log_file)
         self.ui.actionClear_log_file.triggered.connect(self.clear_log_file)
         self.ui.actionSettings.triggered.connect(self.show_settings)
-        self.ui.actionAbout.triggered.connect(self.show_about)        
+        self.ui.actionAbout.triggered.connect(self.show_about)
         self.ui.actionOpen_Tagger.triggered.connect(self.show_tagger)
         self.tagger = TaggerWindow()
         self.ui.actionManage_Tags.triggered.connect(self.tagger.manage_tags)
@@ -84,7 +94,7 @@ class RulesWindow(QMainWindow):
         self.service_runs = False
 
         self.timer = QTimer(self)
-        self.timer.setInterval(int(self.settings['rule_exec_interval']*1000))
+        self.timer.setInterval(int(self.settings["rule_exec_interval"] * 1000))
         self.timer.timeout.connect(self.start_thread)
         self.timer.start()
 
@@ -92,30 +102,34 @@ class RulesWindow(QMainWindow):
         self.instanced_thread.start()
         self.instanced_thread.version.connect(self.suggest_download)
 
-    
     def suggest_download(self, version):
         """Suggests downloading a new version of the application if available."""
         if version:
             try:
                 from packaging.version import Version
-                
-                current_version = Version(load_settings()['version'])
+
+                current_version = Version(load_settings()["version"])
                 # Normalize GitHub version (remove 'v' prefix if present)
-                latest_version = Version(version.lstrip('v'))
-                
+                latest_version = Version(version.lstrip("v"))
+
                 if latest_version > current_version:
-                    reply = QMessageBox.question(self, f"New version: {latest_version}",
+                    reply = QMessageBox.question(
+                        self,
+                        f"New version: {latest_version}",
                         r"There's a new version of DeClutter available. Download now?",
-                        QMessageBox.Yes | QMessageBox.No)
+                        QMessageBox.Yes | QMessageBox.No,
+                    )
                     if reply == QMessageBox.Yes:
                         try:
-                            webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
+                            webbrowser.open(
+                                "https://github.com/midnightdim/declutter/releases/latest"
+                            )
                         except Exception as e:
-                            logging.exception(f'exception {e}')
+                            logging.exception(f"exception {e}")
             except ImportError:
                 logging.error("packaging library not available for version comparison")
             except Exception as e:
-                logging.exception(f'Version comparison failed: {e}')
+                logging.exception(f"Version comparison failed: {e}")
 
     def tray_activated(self, reason):
         """Handles activation of the system tray icon."""
@@ -126,54 +140,63 @@ class RulesWindow(QMainWindow):
         """Moves the selected rule up in the list."""
         rule_idx = self.ui.rulesTable.selectedIndexes()[0].row()
         if rule_idx:
-            rule_id = int(self.settings['rules'][rule_idx]['id'])
-            self.settings['rules'][rule_idx]['id'] = self.settings['rules'][rule_idx-1]['id']
-            self.settings['rules'][rule_idx-1]['id'] = rule_id
+            rule_id = int(self.settings["rules"][rule_idx]["id"])
+            self.settings["rules"][rule_idx]["id"] = self.settings["rules"][
+                rule_idx - 1
+            ]["id"]
+            self.settings["rules"][rule_idx - 1]["id"] = rule_id
 
-            rules = deepcopy(self.settings['rules'])
-            rule_ids = [int(r['id']) for r in rules if 'id' in r.keys()]
+            rules = deepcopy(self.settings["rules"])
+            rule_ids = [int(r["id"]) for r in rules if "id" in r.keys()]
             rule_ids.sort()
 
-            self.settings['rules'] = []
+            self.settings["rules"] = []
             i = 0
             for rule_id in rule_ids:
                 i += 1
                 rule = get_rule_by_id(rule_id, rules)
-                rule['id'] = i  # renumbering rules
-                self.settings['rules'].append(rule)
+                rule["id"] = i  # renumbering rules
+                self.settings["rules"].append(rule)
 
             save_settings(self.settings)
             self.load_rules()
-            self.ui.rulesTable.selectRow(rule_idx-1)
+            self.ui.rulesTable.selectRow(rule_idx - 1)
 
     def move_rule_down(self):
         """Moves the selected rule down in the list."""
         rule_idx = self.ui.rulesTable.selectedIndexes()[0].row()
-        if rule_idx < self.ui.rulesTable.rowCount()-1:
-            rule_id = int(self.settings['rules'][rule_idx]['id'])
-            self.settings['rules'][rule_idx]['id'] = self.settings['rules'][rule_idx+1]['id']
-            self.settings['rules'][rule_idx+1]['id'] = rule_id
+        if rule_idx < self.ui.rulesTable.rowCount() - 1:
+            rule_id = int(self.settings["rules"][rule_idx]["id"])
+            self.settings["rules"][rule_idx]["id"] = self.settings["rules"][
+                rule_idx + 1
+            ]["id"]
+            self.settings["rules"][rule_idx + 1]["id"] = rule_id
 
-            rules = deepcopy(self.settings['rules'])
-            rule_ids = [int(r['id']) for r in rules if 'id' in r.keys()]
+            rules = deepcopy(self.settings["rules"])
+            rule_ids = [int(r["id"]) for r in rules if "id" in r.keys()]
             rule_ids.sort()
 
-            self.settings['rules'] = []
+            self.settings["rules"] = []
             i = 0
             for rule_id in rule_ids:
                 i += 1
                 rule = get_rule_by_id(rule_id, rules)
-                rule['id'] = i  # renumbering rules
-                self.settings['rules'].append(rule)
+                rule["id"] = i  # renumbering rules
+                self.settings["rules"].append(rule)
 
             save_settings(self.settings)
             self.load_rules()
-            self.ui.rulesTable.selectRow(rule_idx+1)
+            self.ui.rulesTable.selectRow(rule_idx + 1)
 
     def show_about(self):
         """Shows the application's About box."""
-        QMessageBox.about(self, "About DeClutter", "DeClutter version "+str(VERSION) +
-                          "\nhttps://github.com/midnightdim/declutter\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov")
+        QMessageBox.about(
+            self,
+            "About DeClutter",
+            "DeClutter version "
+            + str(VERSION)
+            + "\nhttps://github.com/midnightdim/declutter\nAuthor: Dmitry Beloglazov\nTelegram: @beloglazov",
+        )
 
     def show_settings(self):
         """Shows the settings dialog."""
@@ -181,9 +204,11 @@ class RulesWindow(QMainWindow):
         if settings_window.exec():
             self.settings = load_settings()
             self.trayIcon.setToolTip(
-                "DeClutter runs every " + str(float(self.settings['rule_exec_interval']/60)) + " minute(s)")
-            self.timer.setInterval(
-                int(self.settings['rule_exec_interval']*1000))
+                "DeClutter runs every "
+                + str(float(self.settings["rule_exec_interval"] / 60))
+                + " minute(s)"
+            )
+            self.timer.setInterval(int(self.settings["rule_exec_interval"] * 1000))
 
     def change_style(self, style_name):
         """Changes the application's style."""
@@ -195,15 +220,18 @@ class RulesWindow(QMainWindow):
 
     def clear_log_file(self):
         """Clears the log file."""
-        reply = QMessageBox.question(self, "Warning",
-                                     "Are you sure you want to clear the log?",
-                                     QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.question(
+            self,
+            "Warning",
+            "Are you sure you want to clear the log?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
         if reply == QMessageBox.Yes:
             try:
-                with open(LOG_FILE, 'w'):
+                with open(LOG_FILE, "w"):
                     pass
             except Exception as e:
-                logging.exception(f'exception {e}')
+                logging.exception(f"exception {e}")
 
     def message_clicked(self):
         """Shows a dialog with details about the last service run."""
@@ -214,7 +242,8 @@ class RulesWindow(QMainWindow):
         affected = self.service_run_details
         if affected:
             msgBox.ui.label.setText(
-                str(len(affected)) + " file(s) affected by this rule:")
+                str(len(affected)) + " file(s) affected by this rule:"
+            )
             msgBox.ui.listWidget.addItems(affected)
         else:
             msgBox.ui.listWidget.setVisible(False)
@@ -236,23 +265,29 @@ class RulesWindow(QMainWindow):
         self.rule_window = RuleEditWindow()
         if self.rule_window.exec():
             rule = self.rule_window.rule
-            rule['id'] = max([int(r['id']) for r in self.settings['rules']
-                             if 'id' in r.keys()])+1 if self.settings['rules'] else 1
-            self.settings['rules'].append(rule)
+            rule["id"] = (
+                max([int(r["id"]) for r in self.settings["rules"] if "id" in r.keys()])
+                + 1
+                if self.settings["rules"]
+                else 1
+            )
+            self.settings["rules"].append(rule)
         save_settings(self.settings)
         self.load_rules()
 
     def edit_rule(self, r, c):
         """Opens the rule edit window to edit the selected rule."""
         if c == 1:  # Enabled/Disabled is clicked
-            self.settings['rules'][r]['enabled'] = not self.settings['rules'][r]['enabled']
+            self.settings["rules"][r]["enabled"] = not self.settings["rules"][r][
+                "enabled"
+            ]
             save_settings(self.settings)
         else:
-            rule = deepcopy(self.settings['rules'][r])
+            rule = deepcopy(self.settings["rules"][r])
             self.rule_window = RuleEditWindow()
             self.rule_window.load_rule(rule)
             if self.rule_window.exec():
-                self.settings['rules'][r] = self.rule_window.rule
+                self.settings["rules"][r] = self.rule_window.rule
         save_settings(self.settings)
         self.load_rules()
 
@@ -261,26 +296,44 @@ class RulesWindow(QMainWindow):
         del_indexes = [r.row() for r in self.ui.rulesTable.selectedIndexes()]
 
         if del_indexes:
-            del_names = [r['name'] for r in self.settings['rules']
-                         if self.settings['rules'].index(r) in del_indexes]
+            del_names = [
+                r["name"]
+                for r in self.settings["rules"]
+                if self.settings["rules"].index(r) in del_indexes
+            ]
 
-            reply = QMessageBox.question(self, "Warning",
-                                         "Are you sure you want to delete selected rules:\n" +
-                                         "\n".join(del_names)+"\n?",
-                                         QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.question(
+                self,
+                "Warning",
+                "Are you sure you want to delete selected rules:\n"
+                + "\n".join(del_names)
+                + "\n?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
             if reply == QMessageBox.Yes:
                 for ind in sorted(del_indexes, reverse=True):
-                    del self.settings['rules'][ind]
+                    del self.settings["rules"][ind]
                     self.ui.rulesTable.removeRow(ind)
 
-                self.ui.rulesTable.setRangeSelected(QTableWidgetSelectionRange(
-                    0, 0, self.ui.rulesTable.rowCount()-1, self.ui.rulesTable.columnCount()-1), False)
+                self.ui.rulesTable.setRangeSelected(
+                    QTableWidgetSelectionRange(
+                        0,
+                        0,
+                        self.ui.rulesTable.rowCount() - 1,
+                        self.ui.rulesTable.columnCount() - 1,
+                    ),
+                    False,
+                )
 
     def apply_rule(self):
         """Applies the selected rule."""
-        rule = deepcopy(
-            self.settings['rules'][self.ui.rulesTable.selectedIndexes()[0].row()])
-        rule['enabled'] = True
+        selected = self.ui.rulesTable.selectedIndexes()
+        if not selected:
+            QMessageBox.warning(self, "No rule selected", "Please select a rule first.")
+            return
+
+        rule = deepcopy(self.settings["rules"][selected[0].row()])
+        rule["enabled"] = True
         report, affected = apply_rule(rule)
 
         msgBox = QDialog(self)
@@ -290,7 +343,8 @@ class RulesWindow(QMainWindow):
 
         if affected:
             msgBox.ui.label.setText(
-                str(len(affected)) + " file(s) affected by this rule:")
+                str(len(affected)) + " file(s) affected by this rule:"
+            )
             msgBox.ui.listWidget.addItems(affected)
         else:
             msgBox.ui.listWidget.setVisible(False)
@@ -301,20 +355,23 @@ class RulesWindow(QMainWindow):
         """Loads settings (including rules) from the store and populates the rules table."""
         self.settings = load_settings()
 
-        rules = [(int(r['id']), r) for r in self.settings['rules'] if 'id' in r]
+        rules = [(int(r["id"]), r) for r in self.settings["rules"] if "id" in r]
         rules.sort(key=lambda y: y[0])
 
         self.ui.rulesTable.setRowCount(len(rules))
         for i, (_, rule) in enumerate(rules):
-            self.ui.rulesTable.setItem(i, 0, QTableWidgetItem(rule['name']))
-            self.ui.rulesTable.setItem(i, 1, QTableWidgetItem("Enabled" if rule['enabled'] else "Disabled"))
-            self.ui.rulesTable.setItem(i, 2, QTableWidgetItem(rule['action']))
-            self.ui.rulesTable.setItem(i, 3, QTableWidgetItem(','.join(rule['folders'])))
+            self.ui.rulesTable.setItem(i, 0, QTableWidgetItem(rule["name"]))
+            self.ui.rulesTable.setItem(
+                i, 1, QTableWidgetItem("Enabled" if rule["enabled"] else "Disabled")
+            )
+            self.ui.rulesTable.setItem(i, 2, QTableWidgetItem(rule["action"]))
+            self.ui.rulesTable.setItem(
+                i, 3, QTableWidgetItem(",".join(rule["folders"]))
+            )
 
         self.ui.rulesTable.setColumnWidth(0, 200)
         self.ui.rulesTable.setColumnWidth(1, 80)
         self.ui.rulesTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-
 
     def create_actions(self):
         """Creates the actions for the tray icon menu."""
@@ -367,35 +424,39 @@ class RulesWindow(QMainWindow):
                 QSystemTrayIcon.Information,
                 15000,
             )
-        
+
         self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
+
 
 class service_signals(QObject):
     signal1 = Signal(str, list)
 
+
 class declutter_service(QThread):
     """A QThread subclass for running DeClutter rules in the background."""
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.signals = service_signals()
         self.signals.signal1.connect(parent.show_tray_message)
         self.starting_seconds = time()
-        
+
     def run(self):
         # TBD: Add more detailed logging for rule processing
         details = []
         report, details = apply_all_rules(load_settings())
         msg = ""
         for key in report.keys():
-            msg += key + ": " + str(report[key]) + \
-                "\n" if report[key] > 0 else ""
+            msg += key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""
         if len(msg) > 0:
             msg = "Processed files and folders:\n" + msg
         self.signals.signal1.emit(msg, details)
 
+
 class new_version_checker(QThread):
     """A QThread subclass for checking for new versions of DeClutter."""
+
     version = Signal(str)
 
     def __init__(self, parent=None):
@@ -403,26 +464,31 @@ class new_version_checker(QThread):
 
     def run(self):
         try:
-            response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
+            response = requests.get(
+                "https://api.github.com/repos/midnightdim/declutter/releases/latest"
+            )
             if response.status_code == 200:
                 latest_version = response.json()["tag_name"]
                 self.version.emit(latest_version.strip())
         except Exception as e:
-            logging.exception(f'exception {e}')
+            logging.exception(f"exception {e}")
+
 
 def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
     QApplication.setQuitOnLastWindowClosed(False)
     from declutter.store import init_store
+
     init_store()
     logging.info("DeClutter started")
     app.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
 
     window = RulesWindow()
     window.show()
-    window.setWindowTitle('DeClutter (beta) ' + VERSION)
+    window.setWindowTitle("DeClutter (beta) " + VERSION)
     sys.exit(app.exec())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
