@@ -1,6 +1,7 @@
 from cx_Freeze import setup, Executable
 import sys
 import os
+from declutter.config import VERSION as APP_VERSION
 
 build_exe_options = {
     "excludes": [
@@ -31,7 +32,7 @@ build_exe_options = {
 
 setup(
     name="DeClutter",
-    version="1.31.1",
+    version=APP_VERSION,
     description="DeClutter: file organizer",
     options={"build_exe": build_exe_options},
     executables=[

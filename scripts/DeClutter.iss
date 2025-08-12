@@ -1,10 +1,10 @@
 #define MyAppName "DeClutter"
-#define MyAppVersion "1.13.2"
+#define MyAppVersion GetVersionNumbersString(MyAppName + ".exe")
 
 [Setup]
 AppName={#MyAppName}
-AppPublisher=Dmitry Beloglazov
 AppVersion={#MyAppVersion}
+AppPublisher=Dmitry Beloglazov
 WizardStyle=modern
 DefaultDirName={autopf}\{#MyAppName}
 ; Since no icons will be created in "{group}", we don't need the wizard
