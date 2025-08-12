@@ -2,8 +2,6 @@
 
 DeClutter is a desktop application built on PySide6 that helps you manage and organize your files. It provides a set of tools to automate file processing and a simple file manager with tagging capabilities.
 
-![DeClutter Screenshot](https://i.imgur.com/your-screenshot.png) <!-- Replace with a real screenshot -->
-
 ## Features
 
 *   **Automated File Processing:** Create rules to automatically process your files.
