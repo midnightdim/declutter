@@ -45,6 +45,17 @@ class SettingsDialog(QDialog):
 
         self.ui.styleComboBox.addItems(result)
         self.ui.styleComboBox.textActivated.connect(self.change_style)
+        
+        current_palette = self.settings.get("palette", "System/Default")
+        index = self.ui.paletteComboBox.findText(current_palette)
+        if index >= 0:
+            self.ui.paletteComboBox.setCurrentIndex(index)
+
+        # Enable palette selection only for Fusion style
+        self.ui.paletteComboBox.setEnabled(self.settings.get("style", "") == "Fusion")
+        self.ui.styleComboBox.textActivated.connect(
+            lambda name: self.ui.paletteComboBox.setEnabled(name == "Fusion")
+        )
 
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(
             type(c))]  # TBD vN this is not very safe
@@ -126,6 +137,7 @@ class SettingsDialog(QDialog):
         self.settings['rule_exec_interval'] = float(
             self.ui.ruleExecIntervalEdit.text())*60
         self.settings['style'] = self.ui.styleComboBox.currentText()
+        self.settings['palette'] = self.ui.paletteComboBox.currentText()
 
         self.settings['file_types'] = {}
         # TBD add validation

@@ -3,10 +3,9 @@ import os
 from copy import deepcopy
 from time import time
 import logging
-from datetime import datetime
 import webbrowser
 import requests
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QIcon, QAction, QPalette, QColor
 from PySide6.QtWidgets import (
     QApplication,
     QSystemTrayIcon,
@@ -19,7 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStyleFactory,
 )
-from PySide6.QtCore import QObject, QThread, Signal, Slot, QTimer
+from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QTimer
 from src.rule_edit_window import RuleEditWindow
 from src.settings_dialog import SettingsDialog
 from src.ui.ui_rules_window import Ui_rulesWindow
@@ -52,7 +51,10 @@ class RulesWindow(QMainWindow):
         self.trayIcon.show()
         self.settings = load_settings()
         if "style" in self.settings.keys():
-            self.change_style(self.settings["style"])
+            # Apply style and palette together
+            style = self.settings.get("style", "Fusion")
+            palette = self.settings.get("palette", "System/Default")
+            apply_style_and_palette(QApplication.instance(), style, palette)
 
         self.ui.addRule.clicked.connect(self.add_rule)
         self.load_rules()
@@ -209,6 +211,11 @@ class RulesWindow(QMainWindow):
                 + " minute(s)"
             )
             self.timer.setInterval(int(self.settings["rule_exec_interval"] * 1000))
+
+            # Apply style and palette after settings change
+            style = self.settings.get("style", "Fusion")
+            palette = self.settings.get("palette", "System/Default")
+            apply_style_and_palette(QApplication.instance(), style, palette)
 
     def change_style(self, style_name):
         """Changes the application's style."""
@@ -427,6 +434,43 @@ class RulesWindow(QMainWindow):
 
         self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
+
+def make_fusion_light_palette() -> QPalette:
+    p = QPalette()
+    # Use Qt default-derived light palette (optionally tweak)
+    # Keeping it minimal to avoid unintended overrides.
+    return p  # default is light
+
+def make_fusion_dark_palette() -> QPalette:
+    p = QPalette()
+    # Common dark Fusion palette roles (Qt docs and community examples)
+    p.setColor(QPalette.Window, QColor(53, 53, 53))
+    p.setColor(QPalette.WindowText, Qt.white)
+    p.setColor(QPalette.Base, QColor(35, 35, 35))
+    p.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    p.setColor(QPalette.ToolTipBase, Qt.white)
+    p.setColor(QPalette.ToolTipText, Qt.white)
+    p.setColor(QPalette.Text, Qt.white)
+    p.setColor(QPalette.Button, QColor(53, 53, 53))
+    p.setColor(QPalette.ButtonText, Qt.white)
+    p.setColor(QPalette.BrightText, Qt.red)
+    p.setColor(QPalette.Link, QColor(42, 130, 218))
+    p.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    p.setColor(QPalette.HighlightedText, Qt.black)
+    return p
+
+def apply_style_and_palette(app: QApplication, style_name: str, palette_name: str):
+    QApplication.setStyle(QStyleFactory.create(style_name))
+    if style_name == "Fusion":
+        if palette_name == "Fusion Dark":
+            app.setPalette(make_fusion_dark_palette())
+        elif palette_name == "Fusion Light":
+            app.setPalette(make_fusion_light_palette())
+        else:
+            app.setPalette(QPalette())  # System/default
+    else:
+        # Non-Fusion: reset to default so native theming takes over
+        app.setPalette(QPalette())
 
 
 class service_signals(QObject):

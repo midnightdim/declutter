@@ -1,34 +1,40 @@
 # DeClutter
 
-DeClutter is a desktop application built on PySide6. 
-It has 2 main features:
-- automated files processing based on rules
-- tagger: a simple file manager that allows tagging files and folders with user defined tags
+DeClutter is a desktop application built on PySide6 that helps you manage and organize your files. It provides a set of tools to automate file processing and a simple file manager with tagging capabilities.
 
-DeClutter doesn't magically clean up your file mess, but it provides a set of tools that can be incorporated into your file management and archiving policies.
+![DeClutter Screenshot](https://i.imgur.com/your-screenshot.png) <!-- Replace with a real screenshot -->
 
-Some common use cases are:
-1. automated deletion of old files in Downloads folder
-1. quick navigation by tags - it's much more intuitive than navigation by folder tree because we don't normally think in tree structures
-1. you can organize files in your "Downloads" folder by automatically moving them to subfolders based on their type, date, etc.
-1. you can set the "expiration time" for files (using tags) and DeClutter will delete them automatically when they expire
-1. if you work on a project in a system that saves new versions with incremental numbers (like FL Studio or Reaper) you can automatically move older versions of project files to a subfolder, keeping only N recent versions 
+## Features
 
-The main window allows you to manage rules and open the tagger.
-Each rule consists of:
-- sources: which folders should be processed (you can also run rules across all tagged files)
-- conditions: allows you to filter out files and folders based on file name mask, size, date, tags and type
-- action: defines what DeClutter will do with the files that fall under the conditions - you can delete, trash, copy, move, rename, tag files (and more!)
+*   **Automated File Processing:** Create rules to automatically process your files.
+    *   **Sources:** Specify which folders or tagged files to process.
+    *   **Conditions:** Filter files based on name, size, date, tags, and type.
+    *   **Actions:** Delete, trash, copy, move, rename, and tag files.
+*   **File Tagger:** A simple file manager with tagging capabilities.
+    *   **Tag files and folders:** Organize your files with user-defined tags.
+    *   **Tag groups:** Create groups of tags where only one tag from the group can be applied to a file.
+    *   **Filter by tags:** Easily find files with specific tags.
+    *   **Media preview:** Preview audio, video, and image files directly in the tagger.
+*   **Drag and Drop:** Drag and drop files between DeClutter and your file explorer.
 
-Tagger is a simple file browser where you can:
-- tag files
-- view all tagged files
-- filter files (using the same mechanism as rule conditions)
-- preview media files
-There are also tag groups and you can setup a group so that only one tag from this group can be applied to a file. This is useful when you want to define a "parameter" that can have only one value - for example, file rating, file expiration time, etc.
+## Use Cases
 
-Tagger supports files drag-n-drop with Windows Explorer and between tagger windows (if you drag _from_ a tagger window this also preserves tags):
-- if you drag to Windows Explorer you can use Shift key to move the file (by default it's going to be copied)
-- if you drag to another tagger window you can use Ctrl key to copy the file (by default it's going to be moved)
+*   Automatically delete old files in your "Downloads" folder.
+*   Organize your "Downloads" folder by automatically moving files to subfolders based on their type, date, or other criteria.
+*   Set an "expiration time" for files using tags, and DeClutter will automatically delete them when they expire.
+*   If you work on a project that saves new versions with incremental numbers (like FL Studio or Reaper), you can automatically move older versions of project files to a subfolder, keeping only the N most recent versions.
+*   Quickly navigate your files using tags, which can be more intuitive than navigating a folder tree.
 
-DeClutter is primarily tested on Windows. It runs on MacOS, but hasn't been fully ported yet.
+## Technical Details
+
+*   **Framework:** PySide6
+*   **Database:** SQLite
+*   **Platform:** Primarily tested on Windows, but also runs on macOS (with some limitations).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue on GitHub.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
