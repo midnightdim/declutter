@@ -1,0 +1,19 @@
+workflows:
+  macos-build:
+    name: macOS Build
+    instance_type: mac_mini_m1
+    environment:
+      python: 3.11
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -x
+          brew install python@3.11
+          pip3 install -r requirements.txt
+          pip3 install pyinstaller
+      - name: Build the application
+        script: |
+          set -x
+          sh scripts/build_macos.sh
+    artifacts:
+      - build/macos/*.dmg
