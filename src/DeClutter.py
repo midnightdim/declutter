@@ -123,13 +123,19 @@ class RulesWindow(QMainWindow):
                     )
                     if reply == QMessageBox.Yes:
                         try:
-                            webbrowser.open(
-                                "https://github.com/midnightdim/declutter/releases/latest"
-                            )
+                            # Get the download URL from the latest release
+                            response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
+                            if response.status_code == 200:
+                                release_data = response.json()
+                                # Find the Windows executable asset
+                                for asset in release_data.get('assets', []):
+                                    if asset['name'].endswith('.exe') and 'Windows' in asset['name']:
+                                        webbrowser.open(asset['browser_download_url'])
+                                        return
+                            # Fallback to releases page if no specific asset found
+                            webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
                         except Exception as e:
-                            logging.exception(f"exception {e}")
-            except ImportError:
-                logging.error("packaging library not available for version comparison")
+                            logging.exception(f'exception {e}')
             except Exception as e:
                 logging.exception(f"Version comparison failed: {e}")
 

@@ -1,5 +1,12 @@
 #define MyAppName "DeClutter"
-#define MyAppVersion GetVersionNumbersString(MyAppName + ".exe")
+#define RawVersion GetVersionNumbersString("DeClutter.exe")
+
+; Strip trailing `.0` if it exists
+#if Copy(RawVersion, Len(RawVersion)-1, 2) == ".0"
+  #define MyAppVersion Copy(RawVersion, 1, Len(RawVersion)-2)
+#else
+  #define MyAppVersion RawVersion
+#endif
 
 [Setup]
 AppName={#MyAppName}
