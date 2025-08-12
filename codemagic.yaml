@@ -2,8 +2,7 @@ workflows:
   macos-build:
     name: macOS Build
     instance_type: mac_mini_m1
-    environment:
-      python: 3.11
+    python: 3.11
     scripts:
       - name: Install dependencies
         script: |
