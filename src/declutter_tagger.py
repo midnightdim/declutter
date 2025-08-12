@@ -6,11 +6,35 @@ from pathlib import Path
 from send2trash import send2trash
 from PySide6.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QAction
 from PySide6.QtWidgets import (
-    QWidget, QApplication, QMainWindow, QFileSystemModel, QFileIconProvider, QMenu, QAbstractItemView, QFrame, QLineEdit, QMessageBox,
-    QWidgetAction, QHBoxLayout, QLabel, QCheckBox, QFileDialog, QComboBox, QInputDialog
+    QWidget,
+    QApplication,
+    QMainWindow,
+    QFileSystemModel,
+    QFileIconProvider,
+    QMenu,
+    QAbstractItemView,
+    QFrame,
+    QLineEdit,
+    QMessageBox,
+    QWidgetAction,
+    QHBoxLayout,
+    QLabel,
+    QCheckBox,
+    QFileDialog,
+    QComboBox,
+    QInputDialog,
 )
 from PySide6.QtCore import (
-    QDir, Qt, QModelIndex, QSortFilterProxyModel, QUrl, QRect, QSize, QEvent, QMimeData, QMimeDatabase
+    QDir,
+    Qt,
+    QModelIndex,
+    QSortFilterProxyModel,
+    QUrl,
+    QRect,
+    QSize,
+    QEvent,
+    QMimeData,
+    QMimeDatabase,
 )
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
@@ -20,12 +44,19 @@ from declutter.config import ALL_TAGGED_TEXT
 from declutter.store import load_settings, save_settings
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import (
-    tag_get_color, set_tags, get_tags, get_tags_by_group_ids, add_tag, remove_tags, remove_all_tags, 
-    clear_tags_cache, get_all_tags_by_group_id, remove_tag, get_tags_and_groups
+    tag_get_color,
+    set_tags,
+    get_tags,
+    get_tags_by_group_ids,
+    add_tag,
+    remove_tags,
+    remove_all_tags,
+    clear_tags_cache,
+    get_all_tags_by_group_id,
+    remove_tag,
+    get_tags_and_groups,
 )
-from declutter.file_utils import (
-    get_file_type
-)
+from declutter.file_utils import get_file_type
 
 from src.file_system_model_lite import FileSystemModelLite
 from src.condition_dialog import ConditionDialog
@@ -44,9 +75,11 @@ class TaggerWindow(QMainWindow):
         self.videoWidget = QVideoWidget()
         self.ui.playerLayout.addWidget(self.videoWidget)
         self.player.setVideoOutput(self.videoWidget)
-        
+
         # Connect media player signals to slots
-        self.ui.mediaVolumeDial.valueChanged.connect(lambda v: self._audio_output.setVolume(v / 100.0))
+        self.ui.mediaVolumeDial.valueChanged.connect(
+            lambda v: self._audio_output.setVolume(v / 100.0)
+        )
         self.ui.mediaPlayButton.clicked.connect(self.play_media)
         self.player.durationChanged.connect(self.change_duration)
         self.player.positionChanged.connect(self.change_position)
@@ -73,9 +106,9 @@ class TaggerWindow(QMainWindow):
         self.ui.filterRemoveButton.clicked.connect(self.delete_condition)
         self.ui.filterClearButton.clicked.connect(self.clear_conditions)
         self.ui.filterConditionSwitchCombo.currentIndexChanged.connect(
-            self.update_treeview)
-        self.ui.conditionListWidget.itemDoubleClicked.connect(
-            self.edit_condition)
+            self.update_treeview
+        )
+        self.ui.conditionListWidget.itemDoubleClicked.connect(self.edit_condition)
 
         # Configure tree view header and selection
         self.ui.treeView.header().resizeSection(0, 350)
@@ -91,27 +124,29 @@ class TaggerWindow(QMainWindow):
         self.ui.pathEdit.returnPressed.connect(self.change_path)
         self.ui.browseButton.clicked.connect(self.choose_path)
         self.ui.sourceComboBox.currentIndexChanged.connect(self.update_ui)
-        
+
         # Populate initial UI elements
         self.populate()  # TBD can't it be just a part of init()?
 
     def in_tagged_mode(self):
-        return self.ui.sourceComboBox.currentText() == 'Tagged'
+        return self.ui.sourceComboBox.currentText() == "Tagged"
 
     def new_window(self):
         """Opens a new TaggerWindow instance."""
         tagger = TaggerWindow(self)
         tagger.show()
-        tagger.move(self.x()+30, self.y()+30)
+        tagger.move(self.x() + 30, self.y() + 30)
 
     def update_treeview(self):
         """Updates the file tree view based on the selected source and filter conditions."""
         mode = self.ui.sourceComboBox.currentText()
         self.player.stop()
-        self.rule['condition_switch'] = self.ui.filterConditionSwitchCombo.currentText()
-        self.ui.treeView.setEditTriggers(QAbstractItemView.EditKeyPressed | QAbstractItemView.SelectedClicked)
-        if mode == 'Tagged':
-            self.rule['folders'] = [ALL_TAGGED_TEXT]
+        self.rule["condition_switch"] = self.ui.filterConditionSwitchCombo.currentText()
+        self.ui.treeView.setEditTriggers(
+            QAbstractItemView.EditKeyPressed | QAbstractItemView.SelectedClicked
+        )
+        if mode == "Tagged":
+            self.rule["folders"] = [ALL_TAGGED_TEXT]
             paths = get_files_affected_by_rule(self.rule, True)
             self.model = FileSystemModelLite(paths, self)
             self.sorting_model = QSortFilterProxyModel(self)
@@ -121,90 +156,126 @@ class TaggerWindow(QMainWindow):
             self.ui.treeView.setModel(self.sorting_model)
             self.ui.treeView.setSortingEnabled(True)
             self.ui.treeView.expandAll()
-            self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
+            self.ui.treeView.selectionModel().selectionChanged.connect(
+                self.update_status
+            )
         else:
             self.model = TagFSModel()
             self.model.setReadOnly(False)
-            path = self.settings['current_folder'] if 'current_folder' in self.settings.keys(
-            ) and self.settings['current_folder'] != '' else normpath(QDir.homePath())
+            path = (
+                self.settings["current_folder"]
+                if "current_folder" in self.settings.keys()
+                and self.settings["current_folder"] != ""
+                else normpath(QDir.homePath())
+            )
             self.model.setRootPath(path)
             self.model.setFilter(QDir.NoDot | QDir.AllEntries | QDir.Hidden)
             self.model.sort(0, Qt.SortOrder.AscendingOrder)
             self.sorting_model = SortingModel(self)
             self.sorting_model.setSourceModel(self.model)
             self.sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
-            self.rule['folders'] = [normpath(self.ui.pathEdit.text())]
+            self.rule["folders"] = [normpath(self.ui.pathEdit.text())]
             self.sorting_model.recalc_filtered_paths(self.rule)
             self.ui.treeView.setModel(self.sorting_model)
-            self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(path, 0)))
+            self.ui.treeView.setRootIndex(
+                self.sorting_model.mapFromSource(self.model.index(path, 0))
+            )
             self.model.fileRenamed.connect(self.tag_renamed_file)
             self.model.setIconProvider(QFileIconProvider())
             self.ui.treeView.header().setSortIndicator(0, Qt.AscendingOrder)
             self.ui.treeView.setSortingEnabled(True)
             self.ui.treeView.setItemsExpandable(False)
             self.ui.treeView.setRootIsDecorated(False)
-            self.ui.treeView.selectionModel().selectionChanged.connect(self.update_status)
+            self.ui.treeView.selectionModel().selectionChanged.connect(
+                self.update_status
+            )
             self.ui.treeView.setDragDropMode(QAbstractItemView.DragDrop)
             self.ui.treeView.setAcceptDrops(True)
             self.ui.treeView.setDefaultDropAction(Qt.MoveAction)
 
     def tag_renamed_file(self, path, oldName, newName):
-        """Updates tags when a file is renamed."""
-        set_tags(os.path.join(path, newName),
-                 get_tags(os.path.join(path, oldName)))
-        remove_all_tags(os.path.join(path, oldName))
+        """Updates tags when a file is renamed or moved within the same watched directory."""
+        try:
+            old_path = os.path.normpath(os.path.join(path, oldName))
+            new_path = os.path.normpath(os.path.join(path, newName))
+            set_tags(new_path, get_tags(old_path))
+            remove_all_tags(old_path)
+        except Exception:
+            pass
 
     def add_condition(self):
         """Opens a dialog to add a new condition to the rule."""
         self.condition_window = ConditionDialog()
         self.condition_window.exec()
         if self.condition_window.condition:
-            self.rule['conditions'].append(self.condition_window.condition)
+            self.rule["conditions"].append(self.condition_window.condition)
             self.refresh_conditions()
 
     def edit_condition(self, cond):
         """Opens a dialog to edit an existing condition."""
         self.condition_window = ConditionDialog()
         self.condition_window.loadCondition(
-            self.rule['conditions'][self.ui.conditionListWidget.indexFromItem(cond).row()])
+            self.rule["conditions"][
+                self.ui.conditionListWidget.indexFromItem(cond).row()
+            ]
+        )
         self.condition_window.exec_()
         self.refresh_conditions()
 
     def delete_condition(self):
         """Deletes the selected condition from the rule."""
-        del self.rule['conditions'][self.ui.conditionListWidget.selectedIndexes()[
-            0].row()]
+        del self.rule["conditions"][
+            self.ui.conditionListWidget.selectedIndexes()[0].row()
+        ]
         self.refresh_conditions()
 
     def clear_conditions(self):
         """Clears all conditions from the rule."""
-        self.rule['conditions'] = []
+        self.rule["conditions"] = []
         self.refresh_conditions()
 
     def refresh_conditions(self):
         """Refreshes the list of conditions displayed in the UI."""
         conds = []
 
-        for c in self.rule['conditions']:
-            if c['type'] == 'tags' and c['tag_switch'] != 'tags in group':
-                conds.append('Has ' + c['tag_switch'] + (' of these tags: ' + ', '.join(
-                    c['tags']) if c['tag_switch'] not in ('no tags', 'any tags') else ''))
-            elif c['type'] == 'tags' and c['tag_switch'] == 'tags in group':
-                conds.append('Has tags in group: '+c['tag_group'])
-            elif c['type'] == 'date':
+        for c in self.rule["conditions"]:
+            if c["type"] == "tags" and c["tag_switch"] != "tags in group":
                 conds.append(
-                    'Age is ' + c['age_switch'] + ' ' + str(c['age']) + ' ' + c['age_units'])
-            elif c['type'] == 'name':
-                if not 'name_switch' in c.keys():
-                    c['name_switch'] = 'matches'
+                    "Has "
+                    + c["tag_switch"]
+                    + (
+                        " of these tags: " + ", ".join(c["tags"])
+                        if c["tag_switch"] not in ("no tags", "any tags")
+                        else ""
+                    )
+                )
+            elif c["type"] == "tags" and c["tag_switch"] == "tags in group":
+                conds.append("Has tags in group: " + c["tag_group"])
+            elif c["type"] == "date":
                 conds.append(
-                    'Name ' + c['name_switch'] + ' ' + str(c['filemask']))
-            elif c['type'] == 'size':
+                    "Age is "
+                    + c["age_switch"]
+                    + " "
+                    + str(c["age"])
+                    + " "
+                    + c["age_units"]
+                )
+            elif c["type"] == "name":
+                if not "name_switch" in c.keys():
+                    c["name_switch"] = "matches"
+                conds.append("Name " + c["name_switch"] + " " + str(c["filemask"]))
+            elif c["type"] == "size":
                 conds.append(
-                    'File size is ' + c['size_switch'] + ' ' + str(c['size']) + c['size_units'])
-            elif c['type'] == 'type':
-                conds.append('File type ' +
-                             c['file_type_switch'] + ' ' + c['file_type'])
+                    "File size is "
+                    + c["size_switch"]
+                    + " "
+                    + str(c["size"])
+                    + c["size_units"]
+                )
+            elif c["type"] == "type":
+                conds.append(
+                    "File type " + c["file_type_switch"] + " " + c["file_type"]
+                )
 
         self.ui.conditionListWidget.clear()
         self.ui.conditionListWidget.addItems(conds)
@@ -217,6 +288,44 @@ class TaggerWindow(QMainWindow):
     def eventFilter(self, source, event):
         """Filters events for specific UI elements to handle custom interactions."""
         if source == self.ui.treeView:
+            if event.type() == QEvent.Drop:
+                mime = event.mimeData()
+                index_at_pos = (
+                    self.ui.treeView.indexAt(event.position().toPoint())
+                    if hasattr(event, "position")
+                    else self.ui.treeView.indexAt(event.pos())
+                )
+                target_index = (
+                    index_at_pos
+                    if index_at_pos.isValid()
+                    else self.ui.treeView.rootIndex()
+                )
+                src_target_index = (
+                    self.sorting_model.mapToSource(target_index)
+                    if self.sorting_model
+                    else target_index
+                )
+
+                # Resolve action from keyboard modifiers per Qt conventions:
+                mods = event.keyboardModifiers()
+                if mods & Qt.ControlModifier:
+                    action = Qt.CopyAction  # Ctrl forces copy
+                elif mods & Qt.ShiftModifier:
+                    action = Qt.MoveAction  # Shift forces move
+                else:
+                    # Fall back to the view's defaultDropAction (commonly MoveAction as you set)
+                    action = self.ui.treeView.defaultDropAction()
+
+                if hasattr(self.model, "dropMimeData"):
+                    acted = self.model.dropMimeData(
+                        mime, action, -1, -1, src_target_index
+                    )
+                    if acted:
+                        event.acceptProposedAction()
+                        self.update_treeview()
+                        self.update_tag_checkboxes()
+                        return True
+                return False
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_F2:
                     self.player.stop()
@@ -236,103 +345,205 @@ class TaggerWindow(QMainWindow):
                             "Delete files",
                             f"Permanently delete {count} item(s)? This cannot be undone.",
                             QMessageBox.Yes | QMessageBox.No,
-                            QMessageBox.No
+                            QMessageBox.No,
                         )
                         if reply != QMessageBox.Yes:
                             return True
 
                         for index in indexes:
-                            src_index = self.sorting_model.mapToSource(index) if self.sorting_model else index
+                            src_index = (
+                                self.sorting_model.mapToSource(index)
+                                if self.sorting_model
+                                else index
+                            )
                             # capture path for tag cleanup before removing the row
                             try:
                                 path = os.path.normpath(self.model.filePath(src_index))
                             except Exception:
-                                path = ''
+                                path = ""
                             self.model.remove(src_index)
                             if path:
                                 remove_all_tags(path)
-                        self.ui.statusbar.showMessage(str(len(indexes)) + " item(s) deleted")
+                        self.ui.statusbar.showMessage(
+                            str(len(indexes)) + " item(s) deleted"
+                        )
                     else:
                         for index in indexes:
-                            src_index = self.sorting_model.mapToSource(index) if self.sorting_model else index
+                            src_index = (
+                                self.sorting_model.mapToSource(index)
+                                if self.sorting_model
+                                else index
+                            )
                             try:
                                 path = os.path.normpath(self.model.filePath(src_index))
                             except Exception:
-                                path = ''
+                                path = ""
                             if path:
                                 try:
                                     send2trash(path)
                                 except Exception:
                                     pass
                                 remove_all_tags(path)
-                        self.ui.statusbar.showMessage(str(len(indexes)) + " item(s) sent to trash")
+                        self.ui.statusbar.showMessage(
+                            str(len(indexes)) + " item(s) sent to trash"
+                        )
                     return True
 
-                elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+                elif (
+                    event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier
+                ):
+                    # Collect selected rows and store as URLs in clipboard
                     indexes = self.ui.treeView.selectionModel().selectedRows()
-                    urls = [QUrl(self.model.filePath(self.sorting_model.mapToSource(
-                        index)) if self.sorting_model else self.model.filePath(index)) for index in indexes]
+                    urls = [
+                        QUrl(
+                            self.model.filePath(self.sorting_model.mapToSource(index))
+                            if self.sorting_model
+                            else self.model.filePath(index)
+                        )
+                        for index in indexes
+                    ]
                     mime_data = QMimeData()
                     mime_data.setUrls(urls)
+                    QApplication.clipboard().setMimeData(mime_data)
+                    return True
+                elif (
+                    event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier
+                ):
                     clipboard = QApplication.clipboard()
-                    clipboard.setMimeData(mime_data)
-                elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
-                    clipboard = QApplication.clipboard()
-                    for url in clipboard.mimeData().urls():
-                        # TBD: Implement paste functionality
-                        pass
-                return False
-            if event.type() == QEvent.Drop:
-                for url in event.mimeData().urls():
-                    # TBD: Implement drop functionality
-                    pass
+                    clip_mime = clipboard.mimeData()
+
+                    paste_urls = []
+                    if clip_mime:
+                        if clip_mime.hasUrls():
+                            print("Pasting URLs:", clip_mime.urls())
+                            paste_urls = clip_mime.urls()
+                        if not paste_urls and clip_mime.hasText():
+                            raw = clip_mime.text().strip()
+                            if raw:
+                                for part in raw.splitlines():
+                                    part = part.strip()
+                                    if not part:
+                                        continue
+                                    u = QUrl(part)
+                                    if u.isLocalFile() or u.scheme() == "file":
+                                        paste_urls.append(u)
+                                    else:
+                                        # Coerce absolute paths to file URLs
+                                        if os.path.isabs(part):
+                                            paste_urls.append(QUrl.fromLocalFile(part))
+                    if not paste_urls:
+                        return True  # nothing to paste
+
+                    # Build a fresh QMimeData with guaranteed URLs
+                    mime_for_drop = QMimeData()
+                    mime_for_drop.setUrls(paste_urls)
+                    # Preserve Explorer hint if present
+                    if clip_mime and "Preferred DropEffect" in clip_mime.formats():
+                        mime_for_drop.setData(
+                            "Preferred DropEffect",
+                            clip_mime.data("Preferred DropEffect"),
+                        )
+
+                    # Resolve action (default copy; Shift=move)
+                    mods = QApplication.keyboardModifiers()
+                    action = (
+                        Qt.CopyAction
+                        if not (mods & Qt.ShiftModifier)
+                        else Qt.MoveAction
+                    )
+
+                    target_index = self.ui.treeView.currentIndex()
+                    if not target_index.isValid():
+                        target_index = self.ui.treeView.rootIndex()
+                    src_target_index = (
+                        self.sorting_model.mapToSource(target_index)
+                        if self.sorting_model
+                        else target_index
+                    )
+
+                    if hasattr(self.model, "dropMimeData"):
+                        if self.model.dropMimeData(
+                            mime_for_drop, action, -1, -1, src_target_index
+                        ):
+                            self.update_treeview()
+                            self.update_tag_checkboxes()
+                    return True
+
         else:
             if event.type() == QEvent.MouseButtonPress:
                 self.play_media()
             if event.type() == QEvent.Wheel:
-                if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                if (
+                    self.player.playbackState()
+                    == QMediaPlayer.PlaybackState.PlayingState
+                ):
                     delta = event.angleDelta().y() // 120
-                    self.ui.mediaVolumeDial.setValue(self.ui.mediaVolumeDial.value() + delta * 5)
+                    self.ui.mediaVolumeDial.setValue(
+                        self.ui.mediaVolumeDial.value() + delta * 5
+                    )
                     return True
         return super(TaggerWindow, self).eventFilter(source, event)
-    
+
         # aux function, required for smooth navigation using slider
+
     def action_trig(self, action):
         if action == 1:
             self.seek_position(self.ui.mediaPositionSlider.value())
 
-# Begin Media Player section
+    # Begin Media Player section
     def media_update_play_button(self, state):
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/media-pause.svg" if state ==
-                      QMediaPlayer.PlaybackState.PlayingState else u":/images/icons/media-play.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(
+            (
+                ":/images/icons/media-pause.svg"
+                if state == QMediaPlayer.PlaybackState.PlayingState
+                else ":/images/icons/media-play.svg"
+            ),
+            QSize(),
+            QIcon.Normal,
+            QIcon.Off,
+        )
         self.ui.mediaPlayButton.setIcon(icon1)
 
     def play_media(self):
-        file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex(
-        )))) if self.sorting_model else QUrl.fromLocalFile(self.model.filePath(self.ui.treeView.currentIndex()))
-        
-        if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and self.player.source() == file_url:
+        file_url = (
+            QUrl.fromLocalFile(
+                self.model.filePath(
+                    self.sorting_model.mapToSource(self.ui.treeView.currentIndex())
+                )
+            )
+            if self.sorting_model
+            else QUrl.fromLocalFile(
+                self.model.filePath(self.ui.treeView.currentIndex())
+            )
+        )
+
+        if (
+            self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+            and self.player.source() == file_url
+        ):
             self.player.pause()
         elif self.player.source() != file_url:
             self.player.setSource(file_url)
             self.player.play()
-        else: # Same file, but paused or stopped, so play.
+        else:  # Same file, but paused or stopped, so play.
             self.player.play()
 
     def change_position(self, position):
         self.ui.mediaPositionSlider.setValue(position)
-        self.ui.mediaDurationLabel.setText(millis_to_str(
-            position)+" / "+millis_to_str(self.player.duration()))
+        self.ui.mediaDurationLabel.setText(
+            millis_to_str(position) + " / " + millis_to_str(self.player.duration())
+        )
 
     def seek_position(self, position):
         self.player.setPosition(position)
 
     def change_duration(self, duration):
-        self.ui.mediaDurationLabel.setText("0:00 / "+millis_to_str(duration))
+        self.ui.mediaDurationLabel.setText("0:00 / " + millis_to_str(duration))
         self.ui.mediaPositionSlider.setRange(0, duration)
-        self.ui.mediaPositionSlider.setPageStep(int(duration/20))
-# End Media Player section
+        self.ui.mediaPositionSlider.setPageStep(int(duration / 20))
+
+    # End Media Player section
 
     def populate(self):
         self.settings = load_settings()
@@ -340,8 +551,11 @@ class TaggerWindow(QMainWindow):
         self.tag_checkboxes = {}  # checkboxes in tag dock widget
         self.tag_combos = {}  # comboboxes in tag dock widget
         self.filter_tag_checkboxes = {}  # checkboxes in tag filter dock widget
-        self.rule = {'recursive': False, 'action': 'Filter',
-                     'conditions': []}  # filter rule
+        self.rule = {
+            "recursive": False,
+            "action": "Filter",
+            "conditions": [],
+        }  # filter rule
         self.tag_model = QStandardItemModel()
         generate_tag_model(self.tag_model, get_tags_and_groups())
 
@@ -349,8 +563,12 @@ class TaggerWindow(QMainWindow):
         self.ui.recent_menu.aboutToShow.connect(self.update_recent_menu)
         self.ui.recent_menu.triggered.connect(self.open_file_from_recent)
 
-        path = self.settings['current_folder'] if 'current_folder' in self.settings.keys(
-        ) and self.settings['current_folder'] != '' else normpath(QDir.homePath())
+        path = (
+            self.settings["current_folder"]
+            if "current_folder" in self.settings.keys()
+            and self.settings["current_folder"] != ""
+            else normpath(QDir.homePath())
+        )
 
         self.model = TagFSModel()
         self.model.setRootPath(path)
@@ -368,7 +586,8 @@ class TaggerWindow(QMainWindow):
         self.ui.treeView.setModel(self.sorting_model)
 
         self.ui.treeView.setRootIndex(
-            self.sorting_model.mapFromSource(self.model.index(path, 0)))
+            self.sorting_model.mapFromSource(self.model.index(path, 0))
+        )
         self.ui.treeView.header().resizeSection(0, 350)
 
         self.init_tag_checkboxes()
@@ -385,41 +604,42 @@ class TaggerWindow(QMainWindow):
 
         for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
-            if group['name_shown']:
-                self.ui.tagsLayout.addWidget(
-                    QLabel('<b>'+group['name']+'</b>'))
-            if group['widget_type'] == 0:
+            if group["name_shown"]:
+                self.ui.tagsLayout.addWidget(QLabel("<b>" + group["name"] + "</b>"))
+            if group["widget_type"] == 0:
                 for k in range(self.tag_model.item(i).rowCount()):
                     tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
-                    self.tag_checkboxes[tag['name']] = QCheckBox(tag['name'])
-                    self.ui.tagsLayout.addWidget(
-                        self.tag_checkboxes[tag['name']])
-                    self.tag_checkboxes[tag['name']
-                                        ].clicked.connect(self.set_tags)
-                    if tag['color']:
+                    self.tag_checkboxes[tag["name"]] = QCheckBox(tag["name"])
+                    self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag["name"]])
+                    self.tag_checkboxes[tag["name"]].clicked.connect(self.set_tags)
+                    if tag["color"]:
                         color = QColor()
-                        color.setRgba(tag['color'])
-                        self.tag_checkboxes[tag['name']].setPalette(color)
-                        self.tag_checkboxes[tag['name']
-                                            ].setAutoFillBackground(True)
-            elif group['widget_type'] == 1:
-                self.tag_combos[group['id']] = QComboBox(self)
-                self.tag_combos[group['id']].addItems([""]+[self.tag_model.item(i).child(k).data(
-                    Qt.UserRole)['name'] for k in range(self.tag_model.item(i).rowCount())])
-                self.ui.tagsLayout.addWidget(self.tag_combos[group['id']])
-                self.tag_combos[group['id']].currentIndexChanged.connect(
-                    self.set_tags)
+                        color.setRgba(tag["color"])
+                        self.tag_checkboxes[tag["name"]].setPalette(color)
+                        self.tag_checkboxes[tag["name"]].setAutoFillBackground(True)
+            elif group["widget_type"] == 1:
+                self.tag_combos[group["id"]] = QComboBox(self)
+                self.tag_combos[group["id"]].addItems(
+                    [""]
+                    + [
+                        self.tag_model.item(i).child(k).data(Qt.UserRole)["name"]
+                        for k in range(self.tag_model.item(i).rowCount())
+                    ]
+                )
+                self.ui.tagsLayout.addWidget(self.tag_combos[group["id"]])
+                self.tag_combos[group["id"]].currentIndexChanged.connect(self.set_tags)
         self.ui.tagsScrollArea.setWidgetResizable(True)
 
     def update_tag_checkboxes(self):
         """Updates the state of tag checkboxes based on the selected files."""
         indexes = self.ui.treeView.selectionModel().selectedRows()
         if self.sorting_model:
-            cur_selection = [normpath(self.model.filePath(
-                self.sorting_model.mapToSource(index))) for index in indexes]
+            cur_selection = [
+                normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
+                for index in indexes
+            ]
         else:
-            cur_selection = [normpath(self.model.filePath(index))
-                             for index in indexes]
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
 
         all_files_tags_with_group_ids = []
         for f in cur_selection:
@@ -438,32 +658,42 @@ class TaggerWindow(QMainWindow):
 
         for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
-            if group['widget_type'] == 0:
-                for t in get_all_tags_by_group_id(group['id']):
+            if group["widget_type"] == 0:
+                for t in get_all_tags_by_group_id(group["id"]):
                     if t not in all_files_tags:
                         self.tag_checkboxes[t].setTristate(False)
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.Unchecked
+                        ):
                             self.tag_checkboxes[t].setChecked(False)
                     elif all_files_tags.count(t) < len(cur_selection):
                         self.tag_checkboxes[t].setTristate(True)
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.PartiallyChecked
+                        ):
                             self.tag_checkboxes[t].setCheckState(
-                                Qt.CheckState.PartiallyChecked)
+                                Qt.CheckState.PartiallyChecked
+                            )
                     else:
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.Checked
+                        ):
                             self.tag_checkboxes[t].setChecked(True)
-            elif group['widget_type'] == 1:
-                if group['id'] not in tree.keys():
-                    self.tag_combos[group['id']].setCurrentText('')
+            elif group["widget_type"] == 1:
+                if group["id"] not in tree.keys():
+                    self.tag_combos[group["id"]].setCurrentText("")
                 else:
-                    self.tag_combos[group['id']].setCurrentText(
-                        tree[group['id']][0])
+                    self.tag_combos[group["id"]].setCurrentText(tree[group["id"]][0])
 
     def update_recent_menu(self):
         self.ui.recent_menu.clear()
-        for row, foldername in enumerate(self.settings['recent_folders'], 1):
-            recent_action = self.ui.recent_menu.addAction('&{}. {}'.format(
-                row, foldername))
+        for row, foldername in enumerate(self.settings["recent_folders"], 1):
+            recent_action = self.ui.recent_menu.addAction(
+                "&{}. {}".format(row, foldername)
+            )
             recent_action.setData(foldername)
 
     def open_file_from_recent(self, action):
@@ -476,8 +706,8 @@ class TaggerWindow(QMainWindow):
     def update_ui(self):
         """Updates the UI elements based on the selected source mode (Folder/Tagged)."""
         mode = self.ui.sourceComboBox.currentText()
-        self.ui.pathEdit.setEnabled(mode == 'Folder')
-        self.ui.browseButton.setEnabled(mode == 'Folder')
+        self.ui.pathEdit.setEnabled(mode == "Folder")
+        self.ui.browseButton.setEnabled(mode == "Folder")
         self.update_treeview()
 
     def update_status(self):
@@ -486,25 +716,39 @@ class TaggerWindow(QMainWindow):
         self.prev_indexes.sort()
         if indexes != self.prev_indexes:
             self.player.stop()
-            path = self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex(
-            ))) if self.sorting_model else self.model.filePath(self.ui.treeView.currentIndex())
+            path = (
+                self.model.filePath(
+                    self.sorting_model.mapToSource(self.ui.treeView.currentIndex())
+                )
+                if self.sorting_model
+                else self.model.filePath(self.ui.treeView.currentIndex())
+            )
             ftype = get_file_type(path)
-            if isfile(path) and ftype in ('Audio', 'Video', 'Image'):
-                file_url = QUrl.fromLocalFile(self.model.filePath(self.sorting_model.mapToSource(self.ui.treeView.currentIndex(
-                )))) if self.sorting_model else QUrl.fromLocalFile(self.model.filePath(self.ui.treeView.currentIndex()))
-                if ftype == 'Audio':  # TBD change this to audio file type
+            if isfile(path) and ftype in ("Audio", "Video", "Image"):
+                file_url = (
+                    QUrl.fromLocalFile(
+                        self.model.filePath(
+                            self.sorting_model.mapToSource(
+                                self.ui.treeView.currentIndex()
+                            )
+                        )
+                    )
+                    if self.sorting_model
+                    else QUrl.fromLocalFile(
+                        self.model.filePath(self.ui.treeView.currentIndex())
+                    )
+                )
+                if ftype == "Audio":  # TBD change this to audio file type
                     self.ui.playerLayout.setGeometry(QRect(0, 0, 0, 0))
-                if ftype == 'Image':
+                if ftype == "Image":
                     self.ui.playerLayout.update()
                 self.player.setSource(file_url)
                 self.player.play()
                 self.player.pause()
-                self.ui.mediaPlayButton.setVisible(ftype in ('Video', 'Audio'))
-                self.ui.mediaPositionSlider.setVisible(
-                    ftype in ('Video', 'Audio'))
-                self.ui.mediaVolumeDial.setVisible(ftype in ('Video', 'Audio'))
-                self.ui.mediaDurationLabel.setVisible(
-                    ftype in ('Video', 'Audio'))
+                self.ui.mediaPlayButton.setVisible(ftype in ("Video", "Audio"))
+                self.ui.mediaPositionSlider.setVisible(ftype in ("Video", "Audio"))
+                self.ui.mediaVolumeDial.setVisible(ftype in ("Video", "Audio"))
+                self.ui.mediaDurationLabel.setVisible(ftype in ("Video", "Audio"))
             else:
                 self.ui.playerLayout.setGeometry(QRect(0, 0, 0, 0))
                 self.ui.mediaPlayButton.setVisible(False)
@@ -514,14 +758,14 @@ class TaggerWindow(QMainWindow):
         self.prev_indexes = indexes
         # TBD Review this
         num_selected = len(self.ui.treeView.selectionModel().selectedRows())
-        self.ui.statusbar.showMessage(str(num_selected)+" item(s) selected")
+        self.ui.statusbar.showMessage(str(num_selected) + " item(s) selected")
         self.update_tag_checkboxes()
 
     def choose_path(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
-        directory = QFileDialog.getExistingDirectory(self,
-                                                     "QFileDialog.getExistingDirectory()",
-                                                     self.ui.pathEdit.text(), options)
+        directory = QFileDialog.getExistingDirectory(
+            self, "QFileDialog.getExistingDirectory()", self.ui.pathEdit.text(), options
+        )
         if directory:
             self.ui.pathEdit.setText(normpath(directory))
             self.change_path()
@@ -534,16 +778,22 @@ class TaggerWindow(QMainWindow):
             # TBD reuse this in a function
             self.model.setRootPath(normpath(file_path))
             self.ui.treeView.setRootIndex(
-                self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
-            self.ui.pathEdit.setText(normpath(self.model.filePath(
-                self.sorting_model.mapToSource(self.ui.treeView.rootIndex()))))
-            if normpath(self.settings['current_folder']) != normpath(file_path):
-                self.settings['current_folder'] = file_path
-                if file_path in self.settings['recent_folders']:
-                    self.settings['recent_folders'].remove(file_path)
-                self.settings['recent_folders'].insert(0, file_path)
-                if len(self.settings['recent_folders']) > 15:
-                    del self.settings['recent_folders'][-1]
+                self.sorting_model.mapFromSource(self.model.index(file_path, 0))
+            )
+            self.ui.pathEdit.setText(
+                normpath(
+                    self.model.filePath(
+                        self.sorting_model.mapToSource(self.ui.treeView.rootIndex())
+                    )
+                )
+            )
+            if normpath(self.settings["current_folder"]) != normpath(file_path):
+                self.settings["current_folder"] = file_path
+                if file_path in self.settings["recent_folders"]:
+                    self.settings["recent_folders"].remove(file_path)
+                self.settings["recent_folders"].insert(0, file_path)
+                if len(self.settings["recent_folders"]) > 15:
+                    del self.settings["recent_folders"][-1]
                 save_settings(self.settings)
 
     def manage_tags(self):
@@ -556,8 +806,9 @@ class TaggerWindow(QMainWindow):
     def open(self):
         index = self.ui.treeView.currentIndex()
         if self.sorting_model:
-            file_path = normpath(self.model.filePath(
-                self.sorting_model.mapToSource(index)))
+            file_path = normpath(
+                self.model.filePath(self.sorting_model.mapToSource(index))
+            )
         else:
             file_path = normpath(self.model.filePath(index))
         if isdir(file_path):
@@ -565,7 +816,9 @@ class TaggerWindow(QMainWindow):
             if not self.in_tagged_mode():
                 self.model.setRootPath(normpath(file_path))
                 if self.sorting_model:
-                    self.ui.treeView.setRootIndex(self.sorting_model.mapFromSource(self.model.index(file_path, 0)))
+                    self.ui.treeView.setRootIndex(
+                        self.sorting_model.mapFromSource(self.model.index(file_path, 0))
+                    )
                 self.ui.pathEdit.setText(file_path)
                 self.settings["current_folder"] = file_path
                 if file_path in self.settings["recent_folders"]:
@@ -582,30 +835,37 @@ class TaggerWindow(QMainWindow):
             open_file(file_path)
 
     def create_folder(self):
-        folder, ok = QInputDialog.getText(self, "Create new folder",
-                                          "Enter folder name:", QLineEdit.Normal)
-        if ok and folder != '':
+        folder, ok = QInputDialog.getText(
+            self, "Create new folder", "Enter folder name:", QLineEdit.Normal
+        )
+        if ok and folder != "":
             index = self.ui.treeView.currentIndex()
             # TBD this works a bit unexpectedly in "Tagged" mode - it creates a folder inside the parent folder, not the selected folder
             if self.sorting_model:
-                full_path = Path(self.model.filePath(
-                    self.sorting_model.mapToSource(index))).parent / folder
+                full_path = (
+                    Path(
+                        self.model.filePath(self.sorting_model.mapToSource(index))
+                    ).parent
+                    / folder
+                )
             else:
                 full_path = Path(self.model.filePath(index)).parent / folder
             try:
                 os.mkdir(full_path)
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Error", "Can't create this folder", QMessageBox.Ok)
+                    self, "Error", "Can't create this folder", QMessageBox.Ok
+                )
 
     def context_menu(self, position):
         indexes = self.ui.treeView.selectionModel().selectedRows()
         if self.sorting_model:
-            cur_selection = [normpath(self.model.filePath(
-                self.sorting_model.mapToSource(index))) for index in indexes]
+            cur_selection = [
+                normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
+                for index in indexes
+            ]
         else:
-            cur_selection = [normpath(self.model.filePath(index))
-                             for index in indexes]
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
 
         all_files_tags = []
         for f in cur_selection:  # TBD v3 not the most efficient procedure maybe
@@ -628,11 +888,12 @@ class TaggerWindow(QMainWindow):
         indexes = self.ui.treeView.selectionModel().selectedRows()
 
         if self.sorting_model:
-            cur_selection = [normpath(self.model.filePath(
-                self.sorting_model.mapToSource(index))) for index in indexes]
+            cur_selection = [
+                normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
+                for index in indexes
+            ]
         else:
-            cur_selection = [normpath(self.model.filePath(index))
-                             for index in indexes]
+            cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
 
         if type(sender) == QCheckBox:
             for file_path in cur_selection:
@@ -642,18 +903,30 @@ class TaggerWindow(QMainWindow):
                     remove_tag(file_path, sender.text())
         elif type(sender) == QComboBox:
             for file_path in cur_selection:
-                if sender.currentText() == '':
-                    remove_tags(file_path, [sender.itemText(i) for i in range(
-                        sender.count()) if sender.itemText(i) != ''])
+                if sender.currentText() == "":
+                    remove_tags(
+                        file_path,
+                        [
+                            sender.itemText(i)
+                            for i in range(sender.count())
+                            if sender.itemText(i) != ""
+                        ],
+                    )
                 else:
-                    remove_tags(file_path, [sender.itemText(i) for i in range(
-                        sender.count()) if sender.itemText(i) != ''])  # TBD maybe optimize this
+                    remove_tags(
+                        file_path,
+                        [
+                            sender.itemText(i)
+                            for i in range(sender.count())
+                            if sender.itemText(i) != ""
+                        ],
+                    )  # TBD maybe optimize this
                     add_tag(file_path, sender.currentText())
 
 
 class TagFSModel(QFileSystemModel):
     def columnCount(self, parent=QModelIndex()):
-        return super(TagFSModel, self).columnCount()+1
+        return super(TagFSModel, self).columnCount() + 1
 
     def supportedDragActions(self) -> Qt.DropActions:
         return Qt.MoveAction | Qt.CopyAction
@@ -668,17 +941,102 @@ class TagFSModel(QFileSystemModel):
         if index.column() == 2 and role == Qt.DisplayRole:
             return QMimeDatabase().mimeTypeForFile(self.filePath(index)).comment()
 
-        tags = get_tags(normpath(self.filePath(index))) if role in (
-            Qt.DisplayRole, Qt.BackgroundRole) else []
+        tags = (
+            get_tags(normpath(self.filePath(index)))
+            if role in (Qt.DisplayRole, Qt.BackgroundRole)
+            else []
+        )
         if index.column() == self.columnCount() - 1:
             if role == Qt.DisplayRole:
-                return ', '.join(tags)
+                return ", ".join(tags)
         if role == Qt.BackgroundRole and tags and tag_get_color(tags[0]):
             color = QColor()
             color.setRgba(tag_get_color(tags[0]))
             return color
 
         return super(TagFSModel, self).data(index, role)
+
+    def flags(self, index):
+        # Ensure items are draggable and droppable
+        default = super(TagFSModel, self).flags(index)
+        return default | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+
+    def dropMimeData(self, data, action, row, column, parent):
+        if action not in (Qt.MoveAction, Qt.CopyAction):
+            return False
+        if not data.hasUrls():
+            return False
+
+        target_dir = self.filePath(parent) if parent.isValid() else self.rootPath()
+        if not target_dir or not os.path.isdir(target_dir):
+            return False
+
+        success = True
+        for url in data.urls():
+            src_path = url.toLocalFile()
+            if not src_path:
+                continue
+            base_name = os.path.basename(src_path)
+            dst_path = os.path.normpath(os.path.join(target_dir, base_name))
+
+            if os.path.normpath(src_path) == os.path.normpath(dst_path):
+                continue
+
+            from declutter.tags import get_tags, set_tags, remove_all_tags
+
+            try:
+                src_tags = []
+                try:
+                    src_tags = get_tags(os.path.normpath(src_path))
+                except Exception:
+                    src_tags = []
+
+                import shutil
+
+                if action == Qt.CopyAction:
+                    # Copy
+                    if os.path.isdir(src_path):
+                        shutil.copytree(src_path, dst_path)
+                    else:
+                        shutil.copy2(src_path, dst_path)
+                    # Tags: apply to copy; do NOT remove from source
+                    try:
+                        if src_tags:
+                            set_tags(os.path.normpath(dst_path), src_tags)
+                    except Exception:
+                        pass
+                else:
+                    # Move
+                    try:
+                        os.rename(src_path, dst_path)
+                    except OSError:
+                        if os.path.isdir(src_path):
+                            shutil.copytree(src_path, dst_path)
+                            shutil.rmtree(src_path)
+                        else:
+                            shutil.copy2(src_path, dst_path)
+                            os.remove(src_path)
+                    # Tags: migrate
+                    try:
+                        if src_tags:
+                            set_tags(os.path.normpath(dst_path), src_tags)
+                        remove_all_tags(os.path.normpath(src_path))
+                    except Exception:
+                        pass
+
+                # Refresh directories so view updates even on cross-dir operations
+                src_parent = os.path.dirname(src_path)
+                dst_parent = os.path.dirname(dst_path)
+                if os.path.normpath(src_parent) == os.path.normpath(dst_parent):
+                    self.directoryLoaded.emit(dst_parent)
+                else:
+                    self.directoryLoaded.emit(src_parent)
+                    self.directoryLoaded.emit(dst_parent)
+
+            except Exception:
+                success = False
+
+        return success
 
 
 class CheckBoxAction(QWidgetAction):
@@ -707,7 +1065,7 @@ class SortingModel(QSortFilterProxyModel):
         self.filter_enabled = False
 
     def recalc_filtered_paths(self, rule):
-        if 'conditions' in rule.keys() and rule['conditions']:
+        if "conditions" in rule.keys() and rule["conditions"]:
             self.filtered_paths = get_files_affected_by_rule(rule)
             self.filter_enabled = True
         else:
@@ -725,12 +1083,20 @@ class SortingModel(QSortFilterProxyModel):
             return self.sortOrder() == Qt.SortOrder.DescendingOrder
 
         if source_left.column() == 1:
-            return self.sourceModel().size(source_left) < self.sourceModel().size(source_right)
+            return self.sourceModel().size(source_left) < self.sourceModel().size(
+                source_right
+            )
 
         if source_left.column() == 3:
-            return self.sourceModel().lastModified(source_left).__le__(self.sourceModel().lastModified(source_right))
+            return (
+                self.sourceModel()
+                .lastModified(source_left)
+                .__le__(self.sourceModel().lastModified(source_right))
+            )
 
-        if (file_info1.isDir() and file_info2.isDir()) or (file_info1.isFile() and file_info2.isFile()):
+        if (file_info1.isDir() and file_info2.isDir()) or (
+            file_info1.isFile() and file_info2.isFile()
+        ):
             return super().lessThan(source_left, source_right)
 
         return file_info1.isDir() and self.sortOrder() == Qt.SortOrder.AscendingOrder
@@ -740,7 +1106,10 @@ class SortingModel(QSortFilterProxyModel):
         index = source_model.index(source_row, 0, source_parent)
         path = index.data(QFileSystemModel.FilePathRole)
 
-        if source_parent == source_model.index(source_model.rootPath()) and self.filter_enabled:
+        if (
+            source_parent == source_model.index(source_model.rootPath())
+            and self.filter_enabled
+        ):
             source_model = self.sourceModel()
             index = source_model.index(source_row, 0, source_parent)
             path = index.data(QFileSystemModel.FilePathRole)
@@ -758,16 +1127,16 @@ class QHLine(QFrame):
 
 def millis_to_str(duration):
     millis = int(duration)
-    seconds = (millis/1000) % 60
+    seconds = (millis / 1000) % 60
     seconds = str(int(seconds))
     if len(seconds) == 1:
-        seconds = "0"+seconds
-    minutes = (millis/(1000*60)) % 60
+        seconds = "0" + seconds
+    minutes = (millis / (1000 * 60)) % 60
     minutes = str(int(minutes))
     # if len(minutes) == 1:
     #     minutes = "0"+minutes
-    hours = str(int((millis/(1000*60*60)) % 24))
-    return (hours+":" if hours != "0" else "")+minutes+":"+seconds
+    hours = str(int((millis / (1000 * 60 * 60)) % 24))
+    return (hours + ":" if hours != "0" else "") + minutes + ":" + seconds
 
 
 def open_file(filename):
@@ -785,5 +1154,5 @@ def main():
     sys.exit(app.exec())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
