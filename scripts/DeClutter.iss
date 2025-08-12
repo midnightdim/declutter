@@ -1,5 +1,5 @@
 #define MyAppName "DeClutter"
-#define MyAppVersion "1.13.1"
+#define MyAppVersion "1.13.2"
 
 [Setup]
 AppName={#MyAppName}

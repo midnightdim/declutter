@@ -23,8 +23,8 @@
    <string>Condition</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
+   <iconset resource="DeClutter.qrc">
+    <normaloff>:/images/icons/DeClutter.ico</normaloff>:/images/icons/DeClutter.ico</iconset>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>

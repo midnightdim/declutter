@@ -17,8 +17,8 @@
    <string>Manage Tags</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
+   <iconset resource="DeClutter.qrc">
+    <normaloff>:/images/icons/DeClutter.ico</normaloff>:/images/icons/DeClutter.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
@@ -47,7 +47,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
+          <iconset resource="DeClutter.qrc">
            <normaloff>:/images/icons/tag.svg</normaloff>:/images/icons/tag.svg</iconset>
          </property>
         </widget>
@@ -61,7 +61,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
+          <iconset resource="DeClutter.qrc">
            <normaloff>:/images/icons/folder.svg</normaloff>:/images/icons/folder.svg</iconset>
          </property>
         </widget>
@@ -75,7 +75,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
+          <iconset resource="DeClutter.qrc">
            <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
          </property>
         </widget>
@@ -89,7 +89,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
+          <iconset resource="DeClutter.qrc">
            <normaloff>:/images/icons/brush.svg</normaloff>:/images/icons/brush.svg</iconset>
          </property>
         </widget>
