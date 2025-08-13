@@ -4,6 +4,7 @@ import subprocess
 from os.path import normpath, isfile, isdir
 from pathlib import Path
 from send2trash import send2trash
+import logging
 from PySide6.QtGui import QIcon, QColor, QCursor, QStandardItemModel, QAction
 from PySide6.QtWidgets import (
     QWidget,
@@ -146,28 +147,33 @@ class TaggerWindow(QMainWindow):
 
         # If no valid selection, fallback to model rootPath (Folder mode)
         if not cur_index.isValid():
-            # view_model is a proxy; resolve to source root index and path safely
-            if view_model is self.sorting_model and isinstance(self.model, QFileSystemModel):
+            if isinstance(self.model, QFileSystemModel):
                 return os.path.normpath(self.model.rootPath())
             return None
 
-        # If our view model is the same proxy we manage, map safely
-        if view_model is self.sorting_model and isinstance(self.model, QFileSystemModel):
-            try:
-                src_index = self.sorting_model.mapToSource(cur_index)
-                if src_index.isValid():
+        # Map to source if the view uses a proxy, regardless of self.sorting_model identity
+        try:
+            if isinstance(view_model, QSortFilterProxyModel):
+                src_index = view_model.mapToSource(cur_index)
+                if src_index.isValid() and isinstance(self.model, QFileSystemModel):
                     path = self.model.filePath(src_index)
-                    # If a file is selected, paste into its parent directory
-                    return os.path.normpath(path if os.path.isdir(path) else os.path.dirname(path))
-            except Exception:
-                pass
+                else:
+                    path = None
+            elif isinstance(view_model, QFileSystemModel):
+                path = view_model.filePath(cur_index)
+            else:
+                path = None
+        except Exception:
+            path = None
 
-        # Fallback: if the view model is already the source model (unlikely here), use it directly
-        if isinstance(view_model, QFileSystemModel):
-            path = view_model.filePath(cur_index)
-            return os.path.normpath(path if os.path.isdir(path) else os.path.dirname(path))
+        if not path:
+            # Fallback to this window's model root
+            if isinstance(self.model, QFileSystemModel):
+                return os.path.normpath(self.model.rootPath())
+            return None
 
-        return None
+        # If a file is selected, paste into its parent directory
+        return os.path.normpath(path if os.path.isdir(path) else os.path.dirname(path))
 
     def new_window(self):
         """Opens a new TaggerWindow instance."""
@@ -445,7 +451,6 @@ class TaggerWindow(QMainWindow):
                     # Keep a strong reference to avoid premature GC of the QMimeData
                     self._clipboard_mime = mime_data
                     QApplication.clipboard().setMimeData(self._clipboard_mime)
-                    print(QApplication.clipboard().mimeData().urls())
                     return True
                 
                 elif event.key() == Qt.Key_X and event.modifiers() == Qt.ControlModifier:
@@ -471,12 +476,16 @@ class TaggerWindow(QMainWindow):
                     ds << drop_effect
                     mime_data.setData("Preferred DropEffect", ba)
 
-                    self._clipboard_mime = mime_data  # Keep reference
+                    self._clipboard_mime = mime_data
                     QApplication.clipboard().setMimeData(self._clipboard_mime)
-                    print("[CUT] Clipboard URLs:", QApplication.clipboard().mimeData().urls())
                     return True
                 
                 elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
+                    if not self.ui.treeView.hasFocus():
+                        return True
+                    # Ensure this is the active window
+                    if QApplication.activeWindow() is not self:
+                        return True
                     if self.in_tagged_mode():
                         return True
 
@@ -507,7 +516,7 @@ class TaggerWindow(QMainWindow):
                     if not target_dir or not os.path.isdir(target_dir):
                         return True
 
-                    # --- NEW: check for overwrite conflicts ---
+                    # Check for overwrite conflicts
                     for url in paste_urls:
                         dst_path = os.path.join(target_dir, os.path.basename(url.toLocalFile()))
                         if os.path.exists(dst_path):
@@ -526,7 +535,6 @@ class TaggerWindow(QMainWindow):
 
                     if not paste_urls:
                         return True
-                    # ------------------------------------------
 
                     mime_for_drop = QMimeData()
                     mime_for_drop.setUrls(paste_urls)
@@ -540,7 +548,7 @@ class TaggerWindow(QMainWindow):
                             ds.setByteOrder(QDataStream.LittleEndian)
                             drop_effect_val = ds.readInt32()
                         except Exception as e:
-                            print("[PASTE] Error reading Preferred DropEffect:", e)
+                            logging.warning("[PASTE] Error reading Preferred DropEffect: %s", e)
 
                     # Decide action
                     if drop_effect_val == 2:
@@ -549,9 +557,6 @@ class TaggerWindow(QMainWindow):
                         # Default copy; Shift forces move
                         mods = QApplication.keyboardModifiers()
                         action = Qt.CopyAction if not (mods & Qt.ShiftModifier) else Qt.MoveAction
-
-                    # DEBUG
-                    print(f"[PASTE] drop_effect_val={drop_effect_val}, resolved action={action}")
 
                     src_target_index = self.model.index(target_dir, 0) if isinstance(self.model, QFileSystemModel) else QModelIndex()
 
