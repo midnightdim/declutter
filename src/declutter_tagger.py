@@ -35,6 +35,9 @@ from PySide6.QtCore import (
     QEvent,
     QMimeData,
     QMimeDatabase,
+    QByteArray,
+    QDataStream,
+    QIODevice,
 )
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
@@ -424,9 +427,7 @@ class TaggerWindow(QMainWindow):
                         )
                     return True
 
-                elif (
-                    event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier
-                ):
+                elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
                     # Collect selected rows and store as file:// URLs in clipboard
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     urls = [
@@ -446,8 +447,36 @@ class TaggerWindow(QMainWindow):
                     QApplication.clipboard().setMimeData(self._clipboard_mime)
                     print(QApplication.clipboard().mimeData().urls())
                     return True
+                
+                elif event.key() == Qt.Key_X and event.modifiers() == Qt.ControlModifier:
+                    # Collect selected rows and store as file:// URLs in clipboard, mark as cut
+                    indexes = self.ui.treeView.selectionModel().selectedRows()
+                    urls = [
+                        QUrl.fromLocalFile(
+                            self.model.filePath(self.sorting_model.mapToSource(index))
+                            if self.sorting_model
+                            else self.model.filePath(index)
+                        )
+                        for index in indexes
+                    ]
+
+                    mime_data = QMimeData()
+                    mime_data.setUrls(urls)
+
+                    # Windows Explorer hint: 2 = Cut (Move)
+                    drop_effect = 2
+                    ba = QByteArray()
+                    ds = QDataStream(ba, QIODevice.WriteOnly)
+                    ds.setByteOrder(QDataStream.LittleEndian)
+                    ds << drop_effect
+                    mime_data.setData("Preferred DropEffect", ba)
+
+                    self._clipboard_mime = mime_data  # Keep reference
+                    QApplication.clipboard().setMimeData(self._clipboard_mime)
+                    print("[CUT] Clipboard URLs:", QApplication.clipboard().mimeData().urls())
+                    return True
+                
                 elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
-                    # Only paste in Folder mode
                     if self.in_tagged_mode():
                         return True
 
@@ -468,37 +497,70 @@ class TaggerWindow(QMainWindow):
                                     u = QUrl(part)
                                     if u.isLocalFile() or u.scheme() == "file":
                                         paste_urls.append(u)
-                                    else:
-                                        if os.path.isabs(part):
-                                            paste_urls.append(QUrl.fromLocalFile(part))
+                                    elif os.path.isabs(part):
+                                        paste_urls.append(QUrl.fromLocalFile(part))
 
                     if not paste_urls:
-                        return True  # nothing to paste
+                        return True
 
-                    # Compute a robust target directory without relying on stale proxy indexes
                     target_dir = self._current_target_dir()
                     if not target_dir or not os.path.isdir(target_dir):
                         return True
 
-                    # Build a clean QMimeData with guaranteed URLs
+                    # --- NEW: check for overwrite conflicts ---
+                    for url in paste_urls:
+                        dst_path = os.path.join(target_dir, os.path.basename(url.toLocalFile()))
+                        if os.path.exists(dst_path):
+                            reply = QMessageBox.question(
+                                self,
+                                "File exists",
+                                f"File '{os.path.basename(dst_path)}' already exists in the target folder.\nOverwrite?",
+                                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                                QMessageBox.No
+                            )
+                            if reply == QMessageBox.Cancel:
+                                return True
+                            elif reply == QMessageBox.No:
+                                paste_urls = [u for u in paste_urls if u != url]
+                            # if Yes → keep in list to overwrite
+
+                    if not paste_urls:
+                        return True
+                    # ------------------------------------------
+
                     mime_for_drop = QMimeData()
                     mime_for_drop.setUrls(paste_urls)
                     if clip_mime and "Preferred DropEffect" in clip_mime.formats():
                         mime_for_drop.setData("Preferred DropEffect", clip_mime.data("Preferred DropEffect"))
 
-                    # Resolve desired action: default Copy; Shift+Paste => Move
-                    mods = QApplication.keyboardModifiers()
-                    action = Qt.CopyAction if not (mods & Qt.ShiftModifier) else Qt.MoveAction
+                    drop_effect_val = None
+                    if clip_mime and "Preferred DropEffect" in clip_mime.formats():
+                        try:
+                            ds = QDataStream(clip_mime.data("Preferred DropEffect"))
+                            ds.setByteOrder(QDataStream.LittleEndian)
+                            drop_effect_val = ds.readInt32()
+                        except Exception as e:
+                            print("[PASTE] Error reading Preferred DropEffect:", e)
 
-                    # Compute the source index for the target_dir directly from the source model
+                    # Decide action
+                    if drop_effect_val == 2:
+                        action = Qt.MoveAction
+                    else:
+                        # Default copy; Shift forces move
+                        mods = QApplication.keyboardModifiers()
+                        action = Qt.CopyAction if not (mods & Qt.ShiftModifier) else Qt.MoveAction
+
+                    # DEBUG
+                    print(f"[PASTE] drop_effect_val={drop_effect_val}, resolved action={action}")
+
                     src_target_index = self.model.index(target_dir, 0) if isinstance(self.model, QFileSystemModel) else QModelIndex()
 
                     if hasattr(self.model, "dropMimeData"):
                         if self.model.dropMimeData(mime_for_drop, action, -1, -1, src_target_index):
-                            # Refresh after operation
                             self.update_treeview()
                             self.update_tag_checkboxes()
                     return True
+
 
         else:
             if event.type() == QEvent.MouseButtonPress:
