@@ -125,11 +125,46 @@ class TaggerWindow(QMainWindow):
         self.ui.browseButton.clicked.connect(self.choose_path)
         self.ui.sourceComboBox.currentIndexChanged.connect(self.update_ui)
 
+        self._clipboard_mime = None
+
         # Populate initial UI elements
         self.populate()  # TBD can't it be just a part of init()?
 
     def in_tagged_mode(self):
         return self.ui.sourceComboBox.currentText() == "Tagged"
+
+    def _current_target_dir(self):
+        # Only allow pasting into Folder mode, since Tagged view isn't a real FS destination
+        if self.in_tagged_mode():
+            return None
+
+        view_model = self.ui.treeView.model()
+        cur_index = self.ui.treeView.currentIndex()
+
+        # If no valid selection, fallback to model rootPath (Folder mode)
+        if not cur_index.isValid():
+            # view_model is a proxy; resolve to source root index and path safely
+            if view_model is self.sorting_model and isinstance(self.model, QFileSystemModel):
+                return os.path.normpath(self.model.rootPath())
+            return None
+
+        # If our view model is the same proxy we manage, map safely
+        if view_model is self.sorting_model and isinstance(self.model, QFileSystemModel):
+            try:
+                src_index = self.sorting_model.mapToSource(cur_index)
+                if src_index.isValid():
+                    path = self.model.filePath(src_index)
+                    # If a file is selected, paste into its parent directory
+                    return os.path.normpath(path if os.path.isdir(path) else os.path.dirname(path))
+            except Exception:
+                pass
+
+        # Fallback: if the view model is already the source model (unlikely here), use it directly
+        if isinstance(view_model, QFileSystemModel):
+            path = view_model.filePath(cur_index)
+            return os.path.normpath(path if os.path.isdir(path) else os.path.dirname(path))
+
+        return None
 
     def new_window(self):
         """Opens a new TaggerWindow instance."""
@@ -392,30 +427,36 @@ class TaggerWindow(QMainWindow):
                 elif (
                     event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier
                 ):
-                    # Collect selected rows and store as URLs in clipboard
+                    # Collect selected rows and store as file:// URLs in clipboard
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     urls = [
-                        QUrl(
+                        QUrl.fromLocalFile(
                             self.model.filePath(self.sorting_model.mapToSource(index))
                             if self.sorting_model
                             else self.model.filePath(index)
                         )
                         for index in indexes
                     ]
+
                     mime_data = QMimeData()
                     mime_data.setUrls(urls)
-                    QApplication.clipboard().setMimeData(mime_data)
+
+                    # Keep a strong reference to avoid premature GC of the QMimeData
+                    self._clipboard_mime = mime_data
+                    QApplication.clipboard().setMimeData(self._clipboard_mime)
+                    print(QApplication.clipboard().mimeData().urls())
                     return True
-                elif (
-                    event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier
-                ):
+                elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
+                    # Only paste in Folder mode
+                    if self.in_tagged_mode():
+                        return True
+
                     clipboard = QApplication.clipboard()
                     clip_mime = clipboard.mimeData()
 
                     paste_urls = []
                     if clip_mime:
                         if clip_mime.hasUrls():
-                            print("Pasting URLs:", clip_mime.urls())
                             paste_urls = clip_mime.urls()
                         if not paste_urls and clip_mime.hasText():
                             raw = clip_mime.text().strip()
@@ -428,43 +469,33 @@ class TaggerWindow(QMainWindow):
                                     if u.isLocalFile() or u.scheme() == "file":
                                         paste_urls.append(u)
                                     else:
-                                        # Coerce absolute paths to file URLs
                                         if os.path.isabs(part):
                                             paste_urls.append(QUrl.fromLocalFile(part))
+
                     if not paste_urls:
                         return True  # nothing to paste
 
-                    # Build a fresh QMimeData with guaranteed URLs
+                    # Compute a robust target directory without relying on stale proxy indexes
+                    target_dir = self._current_target_dir()
+                    if not target_dir or not os.path.isdir(target_dir):
+                        return True
+
+                    # Build a clean QMimeData with guaranteed URLs
                     mime_for_drop = QMimeData()
                     mime_for_drop.setUrls(paste_urls)
-                    # Preserve Explorer hint if present
                     if clip_mime and "Preferred DropEffect" in clip_mime.formats():
-                        mime_for_drop.setData(
-                            "Preferred DropEffect",
-                            clip_mime.data("Preferred DropEffect"),
-                        )
+                        mime_for_drop.setData("Preferred DropEffect", clip_mime.data("Preferred DropEffect"))
 
-                    # Resolve action (default copy; Shift=move)
+                    # Resolve desired action: default Copy; Shift+Paste => Move
                     mods = QApplication.keyboardModifiers()
-                    action = (
-                        Qt.CopyAction
-                        if not (mods & Qt.ShiftModifier)
-                        else Qt.MoveAction
-                    )
+                    action = Qt.CopyAction if not (mods & Qt.ShiftModifier) else Qt.MoveAction
 
-                    target_index = self.ui.treeView.currentIndex()
-                    if not target_index.isValid():
-                        target_index = self.ui.treeView.rootIndex()
-                    src_target_index = (
-                        self.sorting_model.mapToSource(target_index)
-                        if self.sorting_model
-                        else target_index
-                    )
+                    # Compute the source index for the target_dir directly from the source model
+                    src_target_index = self.model.index(target_dir, 0) if isinstance(self.model, QFileSystemModel) else QModelIndex()
 
                     if hasattr(self.model, "dropMimeData"):
-                        if self.model.dropMimeData(
-                            mime_for_drop, action, -1, -1, src_target_index
-                        ):
+                        if self.model.dropMimeData(mime_for_drop, action, -1, -1, src_target_index):
+                            # Refresh after operation
                             self.update_treeview()
                             self.update_tag_checkboxes()
                     return True
