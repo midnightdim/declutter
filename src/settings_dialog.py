@@ -35,23 +35,42 @@ class SettingsDialog(QDialog):
         self.ui.fileTypesTable.cellChanged.connect(
             self.cell_changed, Qt.QueuedConnection)
 
-        default_style_name = QApplication.style().objectName().lower()
-        result = []
-        for style in QStyleFactory.keys():
-            if style.lower() == default_style_name:
-                result.insert(0, style)
-            else:
-                result.append(style)
+        # Collect styles with exact keys returned by Qt
+        style_keys = list(QStyleFactory.keys())  # exact casing from Qt
+        # Keep current style (from settings) at top if present, else keep default order
+        self.ui.styleComboBox.clear()
+        if self.settings.get('style') in style_keys:
+            # Put saved style at index 0 for convenience
+            styles_ordered = [self.settings['style']] + [s for s in style_keys if s != self.settings['style']]
+        else:
+            styles_ordered = style_keys
+        self.ui.styleComboBox.addItems(styles_ordered)
 
-        self.ui.styleComboBox.addItems(result)
-        self.ui.styleComboBox.textActivated.connect(self.change_style)
+        # Preselect saved style exactly, if present
+        if self.settings.get('style') in style_keys:
+            idx = self.ui.styleComboBox.findText(self.settings['style'])
+            if idx >= 0:
+                self.ui.styleComboBox.setCurrentIndex(idx)
+
+        # IMPORTANT: apply the theme lock logic once after style selection
         self._update_theme_lock(self.ui.styleComboBox.currentText())
-        self.ui.styleComboBox.textActivated.connect(self._update_theme_lock)
 
-        current_theme = self.settings.get("theme", "System")
-        index = self.ui.themeComboBox.findText(current_theme)
-        if index >= 0:
-            self.ui.themeComboBox.setCurrentIndex(index)
+        # Initialize theme combo from saved settings
+        saved_theme = self.settings.get("theme", "System")
+        if self.ui.styleComboBox.currentText().lower() == "windowsvista":
+            # UI lock: force Light for windowsvista
+            t_idx = self.ui.themeComboBox.findText("Light")
+            if t_idx >= 0:
+                self.ui.themeComboBox.setCurrentIndex(t_idx)
+            self.ui.themeComboBox.setEnabled(False)
+        else:
+            t_idx = self.ui.themeComboBox.findText(saved_theme)
+            if t_idx >= 0:
+                self.ui.themeComboBox.setCurrentIndex(t_idx)
+            self.ui.themeComboBox.setEnabled(True)
+
+        # Keep reacting when user changes style
+        self.ui.styleComboBox.textActivated.connect(self._update_theme_lock)
 
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(
             type(c))]  # TBD vN this is not very safe

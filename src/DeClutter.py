@@ -461,12 +461,13 @@ def _palette_snapshot(tag: str, pal: QPalette):
 
 
 def make_fusion_light_palette() -> QPalette:
-    # Explicit Fusion-light palette (minimal changes)
     p = QPalette()
-    # Base surfaces (light)
-    p.setColor(QPalette.Window, QColor(240, 240, 240))  # #f0f0f0
-    p.setColor(QPalette.Base, QColor(255, 255, 255))  # #ffffff
-    p.setColor(QPalette.AlternateBase, QColor(245, 245, 245))  # slightly off-white
+    # Surfaces (close to system light)
+    p.setColor(
+        QPalette.Window, QColor(248, 248, 248)
+    )  # near-white, reduces "gray" feel
+    p.setColor(QPalette.Base, QColor(255, 255, 255))  # white for text inputs/tables
+    p.setColor(QPalette.AlternateBase, QColor(251, 251, 251))  # very close to white
     # Text
     p.setColor(QPalette.Text, Qt.black)
     p.setColor(QPalette.WindowText, Qt.black)
@@ -474,12 +475,13 @@ def make_fusion_light_palette() -> QPalette:
     p.setColor(QPalette.ToolTipText, Qt.black)
     p.setColor(QPalette.BrightText, Qt.red)
     # Controls
-    p.setColor(QPalette.Button, QColor(240, 240, 240))
-    # Accents (match Windows blue-ish highlight seen in logs)
+    p.setColor(QPalette.Button, QColor(248, 248, 248))  # match Window
+    # Accents (Windows-like)
     p.setColor(QPalette.Highlight, QColor(0, 120, 212))  # #0078d4
     p.setColor(QPalette.HighlightedText, Qt.white)
     # Tooltips
     p.setColor(QPalette.ToolTipBase, Qt.white)
+    # Group/Disabled states follow Qt defaults (keeps minimal diff)
     return p
 
 
@@ -537,60 +539,107 @@ def apply_style_and_theme(app: QApplication, style_name: str, theme_name: str):
 
         # Force Light
         if theme_name == "Light":
-            if active_style == "fusion":
-                # Explicit Fusion light palette
-                app.setPalette(make_fusion_light_palette())
+            if QApplication.style().objectName().lower() == "fusion":
+                pal = make_fusion_light_palette()
+                app.setPalette(pal)
                 print("[ThemeDbg] Applied Fusion light palette (explicit) for Light")
             else:
-                # For native styles, use their own light standard palette
-                light_palette = QApplication.style().standardPalette()
-                app.setPalette(light_palette)
-                print("[ThemeDbg] Applied current style standardPalette() for Light")
-
-                # windows11 menu readability fix
-                if active_style == "windows11":
-                    app.setStyleSheet(
-                        "QMenu { background: palette(Base); color: palette(Text); }"
-                    )
-                    print("[ThemeDbg] Applied windows11 QMenu stylesheet for Light")
-                else:
-                    app.setStyleSheet("")
+                pal = QApplication.style().standardPalette()
+                # Ensure bright toolbar/header feel: bump Button/Window if style’s light palette is dull
+                # Only adjust if they’re noticeably gray (simple threshold)
+                if pal.color(QPalette.Button).value() < 240:
+                    pal.setColor(QPalette.Button, QColor(248, 248, 248))
+                if pal.color(QPalette.Window).value() < 240:
+                    pal.setColor(QPalette.Window, QColor(248, 248, 248))
+                # Keep table bases white for crisp lists
+                pal.setColor(QPalette.Base, QColor(255, 255, 255))
+                pal.setColor(QPalette.AlternateBase, QColor(251, 251, 251))
+                app.setPalette(pal)
+                print(
+                    "[ThemeDbg] Applied current style standardPalette() for Light (nudged bright)"
+                )
+            if QApplication.style().objectName().lower() == "windows11":
+                app.setStyleSheet(
+                    "QMenu { background: palette(Base); color: palette(Text); }"
+                )
+                print("[ThemeDbg] Applied windows11 QMenu stylesheet for Light")
+            else:
+                app.setStyleSheet("")
             _palette_snapshot("After Light", app.palette())
             return
 
         # Force Dark
         if theme_name == "Dark":
             if active_style == "fusion":
-                # Explicit Fusion dark palette
                 app.setPalette(make_fusion_dark_palette())
                 print("[ThemeDbg] Applied Fusion dark palette (explicit) for Dark")
-            else:
-                # For native styles, start from Fusion dark as a baseline (stable),
-                # then adapt a few key roles from the current style to match native accents,
-                # and ensure readable foreground text on dark backgrounds.
-                base_dark = make_fusion_dark_palette()
+                app.setStyleSheet("")
+                _palette_snapshot("After Dark", app.palette())
+                return
 
-                native_pal = QApplication.style().standardPalette()
+            # Non-Fusion (windows, windows11, etc.)
+            base_dark = make_fusion_dark_palette()
+            native_pal = QApplication.style().standardPalette()
 
-                # Preserve native accents
-                base_dark.setColor(QPalette.Highlight, native_pal.color(QPalette.Highlight))
-                base_dark.setColor(QPalette.HighlightedText, native_pal.color(QPalette.HighlightedText))
+            # Preserve native accent where possible
+            base_dark.setColor(QPalette.Highlight, native_pal.color(QPalette.Highlight))
+            base_dark.setColor(QPalette.HighlightedText, native_pal.color(QPalette.HighlightedText))
 
-                # Ensure text is readable on dark backgrounds
-                # Some native palettes (on OS Light) report black text; override to white for dark UI.
-                base_dark.setColor(QPalette.WindowText, Qt.white)
-                base_dark.setColor(QPalette.Text, Qt.white)
-                base_dark.setColor(QPalette.ButtonText, Qt.white)
-                base_dark.setColor(QPalette.ToolTipText, Qt.white)
+            # Ensure readable foregrounds on dark
+            base_dark.setColor(QPalette.WindowText, Qt.white)
+            base_dark.setColor(QPalette.Text, Qt.white)
+            base_dark.setColor(QPalette.ButtonText, Qt.white)
+            base_dark.setColor(QPalette.ToolTipText, Qt.white)
+
+            # Darken borders/separators for 'windows' style (avoid bright bevels)
+            if active_style == "windows":
+                # Darken 3D/bevel roles to remove bright lines
+                base_dark.setColor(QPalette.Light,    QColor(80, 80, 80))
+                base_dark.setColor(QPalette.Midlight, QColor(70, 70, 70))
+                base_dark.setColor(QPalette.Mid,      QColor(60, 60, 60))
+                base_dark.setColor(QPalette.Dark,     QColor(40, 40, 40))
+                base_dark.setColor(QPalette.Shadow,   QColor(20, 20, 20))
+
+                # Panels/buttons/alternating rows
+                base_dark.setColor(QPalette.Button,         QColor(53, 53, 53))
+                base_dark.setColor(QPalette.AlternateBase,  QColor(45, 45, 45))
+
+                # Readable foregrounds (you already set globally above)
+                base_dark.setColor(QPalette.Disabled, QPalette.Text,       QColor(170, 170, 170))
+                base_dark.setColor(QPalette.Disabled, QPalette.WindowText, QColor(170, 170, 170))
+                base_dark.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(170, 170, 170))
+
+                # Neutral gray highlight instead of blue
+                base_dark.setColor(QPalette.Highlight,       QColor(70, 70, 70))
+                base_dark.setColor(QPalette.HighlightedText, Qt.white)
 
                 app.setPalette(base_dark)
-                print("[ThemeDbg] Applied adapted dark palette for native style (dark base + native accents + readable text)")
 
+            app.setPalette(base_dark)
+
+            # Add minimal menu chrome in forced Dark for native styles:
+            # - visible 1px border
+            # - hover background so items highlight clearly
+            if active_style in ("windows11", "windows"):
+                app.setStyleSheet(
+                    "QMenu {"
+                    "  background: palette(Window);"
+                    "  color: palette(Text);"
+                    "  border: 1px solid rgb(70,70,70);"
+                    "}"
+                    "QMenu::item {"
+                    "  background: transparent;"
+                    "}"
+                    "QMenu::item:selected {"
+                    "  background: rgb(60,60,60);"
+                    "}"
+                )
+                print("[ThemeDbg] Applied QMenu border/hover stylesheet for native Dark")
+            else:
                 app.setStyleSheet("")
 
             _palette_snapshot("After Dark", app.palette())
             return
-
 
         # Unknown theme fallback
         app.setPalette(QPalette())
