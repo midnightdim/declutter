@@ -127,14 +127,15 @@ class RulesWindow(QMainWindow):
                             )
                             if response.status_code == 200:
                                 release_data = response.json()
-                                # Find the Windows executable asset
-                                for asset in release_data.get("assets", []):
-                                    if (
-                                        asset["name"].endswith(".exe")
-                                        and "Windows" in asset["name"]
-                                    ):
-                                        webbrowser.open(asset["browser_download_url"])
-                                        return
+                                if sys.platform.startswith("win"):
+                                    # Find the Windows executable asset
+                                    for asset in release_data.get("assets", []):
+                                        if (
+                                            asset["name"].endswith(".exe")
+                                            and "Windows" in asset["name"]
+                                        ):
+                                            webbrowser.open(asset["browser_download_url"])
+                                            return
                             # Fallback to releases page if no specific asset found
                             webbrowser.open(
                                 "https://github.com/midnightdim/declutter/releases/latest"
