@@ -50,11 +50,9 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
-        if "style" in self.settings.keys():
-            # Apply style and palette together
-            style = self.settings.get("style", "Fusion")
-            palette = self.settings.get("palette", "System/Default")
-            apply_style_and_palette(QApplication.instance(), style, palette)
+        style = self.settings.get("style", "Fusion")
+        theme = self.settings.get("theme", "System")
+        apply_style_and_theme(QApplication.instance(), style, theme)
 
         self.ui.addRule.clicked.connect(self.add_rule)
         self.load_rules()
@@ -124,18 +122,25 @@ class RulesWindow(QMainWindow):
                     if reply == QMessageBox.Yes:
                         try:
                             # Get the download URL from the latest release
-                            response = requests.get("https://api.github.com/repos/midnightdim/declutter/releases/latest")
+                            response = requests.get(
+                                "https://api.github.com/repos/midnightdim/declutter/releases/latest"
+                            )
                             if response.status_code == 200:
                                 release_data = response.json()
                                 # Find the Windows executable asset
-                                for asset in release_data.get('assets', []):
-                                    if asset['name'].endswith('.exe') and 'Windows' in asset['name']:
-                                        webbrowser.open(asset['browser_download_url'])
+                                for asset in release_data.get("assets", []):
+                                    if (
+                                        asset["name"].endswith(".exe")
+                                        and "Windows" in asset["name"]
+                                    ):
+                                        webbrowser.open(asset["browser_download_url"])
                                         return
                             # Fallback to releases page if no specific asset found
-                            webbrowser.open('https://github.com/midnightdim/declutter/releases/latest')
+                            webbrowser.open(
+                                "https://github.com/midnightdim/declutter/releases/latest"
+                            )
                         except Exception as e:
-                            logging.exception(f'exception {e}')
+                            logging.exception(f"exception {e}")
             except Exception as e:
                 logging.exception(f"Version comparison failed: {e}")
 
@@ -220,8 +225,8 @@ class RulesWindow(QMainWindow):
 
             # Apply style and palette after settings change
             style = self.settings.get("style", "Fusion")
-            palette = self.settings.get("palette", "System/Default")
-            apply_style_and_palette(QApplication.instance(), style, palette)
+            theme = self.settings.get("theme", "System")
+            apply_style_and_theme(QApplication.instance(), style, theme)
 
     def change_style(self, style_name):
         """Changes the application's style."""
@@ -441,42 +446,159 @@ class RulesWindow(QMainWindow):
         self.service_run_details = details if details else self.service_run_details
         self.service_runs = False
 
+
+def _palette_snapshot(tag: str, pal: QPalette):
+    # Key colors to quickly see effective palette
+    w = pal.color(QPalette.Window).name()
+    b = pal.color(QPalette.Base).name()
+    t = pal.color(QPalette.Text).name()
+    wt = pal.color(QPalette.WindowText).name()
+    hl = pal.color(QPalette.Highlight).name()
+    hlt = pal.color(QPalette.HighlightedText).name()
+    print(
+        f"[ThemeDbg] {tag} | Window={w} Base={b} Text={t} WindowText={wt} Highlight={hl} HighlightedText={hlt}"
+    )
+
+
 def make_fusion_light_palette() -> QPalette:
+    # Explicit Fusion-light palette (minimal changes)
     p = QPalette()
-    # Use Qt default-derived light palette (optionally tweak)
-    # Keeping it minimal to avoid unintended overrides.
-    return p  # default is light
+    # Base surfaces (light)
+    p.setColor(QPalette.Window, QColor(240, 240, 240))  # #f0f0f0
+    p.setColor(QPalette.Base, QColor(255, 255, 255))  # #ffffff
+    p.setColor(QPalette.AlternateBase, QColor(245, 245, 245))  # slightly off-white
+    # Text
+    p.setColor(QPalette.Text, Qt.black)
+    p.setColor(QPalette.WindowText, Qt.black)
+    p.setColor(QPalette.ButtonText, Qt.black)
+    p.setColor(QPalette.ToolTipText, Qt.black)
+    p.setColor(QPalette.BrightText, Qt.red)
+    # Controls
+    p.setColor(QPalette.Button, QColor(240, 240, 240))
+    # Accents (match Windows blue-ish highlight seen in logs)
+    p.setColor(QPalette.Highlight, QColor(0, 120, 212))  # #0078d4
+    p.setColor(QPalette.HighlightedText, Qt.white)
+    # Tooltips
+    p.setColor(QPalette.ToolTipBase, Qt.white)
+    return p
+
 
 def make_fusion_dark_palette() -> QPalette:
     p = QPalette()
-    # Common dark Fusion palette roles (Qt docs and community examples)
-    p.setColor(QPalette.Window, QColor(53, 53, 53))
-    p.setColor(QPalette.WindowText, Qt.white)
-    p.setColor(QPalette.Base, QColor(35, 35, 35))
-    p.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    p.setColor(QPalette.ToolTipBase, Qt.white)
-    p.setColor(QPalette.ToolTipText, Qt.white)
-    p.setColor(QPalette.Text, Qt.white)
-    p.setColor(QPalette.Button, QColor(53, 53, 53))
-    p.setColor(QPalette.ButtonText, Qt.white)
+    # Common dark Fusion palette roles (as you used; keeps diff minimal)
+    p.setColor(QPalette.Window, QColor(53, 53, 53))  # #353535
+    p.setColor(QPalette.WindowText, Qt.white)  # #ffffff
+    p.setColor(QPalette.Base, QColor(35, 35, 35))  # #232323
+    p.setColor(QPalette.AlternateBase, QColor(53, 53, 53))  # #353535
+    p.setColor(QPalette.ToolTipBase, Qt.white)  # #ffffff
+    p.setColor(QPalette.ToolTipText, Qt.white)  # #ffffff
+    p.setColor(QPalette.Text, Qt.white)  # #ffffff
+    p.setColor(QPalette.Button, QColor(53, 53, 53))  # #353535
+    p.setColor(QPalette.ButtonText, Qt.white)  # #ffffff
     p.setColor(QPalette.BrightText, Qt.red)
-    p.setColor(QPalette.Link, QColor(42, 130, 218))
-    p.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    p.setColor(QPalette.HighlightedText, Qt.black)
+    p.setColor(QPalette.Link, QColor(42, 130, 218))  # #2a82da
+    p.setColor(QPalette.Highlight, QColor(42, 130, 218))  # #2a82da
+    p.setColor(QPalette.HighlightedText, Qt.black)  # #000000
     return p
 
-def apply_style_and_palette(app: QApplication, style_name: str, palette_name: str):
-    QApplication.setStyle(QStyleFactory.create(style_name))
-    if style_name == "Fusion":
-        if palette_name == "Fusion Dark":
-            app.setPalette(make_fusion_dark_palette())
-        elif palette_name == "Fusion Light":
-            app.setPalette(make_fusion_light_palette())
-        else:
-            app.setPalette(QPalette())  # System/default
-    else:
-        # Non-Fusion: reset to default so native theming takes over
+
+def apply_style_and_theme(app: QApplication, style_name: str, theme_name: str):
+    try:
+        print(f"[ThemeDbg] Requested style={style_name} theme={theme_name}")
+
+        # OS color scheme logging (optional)
+        try:
+            hints = QApplication.styleHints()
+            cs = getattr(hints, "colorScheme", None)
+            os_scheme = cs() if callable(cs) else None
+            print(f"[ThemeDbg] OS styleHints.colorScheme={os_scheme}")
+        except Exception as e:
+            print(f"[ThemeDbg] styleHints not available: {e}")
+
+        # Always set the user-selected style
+        QApplication.setStyle(QStyleFactory.create(style_name))
+        active_style = QApplication.style().objectName().lower()
+        print(f"[ThemeDbg] Active Qt style after set: {active_style}")
+
+        _palette_snapshot("BeforeApply", app.palette())
+
+        # windowsvista has no dark support; always treat as Light
+        if style_name.lower() == "windowsvista":
+            if theme_name != "Light":
+                print("[ThemeDbg] windowsvista selected → forcing theme=Light")
+            theme_name = "Light"
+
+        # System: follow OS, clear overrides
+        if theme_name == "System":
+            app.setPalette(QPalette())
+            app.setStyleSheet("")
+            _palette_snapshot("After System", app.palette())
+            return
+
+        # Force Light
+        if theme_name == "Light":
+            if active_style == "fusion":
+                # Explicit Fusion light palette
+                app.setPalette(make_fusion_light_palette())
+                print("[ThemeDbg] Applied Fusion light palette (explicit) for Light")
+            else:
+                # For native styles, use their own light standard palette
+                light_palette = QApplication.style().standardPalette()
+                app.setPalette(light_palette)
+                print("[ThemeDbg] Applied current style standardPalette() for Light")
+
+                # windows11 menu readability fix
+                if active_style == "windows11":
+                    app.setStyleSheet(
+                        "QMenu { background: palette(Base); color: palette(Text); }"
+                    )
+                    print("[ThemeDbg] Applied windows11 QMenu stylesheet for Light")
+                else:
+                    app.setStyleSheet("")
+            _palette_snapshot("After Light", app.palette())
+            return
+
+        # Force Dark
+        if theme_name == "Dark":
+            if active_style == "fusion":
+                # Explicit Fusion dark palette
+                app.setPalette(make_fusion_dark_palette())
+                print("[ThemeDbg] Applied Fusion dark palette (explicit) for Dark")
+            else:
+                # For native styles, start from Fusion dark as a baseline (stable),
+                # then adapt a few key roles from the current style to match native accents,
+                # and ensure readable foreground text on dark backgrounds.
+                base_dark = make_fusion_dark_palette()
+
+                native_pal = QApplication.style().standardPalette()
+
+                # Preserve native accents
+                base_dark.setColor(QPalette.Highlight, native_pal.color(QPalette.Highlight))
+                base_dark.setColor(QPalette.HighlightedText, native_pal.color(QPalette.HighlightedText))
+
+                # Ensure text is readable on dark backgrounds
+                # Some native palettes (on OS Light) report black text; override to white for dark UI.
+                base_dark.setColor(QPalette.WindowText, Qt.white)
+                base_dark.setColor(QPalette.Text, Qt.white)
+                base_dark.setColor(QPalette.ButtonText, Qt.white)
+                base_dark.setColor(QPalette.ToolTipText, Qt.white)
+
+                app.setPalette(base_dark)
+                print("[ThemeDbg] Applied adapted dark palette for native style (dark base + native accents + readable text)")
+
+                app.setStyleSheet("")
+
+            _palette_snapshot("After Dark", app.palette())
+            return
+
+
+        # Unknown theme fallback
         app.setPalette(QPalette())
+        app.setStyleSheet("")
+        _palette_snapshot("After Unknown", app.palette())
+
+    except Exception as e:
+        print(f"[ThemeDbg] Exception in apply_style_and_theme: {e}")
 
 
 class service_signals(QObject):

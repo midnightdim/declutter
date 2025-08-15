@@ -45,17 +45,13 @@ class SettingsDialog(QDialog):
 
         self.ui.styleComboBox.addItems(result)
         self.ui.styleComboBox.textActivated.connect(self.change_style)
-        
-        current_palette = self.settings.get("palette", "System/Default")
-        index = self.ui.paletteComboBox.findText(current_palette)
-        if index >= 0:
-            self.ui.paletteComboBox.setCurrentIndex(index)
+        self._update_theme_lock(self.ui.styleComboBox.currentText())
+        self.ui.styleComboBox.textActivated.connect(self._update_theme_lock)
 
-        # Enable palette selection only for Fusion style
-        self.ui.paletteComboBox.setEnabled(self.settings.get("style", "") == "Fusion")
-        self.ui.styleComboBox.textActivated.connect(
-            lambda name: self.ui.paletteComboBox.setEnabled(name == "Fusion")
-        )
+        current_theme = self.settings.get("theme", "System")
+        index = self.ui.themeComboBox.findText(current_theme)
+        if index >= 0:
+            self.ui.themeComboBox.setCurrentIndex(index)
 
         rbs = [c for c in self.ui.dateDefGroupBox.children() if 'QRadioButton' in str(
             type(c))]  # TBD vN this is not very safe
@@ -64,7 +60,14 @@ class SettingsDialog(QDialog):
             str(self.settings['rule_exec_interval']/60))
         
 
-    
+    def _update_theme_lock(self, style_name: str):
+        is_vista = style_name.lower() == "windowsvista"
+        self.ui.themeComboBox.setEnabled(not is_vista)
+        if is_vista:
+            # Force Light in UI for windowsvista
+            idx = self.ui.themeComboBox.findText("Light")
+            if idx >= 0:
+                self.ui.themeComboBox.setCurrentIndex(idx)
 
     def cell_changed(self, row, col):
         if col == 0:
@@ -137,7 +140,10 @@ class SettingsDialog(QDialog):
         self.settings['rule_exec_interval'] = float(
             self.ui.ruleExecIntervalEdit.text())*60
         self.settings['style'] = self.ui.styleComboBox.currentText()
-        self.settings['palette'] = self.ui.paletteComboBox.currentText()
+        if self.settings['style'].lower() == "windowsvista":
+            self.settings['theme'] = "Light"
+        else:
+            self.settings['theme'] = self.ui.themeComboBox.currentText()
 
         self.settings['file_types'] = {}
         # TBD add validation

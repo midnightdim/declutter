@@ -19,7 +19,7 @@ PRIMITIVE_KEYS = {
     'dryrun': False,
     'date_type': 0,
     'style': 'Fusion',
-    'palette': 'System/Default'
+    'theme': 'System'
 }
 
 
