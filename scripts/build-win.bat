@@ -2,11 +2,11 @@
 REM This script builds the DeClutter application for Windows using PyInstaller.
 
 cd ..
-REM python setup.py build
+python setup.py build
 
 copy scripts\win_build_files_to_delete.txt build\exe.win-amd64-3.13\lib\PySide6\files_to_delete.txt
 
-REM copy DeClutter.ico build\exe.win-amd64-3.13\DeClutter.ico
+copy DeClutter.ico build\exe.win-amd64-3.13\DeClutter.ico
 copy scripts\DeClutter.iss build\exe.win-amd64-3.13\DeClutter.iss
 
 REM Navigate and delete
@@ -16,7 +16,7 @@ del files_to_delete.txt
 rmdir /s /q translations
 rmdir /s /q qml
 cd ../..
-dir
+
 REM Run Inno Setup to create the installer
 echo "The application has been built."
 echo "You can now create an installer using Inno Setup."
