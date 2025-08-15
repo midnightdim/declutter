@@ -262,7 +262,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="DeClutter.qrc">
+            <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart" resource="DeClutter.qrc">
              <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
            </property>
           </widget>

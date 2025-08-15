@@ -20,7 +20,7 @@
    <string>DeClutter (beta): Rules</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="DeClutter.qrc">
+   <iconset>
     <normaloff>:/images/DeClutter.ico</normaloff>:/images/DeClutter.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -73,7 +73,7 @@
         <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -88,10 +88,10 @@
       <item>
        <widget class="QTableWidget" name="rulesTable">
         <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
+         <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
         </property>
         <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
+         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
         </property>
         <property name="alternatingRowColors">
          <bool>true</bool>
@@ -134,7 +134,7 @@
      <x>0</x>
      <y>0</y>
      <width>1028</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
@@ -182,7 +182,7 @@
   </widget>
   <action name="actionAdd">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="QIcon::ThemeIcon::DocumentPageSetup" resource="DeClutter.qrc">
      <normaloff>:/images/icons/document-new.svg</normaloff>:/images/icons/document-new.svg</iconset>
    </property>
    <property name="text">
@@ -207,7 +207,7 @@
   </action>
   <action name="actionDelete">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="QIcon::ThemeIcon::EditDelete" resource="DeClutter.qrc">
      <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
    </property>
    <property name="text">
@@ -219,7 +219,7 @@
   </action>
   <action name="actionExecute">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart" resource="DeClutter.qrc">
      <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
    </property>
    <property name="text">
@@ -228,7 +228,7 @@
   </action>
   <action name="actionMove_up">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="QIcon::ThemeIcon::GoUp" resource="DeClutter.qrc">
      <normaloff>:/images/icons/arrow-thin-up.svg</normaloff>:/images/icons/arrow-thin-up.svg</iconset>
    </property>
    <property name="text">
@@ -240,7 +240,7 @@
   </action>
   <action name="actionMove_down">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="QIcon::ThemeIcon::GoDown" resource="DeClutter.qrc">
      <normaloff>:/images/icons/arrow-thin-down.svg</normaloff>:/images/icons/arrow-thin-down.svg</iconset>
    </property>
    <property name="text">
@@ -267,7 +267,7 @@
   </action>
   <action name="actionOpen_Tagger">
    <property name="icon">
-    <iconset resource="DeClutter.qrc">
+    <iconset theme="system-file-manager" resource="DeClutter.qrc">
      <normaloff>:/images/icons/tags.svg</normaloff>:/images/icons/tags.svg</iconset>
    </property>
    <property name="text">
