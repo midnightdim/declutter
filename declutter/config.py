@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from appdirs import user_data_dir
 
-VERSION = "1.13.4"
+VERSION = "1.13.5"
 
 APP_FOLDER = user_data_dir("DeClutter", appauthor='', roaming=True)
 Path(APP_FOLDER).mkdir(parents=True, exist_ok=True)

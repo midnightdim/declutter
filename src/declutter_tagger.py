@@ -433,7 +433,9 @@ class TaggerWindow(QMainWindow):
                         )
                     return True
 
-                elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+                elif (
+                    event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier
+                ):
                     # Collect selected rows and store as file:// URLs in clipboard
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     urls = [
@@ -452,8 +454,10 @@ class TaggerWindow(QMainWindow):
                     self._clipboard_mime = mime_data
                     QApplication.clipboard().setMimeData(self._clipboard_mime)
                     return True
-                
-                elif event.key() == Qt.Key_X and event.modifiers() == Qt.ControlModifier:
+
+                elif (
+                    event.key() == Qt.Key_X and event.modifiers() == Qt.ControlModifier
+                ):
                     # Collect selected rows and store as file:// URLs in clipboard, mark as cut
                     indexes = self.ui.treeView.selectionModel().selectedRows()
                     urls = [
@@ -479,8 +483,10 @@ class TaggerWindow(QMainWindow):
                     self._clipboard_mime = mime_data
                     QApplication.clipboard().setMimeData(self._clipboard_mime)
                     return True
-                
-                elif event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier:
+
+                elif (
+                    event.key() == Qt.Key_V and event.modifiers() == Qt.ControlModifier
+                ):
                     if not self.ui.treeView.hasFocus():
                         return True
                     # Ensure this is the active window
@@ -518,14 +524,16 @@ class TaggerWindow(QMainWindow):
 
                     # Check for overwrite conflicts
                     for url in paste_urls:
-                        dst_path = os.path.join(target_dir, os.path.basename(url.toLocalFile()))
+                        dst_path = os.path.join(
+                            target_dir, os.path.basename(url.toLocalFile())
+                        )
                         if os.path.exists(dst_path):
                             reply = QMessageBox.question(
                                 self,
                                 "File exists",
                                 f"File '{os.path.basename(dst_path)}' already exists in the target folder.\nOverwrite?",
                                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-                                QMessageBox.No
+                                QMessageBox.No,
                             )
                             if reply == QMessageBox.Cancel:
                                 return True
@@ -539,7 +547,10 @@ class TaggerWindow(QMainWindow):
                     mime_for_drop = QMimeData()
                     mime_for_drop.setUrls(paste_urls)
                     if clip_mime and "Preferred DropEffect" in clip_mime.formats():
-                        mime_for_drop.setData("Preferred DropEffect", clip_mime.data("Preferred DropEffect"))
+                        mime_for_drop.setData(
+                            "Preferred DropEffect",
+                            clip_mime.data("Preferred DropEffect"),
+                        )
 
                     drop_effect_val = None
                     if clip_mime and "Preferred DropEffect" in clip_mime.formats():
@@ -548,7 +559,9 @@ class TaggerWindow(QMainWindow):
                             ds.setByteOrder(QDataStream.LittleEndian)
                             drop_effect_val = ds.readInt32()
                         except Exception as e:
-                            logging.warning("[PASTE] Error reading Preferred DropEffect: %s", e)
+                            logging.warning(
+                                "[PASTE] Error reading Preferred DropEffect: %s", e
+                            )
 
                     # Decide action
                     if drop_effect_val == 2:
@@ -556,16 +569,25 @@ class TaggerWindow(QMainWindow):
                     else:
                         # Default copy; Shift forces move
                         mods = QApplication.keyboardModifiers()
-                        action = Qt.CopyAction if not (mods & Qt.ShiftModifier) else Qt.MoveAction
+                        action = (
+                            Qt.CopyAction
+                            if not (mods & Qt.ShiftModifier)
+                            else Qt.MoveAction
+                        )
 
-                    src_target_index = self.model.index(target_dir, 0) if isinstance(self.model, QFileSystemModel) else QModelIndex()
+                    src_target_index = (
+                        self.model.index(target_dir, 0)
+                        if isinstance(self.model, QFileSystemModel)
+                        else QModelIndex()
+                    )
 
                     if hasattr(self.model, "dropMimeData"):
-                        if self.model.dropMimeData(mime_for_drop, action, -1, -1, src_target_index):
+                        if self.model.dropMimeData(
+                            mime_for_drop, action, -1, -1, src_target_index
+                        ):
                             self.update_treeview()
                             self.update_tag_checkboxes()
                     return True
-
 
         else:
             if event.type() == QEvent.MouseButtonPress:
@@ -693,6 +715,10 @@ class TaggerWindow(QMainWindow):
 
     def init_tag_checkboxes(self):
         """Initializes and populates the tag checkboxes in the tags dock widget."""
+        # reset mappings to avoid stale QObject references
+        self.tag_checkboxes = {}
+        self.tag_combos = {}
+
         # removing all tag checkboxes
         while True:
             if self.ui.tagsLayout.itemAt(0):
@@ -703,13 +729,15 @@ class TaggerWindow(QMainWindow):
         for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
             if group["name_shown"]:
-                self.ui.tagsLayout.addWidget(QLabel("<b>" + group["name"] + "</b>"))
+                self.ui.tagsLayout.addWidget(QLabel("" + group["name"] + ""))
             if group["widget_type"] == 0:
                 for k in range(self.tag_model.item(i).rowCount()):
                     tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                     self.tag_checkboxes[tag["name"]] = QCheckBox(tag["name"])
                     self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag["name"]])
                     self.tag_checkboxes[tag["name"]].clicked.connect(self.set_tags)
+                    # disabled by default until selection is present
+                    self.tag_checkboxes[tag["name"]].setEnabled(False)
                     if tag["color"]:
                         color = QColor()
                         color.setRgba(tag["color"])
@@ -725,12 +753,31 @@ class TaggerWindow(QMainWindow):
                     ]
                 )
                 self.ui.tagsLayout.addWidget(self.tag_combos[group["id"]])
+                self.tag_combos[group["id"]].setCurrentText("")
                 self.tag_combos[group["id"]].currentIndexChanged.connect(self.set_tags)
+                # disabled by default until selection is present
+                self.tag_combos[group["id"]].setEnabled(False)
+
         self.ui.tagsScrollArea.setWidgetResizable(True)
 
     def update_tag_checkboxes(self):
         """Updates the state of tag checkboxes based on the selected files."""
         indexes = self.ui.treeView.selectionModel().selectedRows()
+
+        if not indexes:
+            for cb in self.tag_checkboxes.values():
+                cb.setEnabled(False)
+                cb.setChecked(False)
+            for combo in self.tag_combos.values():
+                combo.setEnabled(False)
+                combo.setCurrentText("")
+            return
+        else:
+            for cb in self.tag_checkboxes.values():
+                cb.setEnabled(True)
+            for combo in self.tag_combos.values():
+                combo.setEnabled(True)
+
         if self.sorting_model:
             cur_selection = [
                 normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
@@ -742,17 +789,17 @@ class TaggerWindow(QMainWindow):
         all_files_tags_with_group_ids = []
         for f in cur_selection:
             all_files_tags_with_group_ids.extend(get_tags_by_group_ids(f))
+        # all_files_tags_with_group_ids should be a list of (tag_name, group_id)
 
         if all_files_tags_with_group_ids:
-            all_files_tags, n = zip(*all_files_tags_with_group_ids)
+            all_files_tags, _ = zip(*all_files_tags_with_group_ids)
         else:
             all_files_tags = []
 
+        # Build group_id -> list[str tag_name]
         tree = {}
-        for t in set(all_files_tags_with_group_ids):
-            if t[1] not in tree.keys():
-                tree[t[1]] = []
-            tree[t[1]].append(t[0])
+        for tag_name, group_id in set(all_files_tags_with_group_ids):
+            tree.setdefault(group_id, []).append(tag_name)
 
         for i in range(self.tag_model.rowCount()):
             group = self.tag_model.item(i).data(Qt.UserRole)
@@ -760,31 +807,26 @@ class TaggerWindow(QMainWindow):
                 for t in get_all_tags_by_group_id(group["id"]):
                     if t not in all_files_tags:
                         self.tag_checkboxes[t].setTristate(False)
-                        if (
-                            self.tag_checkboxes[t].checkState()
-                            is not Qt.CheckState.Unchecked
-                        ):
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
                             self.tag_checkboxes[t].setChecked(False)
                     elif all_files_tags.count(t) < len(cur_selection):
                         self.tag_checkboxes[t].setTristate(True)
-                        if (
-                            self.tag_checkboxes[t].checkState()
-                            is not Qt.CheckState.PartiallyChecked
-                        ):
-                            self.tag_checkboxes[t].setCheckState(
-                                Qt.CheckState.PartiallyChecked
-                            )
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
+                            self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
                     else:
-                        if (
-                            self.tag_checkboxes[t].checkState()
-                            is not Qt.CheckState.Checked
-                        ):
+                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
                             self.tag_checkboxes[t].setChecked(True)
             elif group["widget_type"] == 1:
-                if group["id"] not in tree.keys():
+                # Set combo to the first tag name (string) for this group
+                vals = tree.get(group["id"], [])
+                if not vals:
                     self.tag_combos[group["id"]].setCurrentText("")
                 else:
-                    self.tag_combos[group["id"]].setCurrentText(tree[group["id"]][0])
+                    # Defensive: ensure we pass a string even if vals contain tuples by mistake
+                    first = vals[0]
+                    self.tag_combos[group["id"]].setCurrentText(first if isinstance(first, tuple) else first)
+
+
 
     def update_recent_menu(self):
         self.ui.recent_menu.clear()
@@ -990,36 +1032,48 @@ class TaggerWindow(QMainWindow):
                 normpath(self.model.filePath(self.sorting_model.mapToSource(index)))
                 for index in indexes
             ]
+            source_indexes = [self.sorting_model.mapToSource(i) for i in indexes]
         else:
             cur_selection = [normpath(self.model.filePath(index)) for index in indexes]
+            source_indexes = indexes
 
         if type(sender) == QCheckBox:
             for file_path in cur_selection:
-                if state:  # checked - it was 2 when used with stateChanged
+                if state:  # checked
                     add_tag(file_path, sender.text())
-                elif not state:  # unchecked - it was 0 when used with stateChanged
+                else:      # unchecked
                     remove_tag(file_path, sender.text())
+
         elif type(sender) == QComboBox:
             for file_path in cur_selection:
                 if sender.currentText() == "":
                     remove_tags(
                         file_path,
-                        [
-                            sender.itemText(i)
-                            for i in range(sender.count())
-                            if sender.itemText(i) != ""
-                        ],
+                        [sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != ""],
                     )
                 else:
                     remove_tags(
                         file_path,
-                        [
-                            sender.itemText(i)
-                            for i in range(sender.count())
-                            if sender.itemText(i) != ""
-                        ],
-                    )  # TBD maybe optimize this
+                        [sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != ""],
+                    )
                     add_tag(file_path, sender.currentText())
+
+        # Refresh dock state immediately
+        self.update_tag_checkboxes()
+
+        # Refresh view/model cells for tag column immediately (multi-select too)
+        try:
+            if isinstance(self.model, TagFSModel):
+                tag_col = self.model.columnCount() - 1
+                for sidx in source_indexes:
+                    if sidx.isValid():
+                        left = self.model.index(sidx.row(), tag_col, sidx.parent())
+                        self.model.dataChanged.emit(left, left, [Qt.DisplayRole, Qt.BackgroundRole])
+        except Exception:
+            pass
+
+        # Ensure repaint
+        self.ui.treeView.viewport().update()
 
 
 class TagFSModel(QFileSystemModel):
