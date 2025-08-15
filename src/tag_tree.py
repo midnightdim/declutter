@@ -49,24 +49,34 @@ class TagTree(QTreeView):
         """Handles drop events to perform tag and group movements."""
         to_index = self.indexAt(event.pos())
         position = self.dropIndicatorPosition()
-
         par_ix = self.selectedIndexes()[0] if self.selectedIndexes() else None
+
         if not par_ix or not par_ix.isValid():
             return
 
         where = to_index.data(Qt.UserRole)
         what = par_ix.data(Qt.UserRole)
 
+        # Normalize drop indicator enum to the integer expected by move_* functions
+        # Map: Above/On -> 1 (before), Below -> 2 (after), OnViewport -> 2 (safe default)
+        if position in (QAbstractItemView.AboveItem, QAbstractItemView.OnItem):
+            position_int = 1
+        elif position == QAbstractItemView.BelowItem:
+            position_int = 2
+        else:
+            position_int = 2
+
         # Logic for moving tags/groups based on source and target types
         if what['type'] == 'tag' and where['type'] == 'group':
             move_tag_to_group(what['id'], where['id'])
         elif what['type'] == 'tag' and where['type'] == 'tag':
-            move_tag_to_tag(what, where, int(position))
+            move_tag_to_tag(what, where, position_int)
         elif what['type'] == 'group' and where['type'] == 'group':
-            move_group_to_group(what, where, int(position))
+            move_group_to_group(what, where, position_int)
 
         super().dropEvent(event)
         self.setExpanded(to_index, True)
+
 
 class TagsDialog(QDialog):
     """Dialog for managing tags, displaying them in a TagTree."""
