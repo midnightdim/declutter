@@ -194,6 +194,14 @@ class TagsDialog(QDialog):
                 {"name": group, "name_shown": group, "type": "group", "id": id},
                 Qt.UserRole,
             )
+
+            # Set folder icon immediately (prefer theme; fallback to bundled)
+            iconThemeName = "folder"
+            if QIcon.hasThemeIcon(iconThemeName):
+                gr_item.setIcon(QIcon.fromTheme(iconThemeName))
+            else:
+                gr_item.setIcon(QIcon(":/images/icons/folder.svg"))
+
             self.model.appendRow(gr_item)
 
     def remove(self):
