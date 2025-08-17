@@ -48,7 +48,11 @@ class Ui_tagsDialog(object):
         self.addButton = QPushButton(tagsDialog)
         self.addButton.setObjectName(u"addButton")
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/tag.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.DocumentNew):
+            icon1 = QIcon.fromTheme(QIcon.ThemeIcon.DocumentNew)
+        else:
+            icon1.addFile(u":/images/icons/tag.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.addButton.setIcon(icon1)
 
         self.horizontalLayout.addWidget(self.addButton)
@@ -56,26 +60,38 @@ class Ui_tagsDialog(object):
         self.addGroupButton = QPushButton(tagsDialog)
         self.addGroupButton.setObjectName(u"addGroupButton")
         icon2 = QIcon()
-        icon2.addFile(u":/images/icons/folder.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.FolderNew):
+            icon2 = QIcon.fromTheme(QIcon.ThemeIcon.FolderNew)
+        else:
+            icon2.addFile(u":/images/icons/folder.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.addGroupButton.setIcon(icon2)
 
         self.horizontalLayout.addWidget(self.addGroupButton)
 
+        self.editButton = QPushButton(tagsDialog)
+        self.editButton.setObjectName(u"editButton")
+        icon3 = QIcon()
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.DocumentProperties):
+            icon3 = QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties)
+        else:
+            icon3.addFile(u":/images/icons/brush.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
+        self.editButton.setIcon(icon3)
+
+        self.horizontalLayout.addWidget(self.editButton)
+
         self.removeButton = QPushButton(tagsDialog)
         self.removeButton.setObjectName(u"removeButton")
-        icon3 = QIcon()
-        icon3.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.removeButton.setIcon(icon3)
+        icon4 = QIcon()
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.EditDelete):
+            icon4 = QIcon.fromTheme(QIcon.ThemeIcon.EditDelete)
+        else:
+            icon4.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
+        self.removeButton.setIcon(icon4)
 
         self.horizontalLayout.addWidget(self.removeButton)
-
-        self.colorButton = QPushButton(tagsDialog)
-        self.colorButton.setObjectName(u"colorButton")
-        icon4 = QIcon()
-        icon4.addFile(u":/images/icons/brush.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.colorButton.setIcon(icon4)
-
-        self.horizontalLayout.addWidget(self.colorButton)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -92,6 +108,9 @@ class Ui_tagsDialog(object):
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
+        QWidget.setTabOrder(self.addButton, self.addGroupButton)
+        QWidget.setTabOrder(self.addGroupButton, self.removeButton)
+        QWidget.setTabOrder(self.removeButton, self.treeView)
 
         self.retranslateUi(tagsDialog)
         self.buttonBox.rejected.connect(tagsDialog.reject)
@@ -111,12 +130,12 @@ class Ui_tagsDialog(object):
 #endif // QT_CONFIG(tooltip)
         self.addGroupButton.setText("")
 #if QT_CONFIG(tooltip)
+        self.editButton.setToolTip(QCoreApplication.translate("tagsDialog", u"Edit", None))
+#endif // QT_CONFIG(tooltip)
+        self.editButton.setText("")
+#if QT_CONFIG(tooltip)
         self.removeButton.setToolTip(QCoreApplication.translate("tagsDialog", u"Delete", None))
 #endif // QT_CONFIG(tooltip)
         self.removeButton.setText("")
-#if QT_CONFIG(tooltip)
-        self.colorButton.setToolTip(QCoreApplication.translate("tagsDialog", u"Select Color", None))
-#endif // QT_CONFIG(tooltip)
-        self.colorButton.setText("")
     # retranslateUi
 

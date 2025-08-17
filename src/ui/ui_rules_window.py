@@ -39,7 +39,11 @@ class Ui_rulesWindow(object):
         self.actionAdd = QAction(rulesWindow)
         self.actionAdd.setObjectName(u"actionAdd")
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.DocumentPageSetup):
+            icon1 = QIcon.fromTheme(QIcon.ThemeIcon.DocumentPageSetup)
+        else:
+            icon1.addFile(u":/images/icons/document-new.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionAdd.setIcon(icon1)
         self.actionOpen_log_file = QAction(rulesWindow)
         self.actionOpen_log_file.setObjectName(u"actionOpen_log_file")
@@ -48,22 +52,38 @@ class Ui_rulesWindow(object):
         self.actionDelete = QAction(rulesWindow)
         self.actionDelete.setObjectName(u"actionDelete")
         icon2 = QIcon()
-        icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.EditDelete):
+            icon2 = QIcon.fromTheme(QIcon.ThemeIcon.EditDelete)
+        else:
+            icon2.addFile(u":/images/icons/trash.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionDelete.setIcon(icon2)
         self.actionExecute = QAction(rulesWindow)
         self.actionExecute.setObjectName(u"actionExecute")
         icon3 = QIcon()
-        icon3.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.MediaPlaybackStart):
+            icon3 = QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart)
+        else:
+            icon3.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionExecute.setIcon(icon3)
         self.actionMove_up = QAction(rulesWindow)
         self.actionMove_up.setObjectName(u"actionMove_up")
         icon4 = QIcon()
-        icon4.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.GoUp):
+            icon4 = QIcon.fromTheme(QIcon.ThemeIcon.GoUp)
+        else:
+            icon4.addFile(u":/images/icons/arrow-thin-up.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionMove_up.setIcon(icon4)
         self.actionMove_down = QAction(rulesWindow)
         self.actionMove_down.setObjectName(u"actionMove_down")
         icon5 = QIcon()
-        icon5.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.GoDown):
+            icon5 = QIcon.fromTheme(QIcon.ThemeIcon.GoDown)
+        else:
+            icon5.addFile(u":/images/icons/arrow-thin-down.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionMove_down.setIcon(icon5)
         self.actionSettings = QAction(rulesWindow)
         self.actionSettings.setObjectName(u"actionSettings")
@@ -74,7 +94,12 @@ class Ui_rulesWindow(object):
         self.actionOpen_Tagger = QAction(rulesWindow)
         self.actionOpen_Tagger.setObjectName(u"actionOpen_Tagger")
         icon6 = QIcon()
-        icon6.addFile(u":/images/icons/tags.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        iconThemeName = u"system-file-manager"
+        if QIcon.hasThemeIcon(iconThemeName):
+            icon6 = QIcon.fromTheme(iconThemeName)
+        else:
+            icon6.addFile(u":/images/icons/tags.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.actionOpen_Tagger.setIcon(icon6)
         self.centralwidget = QWidget(rulesWindow)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -130,8 +155,8 @@ class Ui_rulesWindow(object):
         __qtablewidgetitem3 = QTableWidgetItem()
         self.rulesTable.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         self.rulesTable.setObjectName(u"rulesTable")
-        self.rulesTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        self.rulesTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.rulesTable.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.rulesTable.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.rulesTable.setAlternatingRowColors(True)
         self.rulesTable.setColumnCount(4)
         self.rulesTable.horizontalHeader().setStretchLastSection(True)
@@ -144,7 +169,7 @@ class Ui_rulesWindow(object):
         rulesWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(rulesWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1028, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1028, 22))
         self.menuOptions = QMenu(self.menubar)
         self.menuOptions.setObjectName(u"menuOptions")
         self.menuOptions_2 = QMenu(self.menubar)

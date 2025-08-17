@@ -174,7 +174,11 @@ class Ui_taggerWindow(object):
         self.mediaPlayButton = QPushButton(self.mediaDockWidgetContent)
         self.mediaPlayButton.setObjectName(u"mediaPlayButton")
         icon1 = QIcon()
-        icon1.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        if QIcon.hasThemeIcon(QIcon.ThemeIcon.MediaPlaybackStart):
+            icon1 = QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart)
+        else:
+            icon1.addFile(u":/images/icons/media-play.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+
         self.mediaPlayButton.setIcon(icon1)
 
         self.horizontalLayout_2.addWidget(self.mediaPlayButton)

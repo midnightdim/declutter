@@ -85,18 +85,18 @@ class Ui_settingsDialog(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.paletteLabel = QLabel(self.mainTab)
-        self.paletteLabel.setObjectName(u"paletteLabel")
+        self.themeLabel = QLabel(self.mainTab)
+        self.themeLabel.setObjectName(u"themeLabel")
 
-        self.horizontalLayout_4.addWidget(self.paletteLabel)
+        self.horizontalLayout_4.addWidget(self.themeLabel)
 
-        self.paletteComboBox = QComboBox(self.mainTab)
-        self.paletteComboBox.addItem("")
-        self.paletteComboBox.addItem("")
-        self.paletteComboBox.addItem("")
-        self.paletteComboBox.setObjectName(u"paletteComboBox")
+        self.themeComboBox = QComboBox(self.mainTab)
+        self.themeComboBox.addItem("")
+        self.themeComboBox.addItem("")
+        self.themeComboBox.addItem("")
+        self.themeComboBox.setObjectName(u"themeComboBox")
 
-        self.horizontalLayout_4.addWidget(self.paletteComboBox)
+        self.horizontalLayout_4.addWidget(self.themeComboBox)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -228,10 +228,10 @@ class Ui_settingsDialog(object):
         self.label_2.setText(QCoreApplication.translate("settingsDialog", u"Process rules every", None))
         self.label_3.setText(QCoreApplication.translate("settingsDialog", u"minutes", None))
         self.label_4.setText(QCoreApplication.translate("settingsDialog", u"Style", None))
-        self.paletteLabel.setText(QCoreApplication.translate("settingsDialog", u"Palette", None))
-        self.paletteComboBox.setItemText(0, QCoreApplication.translate("settingsDialog", u"System/Default", None))
-        self.paletteComboBox.setItemText(1, QCoreApplication.translate("settingsDialog", u"Fusion Light", None))
-        self.paletteComboBox.setItemText(2, QCoreApplication.translate("settingsDialog", u"Fusion Dark", None))
+        self.themeLabel.setText(QCoreApplication.translate("settingsDialog", u"Theme", None))
+        self.themeComboBox.setItemText(0, QCoreApplication.translate("settingsDialog", u"System", None))
+        self.themeComboBox.setItemText(1, QCoreApplication.translate("settingsDialog", u"Light", None))
+        self.themeComboBox.setItemText(2, QCoreApplication.translate("settingsDialog", u"Dark", None))
 
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.mainTab), QCoreApplication.translate("settingsDialog", u"Main", None))
         self.dateDefGroupBox.setTitle(QCoreApplication.translate("settingsDialog", u"Date definition", None))
