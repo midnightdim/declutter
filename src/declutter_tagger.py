@@ -727,36 +727,39 @@ class TaggerWindow(QMainWindow):
                 break
 
         for i in range(self.tag_model.rowCount()):
-            group = self.tag_model.item(i).data(Qt.UserRole)
-            if group["name_shown"]:
-                self.ui.tagsLayout.addWidget(QLabel("" + group["name"] + ""))
-            if group["widget_type"] == 0:
+            group = self.tag_model.item(i).data(Qt.UserRole) or {}
+            # default fallbacks if keys are missing
+            widget_type = group.get("widget_type", 0)
+            name_shown = group.get("name_shown", 1)
+            group_id = group.get("id")
+
+            if name_shown:
+                self.ui.tagsLayout.addWidget(QLabel("" + group.get("name", "") + ""))
+
+            if widget_type == 0:
                 for k in range(self.tag_model.item(i).rowCount()):
                     tag = self.tag_model.item(i).child(k).data(Qt.UserRole)
                     self.tag_checkboxes[tag["name"]] = QCheckBox(tag["name"])
                     self.ui.tagsLayout.addWidget(self.tag_checkboxes[tag["name"]])
                     self.tag_checkboxes[tag["name"]].clicked.connect(self.set_tags)
-                    # disabled by default until selection is present
                     self.tag_checkboxes[tag["name"]].setEnabled(False)
                     if tag["color"]:
                         color = QColor()
                         color.setRgba(tag["color"])
                         self.tag_checkboxes[tag["name"]].setPalette(color)
                         self.tag_checkboxes[tag["name"]].setAutoFillBackground(True)
-            elif group["widget_type"] == 1:
-                self.tag_combos[group["id"]] = QComboBox(self)
-                self.tag_combos[group["id"]].addItems(
-                    [""]
-                    + [
+            elif widget_type == 1:
+                self.tag_combos[group_id] = QComboBox(self)
+                self.tag_combos[group_id].addItems(
+                    [""] + [
                         self.tag_model.item(i).child(k).data(Qt.UserRole)["name"]
                         for k in range(self.tag_model.item(i).rowCount())
                     ]
                 )
-                self.ui.tagsLayout.addWidget(self.tag_combos[group["id"]])
-                self.tag_combos[group["id"]].setCurrentText("")
-                self.tag_combos[group["id"]].currentIndexChanged.connect(self.set_tags)
-                # disabled by default until selection is present
-                self.tag_combos[group["id"]].setEnabled(False)
+                self.ui.tagsLayout.addWidget(self.tag_combos[group_id])
+                self.tag_combos[group_id].setCurrentText("")
+                self.tag_combos[group_id].currentIndexChanged.connect(self.set_tags)
+                self.tag_combos[group_id].setEnabled(False)
 
         self.ui.tagsScrollArea.setWidgetResizable(True)
 

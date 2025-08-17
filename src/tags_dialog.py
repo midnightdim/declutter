@@ -6,10 +6,10 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLineEdit,
     QColorDialog,
-    QPushButton,
     QComboBox,
     QDialogButtonBox,
-    QVBoxLayout,
+    QVBoxLayout, 
+    QAbstractItemView,
 )
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QColor, QStandardItemModel, QStandardItem, QIcon
@@ -48,6 +48,7 @@ class TagsDialog(QDialog):
         self.ui.treeView.setModel(self.model)
         self.ui.treeView.expandAll()
         self.ui.treeView.setExpandsOnDoubleClick(False)
+        self.ui.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def rename(self):
         cur_item = self.ui.treeView.currentIndex().data(Qt.UserRole)
@@ -84,21 +85,29 @@ class TagsDialog(QDialog):
                 self.model.item(i).data(Qt.UserRole)["name"]
                 for i in range(self.model.rowCount())
             ]
-
             other_groups.remove(group)
 
             group_dialog = GroupDialog(group)
 
-            if group_dialog.exec():
+            # Preselect current widget_type if present
+            current_widget_type = cur_item.get("widget_type", 0)
+            try:
+                group_dialog.comboBox.setCurrentIndex(int(current_widget_type))
+            except Exception:
+                group_dialog.comboBox.setCurrentIndex(0)
 
+            if group_dialog.exec():
                 newgroup = group_dialog.lineEdit.text()
                 widget_type = group_dialog.comboBox.currentIndex()
-                set_group_type(group, widget_type)
-                cur_item["widget_type"] = widget_type
-                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
-                    cur_item, Qt.UserRole
-                )
 
+                # Persist group type to DB
+                set_group_type(group, widget_type)
+
+                # Update current item’s metadata
+                cur_item["widget_type"] = widget_type
+                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item, Qt.UserRole)
+
+                # Rename group if changed and not duplicate
                 if newgroup != "" and newgroup != group:
                     if newgroup in other_groups:
                         QMessageBox.information(
@@ -108,15 +117,13 @@ class TagsDialog(QDialog):
                         )
                     else:
                         rename_group(group, newgroup)
-
                         cur_item["name"] = newgroup
+                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item, Qt.UserRole)
+                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(newgroup, Qt.DisplayRole)
 
-                        self.model.itemFromIndex(
-                            self.ui.treeView.currentIndex()
-                        ).setData(cur_item, Qt.UserRole)
-                        self.model.itemFromIndex(
-                            self.ui.treeView.currentIndex()
-                        ).setData(newgroup, Qt.DisplayRole)
+            # Ensure the view does not enter inline edit after dialog
+            self.ui.treeView.clearSelection()
+            self.ui.treeView.setCurrentIndex(self.model.index(-1, -1))
 
     def set_color(self):
         if self.ui.treeView.currentIndex().data(Qt.UserRole)["type"] == "tag":
@@ -284,7 +291,7 @@ class GroupDialog(QDialog):
         super(GroupDialog, self).__init__()
         vbox = QVBoxLayout()
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Multi-value (checkboxes)", "Single value (combobox)"])
+        self.comboBox.addItems(["Multi value (checkboxes)", "Single value (combobox)"])
         self.lineEdit = QLineEdit(group)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -295,9 +302,8 @@ class GroupDialog(QDialog):
         vbox.addWidget(self.lineEdit)
         vbox.addWidget(self.comboBox)
         vbox.addWidget(self.buttonBox)
-        icon = QIcon()
-        icon.addFile(":/images/DeClutter.ico", QSize(), QIcon.Normal, QIcon.Off)
-        self.setWindowIcon(icon)
+        self.setWindowTitle("Edit Group")
+        self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.setLayout(vbox)
 
     def accept(self):
