@@ -337,6 +337,13 @@ def set_group_type(group, widget_type):
     c.execute("UPDATE tag_groups SET widget_type = ? WHERE name = ?", (widget_type, group))
     conn.commit()
     conn.close()
+    
+def set_group_name_shown(group_name: str, name_shown: int):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("UPDATE tag_groups SET name_shown = ? WHERE name = ?", (int(name_shown), group_name))
+    conn.commit()
+    conn.close()    
 
 def move_tag_to_group(tag_id, group_id):
     conn = sqlite3.connect(DB_FILE)

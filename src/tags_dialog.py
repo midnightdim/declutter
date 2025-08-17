@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QColorDialog,
     QComboBox,
     QDialogButtonBox,
-    QVBoxLayout, 
+    QVBoxLayout,
     QAbstractItemView,
 )
 from PySide6.QtCore import Qt, QSize
@@ -26,6 +26,7 @@ from declutter.tags import (
     create_group,
     delete_tag,
     delete_group,
+    set_group_name_shown,
 )
 
 
@@ -87,10 +88,15 @@ class TagsDialog(QDialog):
             ]
             other_groups.remove(group)
 
-            group_dialog = GroupDialog(group)
-
-            # Preselect current widget_type if present
+            # Preselect current widget_type and name_shown
             current_widget_type = cur_item.get("widget_type", 0)
+            current_name_shown = cur_item.get("name_shown", 1)
+            is_default = cur_item.get("id") == 1
+
+            group_dialog = GroupDialog(
+                group, name_shown=current_name_shown, is_default=is_default
+            )
+
             try:
                 group_dialog.comboBox.setCurrentIndex(int(current_widget_type))
             except Exception:
@@ -99,13 +105,21 @@ class TagsDialog(QDialog):
             if group_dialog.exec():
                 newgroup = group_dialog.lineEdit.text()
                 widget_type = group_dialog.comboBox.currentIndex()
+                name_shown = 1 if group_dialog.showNameCheck.isChecked() else 0
 
                 # Persist group type to DB
                 set_group_type(group, widget_type)
+                try:
+                    set_group_name_shown(group, name_shown)
+                except Exception:
+                    pass
 
-                # Update current item’s metadata
+                # Update current item’s metadata in the model
                 cur_item["widget_type"] = widget_type
-                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item, Qt.UserRole)
+                cur_item["name_shown"] = name_shown
+                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
+                    cur_item, Qt.UserRole
+                )
 
                 # Rename group if changed and not duplicate
                 if newgroup != "" and newgroup != group:
@@ -118,10 +132,14 @@ class TagsDialog(QDialog):
                     else:
                         rename_group(group, newgroup)
                         cur_item["name"] = newgroup
-                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(cur_item, Qt.UserRole)
-                        self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(newgroup, Qt.DisplayRole)
+                        self.model.itemFromIndex(
+                            self.ui.treeView.currentIndex()
+                        ).setData(cur_item, Qt.UserRole)
+                        self.model.itemFromIndex(
+                            self.ui.treeView.currentIndex()
+                        ).setData(newgroup, Qt.DisplayRole)
 
-            # Ensure the view does not enter inline edit after dialog
+            # Prevent accidental inline edit after dialog
             self.ui.treeView.clearSelection()
             self.ui.treeView.setCurrentIndex(self.model.index(-1, -1))
 
@@ -180,8 +198,6 @@ class TagsDialog(QDialog):
 
         # Create and handle any DB uniqueness errors defensively
         try:
-            from declutter.tags import create_tag
-
             create_tag(tag, group_id)
         except Exception as e:
             # Most likely sqlite3.IntegrityError: UNIQUE constraint failed: tags.name
@@ -266,7 +282,16 @@ def generate_tag_model(model, data, groups_selectable=True):
         item = QStandardItem(group)
         item.setData(group, Qt.DisplayRole)
         item.setData(data[group], Qt.UserRole)
-        # TBD can change this in the future to make in-place editing
+        try:
+            if data[group].get("id") == 1:
+                # avoid importing QFont globally; set a bold font object via FontRole
+                from PySide6.QtGui import QFont
+
+                bold_font = QFont()
+                bold_font.setBold(True)
+                item.setData(bold_font, Qt.FontRole)
+        except Exception:
+            pass
         item.setEditable(False)
         item.setSelectable(groups_selectable)
         item.setIcon(QIcon(":/images/icons/folder.svg"))
@@ -281,27 +306,41 @@ def generate_tag_model(model, data, groups_selectable=True):
                     color.setRgba(tag["color"])
                     tag_item.setData(color, Qt.BackgroundRole)
                 tag_item.setDropEnabled(False)
-                # TBD can change this in the future to make in-place editing
                 tag_item.setEditable(False)
                 item.appendRow(tag_item)
 
 
 class GroupDialog(QDialog):
-    def __init__(self, group):
-        super(GroupDialog, self).__init__()
+    def __init__(self, group, name_shown=True, is_default=False, parent=None):
+        super(GroupDialog, self).__init__(parent)
         vbox = QVBoxLayout()
+
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Multi value (checkboxes)", "Single value (combobox)"])
+        self.comboBox.addItems(["Multi-value (checkboxes)", "Single value (combobox)"])
+
         self.lineEdit = QLineEdit(group)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        # New: checkbox to control name_shown
+        from PySide6.QtWidgets import QCheckBox, QLabel
 
+        self.showNameCheck = QCheckBox("Show group name")
+        self.showNameCheck.setChecked(bool(name_shown))
+
+        # Optional info for Default group
+        if is_default:
+            note = QLabel("This is the default group")
+            note.setStyleSheet("color: palette(mid);")  # subtle
+            vbox.addWidget(note)
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.accepted.connect(self.accept)
 
         vbox.addWidget(self.lineEdit)
         vbox.addWidget(self.comboBox)
+        vbox.addWidget(self.showNameCheck)
         vbox.addWidget(self.buttonBox)
+
         self.setWindowTitle("Edit Group")
         self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.setLayout(vbox)
