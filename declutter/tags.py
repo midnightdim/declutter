@@ -103,31 +103,87 @@ def rename_group(old_group, new_group):
     conn.close()
 
 def rename_tag(old_tag, new_tag):
-    tagged_files = get_files_by_tag(old_tag)
+    """
+    Rename a tag. If new_tag already exists, merge old_tag into new_tag:
+    - move all file associations to new_tag (no duplicates)
+    - delete old_tag
+    Also updates settings rules/conditions occurrences.
+    """
     conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    if new_tag in get_all_tags():
-        delete_tag(old_tag)
+
+    # Check if target exists
+    c.execute("SELECT id FROM tags WHERE name = ?", (new_tag,))
+    row = c.fetchone()
+    target_exists = row is not None
+
+    if target_exists:
+        # Merge: move associations old_tag -> new_tag, then delete old_tag
+        c.execute("SELECT id FROM tags WHERE name = ?", (old_tag,))
+        src_row = c.fetchone()
+        if not src_row:
+            conn.close()
+            return
+        src_tag_id = src_row["id"]
+        dst_tag_id = row["id"]
+
+        # Move associations, avoid creating duplicates where possible
+        c.execute("""
+            INSERT OR IGNORE INTO file_tags(file_id, tag_id, timestamp)
+            SELECT file_id, ?, timestamp FROM file_tags WHERE tag_id = ?
+        """, (dst_tag_id, src_tag_id))
+
+        # HARD DEDUP: in case table has no unique constraint on (file_id, tag_id)
+        # Keep the earliest timestamp row; delete any duplicate rows for (file_id, dst_tag_id)
+        c.execute("""
+            DELETE FROM file_tags
+            WHERE rowid NOT IN (
+                SELECT MIN(ft.rowid)
+                FROM file_tags ft
+                WHERE ft.tag_id = ?
+                GROUP BY ft.file_id, ft.tag_id
+            )
+            AND tag_id = ?
+        """, (dst_tag_id, dst_tag_id))
+
+        # Remove old tag associations and the tag row
+        c.execute("DELETE FROM file_tags WHERE tag_id = ?", (src_tag_id,))
+        c.execute("DELETE FROM tags WHERE id = ?", (src_tag_id,))
+        conn.commit()
+        conn.close()
     else:
-        c.execute("UPDATE tags set name = ? WHERE name = ?", (new_tag, old_tag))
-    conn.commit()
-    conn.close()
+        # Simple rename of tag name
+        c.execute("UPDATE tags SET name = ? WHERE name = ?", (new_tag, old_tag))
+        conn.commit()
+        conn.close()
 
-    # updating tagged files
-    for f in tagged_files:
-        add_tag(f, new_tag)
-
-    # updating rules and conditions
+    # Update settings references
     settings = load_settings()
-    for r in settings['rules']:
-        if old_tag in r['tags']:
-            r['tags'].remove(old_tag)
-            r['tags'].append(new_tag)
-        for cond in r['conditions']:
+    changed = False
+    for r in settings.get('rules', []):
+        if 'tags' in r and old_tag in r['tags']:
+            try:
+                r['tags'].remove(old_tag)
+            except ValueError:
+                pass
+            if new_tag not in r['tags']:
+                r['tags'].append(new_tag)
+            changed = True
+        for cond in r.get('conditions', []):
             if cond.get('type') == 'tags' and old_tag in cond.get('tags', []):
-                cond['tags'].remove(old_tag)
-                cond['tags'].append(new_tag)
-    save_settings(settings)
+                try:
+                    cond['tags'].remove(old_tag)
+                except ValueError:
+                    pass
+                if new_tag not in cond['tags']:
+                    cond['tags'].append(new_tag)
+                changed = True
+    if changed:
+        save_settings(settings)
+
+    # Clear per-file tag cache so reads reflect the merge
+    clear_tags_cache()
 
 def set_tags(filename, tags):  # stores complete tag set for file
     filename = os.path.normpath(filename).lower()

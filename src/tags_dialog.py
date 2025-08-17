@@ -27,6 +27,7 @@ from declutter.tags import (
     delete_tag,
     delete_group,
     set_group_name_shown,
+    get_files_by_tag,
 )
 
 
@@ -42,14 +43,37 @@ class TagsDialog(QDialog):
         self.ui.removeButton.clicked.connect(self.remove)
         self.ui.addGroupButton.clicked.connect(self.add_group)
 
-        self.ui.colorButton.clicked.connect(self.set_color)
+        self.ui.editButton.clicked.connect(self.edit_selected)
 
         self.ui.treeView.doubleClicked.connect(self.rename)
         # self.model.itemChanged.connect(self.item_changed) # TBD this can be used for in-place editing
         self.ui.treeView.setModel(self.model)
+        sel_model = self.ui.treeView.selectionModel()
+        if sel_model:
+            sel_model.selectionChanged.connect(self._update_toolbar_buttons_state)
+        # Initialize state on open
+        self._update_toolbar_buttons_state()
         self.ui.treeView.expandAll()
         self.ui.treeView.setExpandsOnDoubleClick(False)
         self.ui.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+    def _update_toolbar_buttons_state(self, *args):
+        """Enable/disable edit and delete buttons based on selection."""
+        idx = self.ui.treeView.currentIndex()
+        has_selection = idx.isValid() and bool(idx.data(Qt.UserRole))
+        # Edit enabled only if something is selected (tag or group)
+        self.ui.editButton.setEnabled(has_selection)
+        # Delete enabled only if a tag is selected OR a non-default group is selected
+        can_delete = False
+        if has_selection:
+            payload = idx.data(Qt.UserRole)
+            if payload and "type" in payload:
+                if payload["type"] == "tag":
+                    can_delete = True
+                elif payload["type"] == "group":
+                    # block default group (id==1)
+                    can_delete = payload.get("id") != 1
+        self.ui.removeButton.setEnabled(can_delete)
 
     def rename(self):
         cur_item = self.ui.treeView.currentIndex().data(Qt.UserRole)
@@ -58,34 +82,58 @@ class TagsDialog(QDialog):
             newtag, ok = QInputDialog.getText(
                 self, "Rename tag", "Enter new name:", QLineEdit.Normal, cur_tag
             )
+
             if ok and newtag != "" and newtag != cur_tag:
-                merge = False
-                if newtag in get_all_tags():  # TBD use model data instead?
+                # Check if target tag exists
+                existing = set(get_all_tags())
+                target_exists = newtag in existing
+
+                # Count usage of current tag to decide whether to show merge message
+                usage_count = 0
+                if target_exists:
+                    try:
+                        usage = get_files_by_tag(cur_tag)
+                        usage_count = len(usage) if usage else 0
+                    except Exception:
+                        usage_count = 0
+
+                proceed = True
+                if target_exists and usage_count > 0:
+                    file_word = "file" if usage_count == 1 else "files"
                     merge = QMessageBox.question(
                         self,
                         "Warning",
-                        "This tag already exists, files tagged with '"
-                        + cur_tag
-                        + "' will be tagged with '"
-                        + newtag
-                        + "'.\nAre you sure you want to proceed?",
+                        f"This tag already exists. Files tagged with '{cur_tag}' ({usage_count} {file_word}) will be tagged with '{newtag}'.\nAre you sure you want to proceed?",
                         QMessageBox.Yes | QMessageBox.No,
                     )
-                if newtag and merge in (QMessageBox.Yes, False):
-                    rename_tag(cur_tag, newtag)
-                    cur_item["name"] = newtag
-                    self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
-                        cur_item, Qt.UserRole
-                    )
-                    self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
-                        newtag, Qt.DisplayRole
-                    )
+                    proceed = merge == QMessageBox.Yes
+
+                if not proceed:
+                    return
+
+                # Perform rename (with merge if target exists)
+                rename_tag(cur_tag, newtag)
+
+                # Update UI model payload for immediate feedback
+                cur_item["name"] = newtag
+                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
+                    cur_item, Qt.UserRole
+                )
+                self.model.itemFromIndex(self.ui.treeView.currentIndex()).setData(
+                    newtag, Qt.DisplayRole
+                )
+
+                # Fully rebuild the model to drop the old tag row immediately
+                self.reload_model()
+            return
+
         else:  # group
             group = cur_item["name"]
             other_groups = [
                 self.model.item(i).data(Qt.UserRole)["name"]
                 for i in range(self.model.rowCount())
             ]
+
             other_groups.remove(group)
 
             # Preselect current widget_type and name_shown
@@ -138,6 +186,79 @@ class TagsDialog(QDialog):
                         self.model.itemFromIndex(
                             self.ui.treeView.currentIndex()
                         ).setData(newgroup, Qt.DisplayRole)
+
+            # Prevent accidental inline edit after dialog
+            self.ui.treeView.clearSelection()
+            self.ui.treeView.setCurrentIndex(self.model.index(-1, -1))
+
+    def edit_selected(self):
+        """Edit selected tag or group:
+        - tag: open color picker (existing behavior)
+        - group: open GroupDialog
+        """
+        idx = self.ui.treeView.currentIndex()
+        if not idx.isValid():
+            return
+        payload = idx.data(Qt.UserRole)
+        if not payload or "type" not in payload:
+            return
+
+        if payload["type"] == "tag":
+            self.set_color()
+        elif payload["type"] == "group":
+            # Reuse the same flow as double-click on group
+            group = payload.get("name", "")
+            current_widget_type = payload.get("widget_type", 0)
+            current_name_shown = payload.get("name_shown", 1)
+            is_default = payload.get("id") == 1
+
+            group_dialog = GroupDialog(
+                group, name_shown=current_name_shown, is_default=is_default
+            )
+            try:
+                group_dialog.comboBox.setCurrentIndex(int(current_widget_type))
+            except Exception:
+                group_dialog.comboBox.setCurrentIndex(0)
+
+            if group_dialog.exec():
+                newgroup = group_dialog.lineEdit.text()
+                widget_type = group_dialog.comboBox.currentIndex()
+                name_shown = 1 if group_dialog.showNameCheck.isChecked() else 0
+
+                # Persist to DB
+                set_group_type(group, widget_type)
+                try:
+                    set_group_name_shown(group, name_shown)
+                except Exception:
+                    pass
+
+                # Update model payload
+                payload["widget_type"] = widget_type
+                payload["name_shown"] = name_shown
+                self.model.itemFromIndex(idx).setData(payload, Qt.UserRole)
+
+                # Handle rename if changed and not duplicate
+                if newgroup and newgroup != group:
+                    other_groups = [
+                        self.model.item(i).data(Qt.UserRole)["name"]
+                        for i in range(self.model.rowCount())
+                    ]
+                    # remove current name to avoid self-duplicate detection
+                    try:
+                        other_groups.remove(group)
+                    except ValueError:
+                        pass
+                    if newgroup in other_groups:
+                        QMessageBox.information(
+                            self,
+                            "Can't do that",
+                            "Another group with this name already exists. Please choose a different name.",
+                        )
+                    else:
+                        rename_group(group, newgroup)
+                        payload["name"] = newgroup
+                        self.model.itemFromIndex(idx).setData(payload, Qt.UserRole)
+                        self.model.itemFromIndex(idx).setData(newgroup, Qt.DisplayRole)
 
             # Prevent accidental inline edit after dialog
             self.ui.treeView.clearSelection()
@@ -214,7 +335,7 @@ class TagsDialog(QDialog):
             id = create_group(group)
             gr_item = QStandardItem(group)
             gr_item.setData(
-                {"name": group, "name_shown": group, "type": "group", "id": id},
+                {"name": group, "name_shown": 1, "type": "group", "id": id},
                 Qt.UserRole,
             )
 
@@ -228,48 +349,69 @@ class TagsDialog(QDialog):
             self.model.appendRow(gr_item)
 
     def remove(self):
-        if self.ui.treeView.currentIndex().data(Qt.UserRole)["type"] == "tag":
-            tag = self.ui.treeView.currentIndex().data()
+        idx = self.ui.treeView.currentIndex()
+        data = idx.data(Qt.UserRole)
+        if not data or "type" not in data:
+            return
+
+        if data["type"] == "tag":
+            tag = idx.data()  # display role holds tag name
+            # New: compute usage count
+            try:
+                from declutter.tags import get_files_by_tag
+
+                usage = get_files_by_tag(tag)
+                count = len(usage) if usage else 0
+            except Exception:
+                count = 0
+
+            msg = f'Are you sure you want to delete this tag: "{tag}"?'
+            if count > 0:
+                msg += f"\nThis tag is used by {count} file{'s' if count != 1 else ''}.\nDeleting it will remove the tag from {'those files' if count != 1 else 'that file'}."
+
             reply = QMessageBox.question(
                 self,
                 "Warning",
-                "Are you sure you want to delete this tag:\n" + tag + "?",
+                msg,
                 QMessageBox.Yes | QMessageBox.No,
             )
             if reply == QMessageBox.Yes:
                 delete_tag(tag)
-                item = self.model.itemFromIndex(self.ui.treeView.currentIndex())
+                item = self.model.itemFromIndex(idx)
                 self.model.removeRow(
                     item.row(), self.model.indexFromItem(item.parent())
                 )
+            return
+
         else:
-            group = self.ui.treeView.currentIndex().data(Qt.UserRole)
+            group = data
             if group["id"] == 1:
                 QMessageBox.critical(
                     self, "Can't do that", "You can't delete the default group, sorry."
                 )
-            else:
-                msgBox = QMessageBox(
-                    QMessageBox.Question,
-                    "Question",
-                    "You're about to delete this group:\n"
-                    + group["name"]
-                    + "\nWould you like to keep its tags (will be moved to Default group) or delete them all?",
-                )
-                # to default group
-                msgBox.addButton("Keep tags", QMessageBox.YesRole)
-                msgBox.addButton("Delete tags", QMessageBox.NoRole)
-                msgBox.addButton("Cancel", QMessageBox.RejectRole)
+                return
 
-                reply = msgBox.exec()
-                if reply != 2:
-                    delete_group(group["id"], not reply)
+            msgBox = QMessageBox(
+                QMessageBox.Question,
+                "Question",
+                "You're about to delete this group:\n"
+                + group["name"]
+                + "\nWould you like to keep its tags (will be moved to Default group) or delete them all?",
+            )
+            # to default group
+            msgBox.addButton("Keep tags", QMessageBox.YesRole)
+            msgBox.addButton("Delete tags", QMessageBox.NoRole)
+            msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            reply = msgBox.exec()
+            if reply != 2:
+                delete_group(group["id"], not reply)
                 self.reload_model()
 
     def reload_model(self):
 
         self.model.clear()
         generate_tag_model(self.model, get_tags_and_groups())
+        self._update_toolbar_buttons_state()
 
         self.ui.treeView.expandAll()
 

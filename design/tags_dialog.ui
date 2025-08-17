@@ -67,6 +67,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="editButton">
+         <property name="toolTip">
+          <string>Edit</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::DocumentProperties" resource="DeClutter.qrc">
+           <normaloff>:/images/icons/brush.svg</normaloff>:/images/icons/brush.svg</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="removeButton">
          <property name="toolTip">
           <string>Delete</string>
@@ -77,20 +91,6 @@
          <property name="icon">
           <iconset theme="QIcon::ThemeIcon::EditDelete" resource="DeClutter.qrc">
            <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="colorButton">
-         <property name="toolTip">
-          <string>Select Color</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset theme="QIcon::ThemeIcon::DocumentProperties" resource="DeClutter.qrc">
-           <normaloff>:/images/icons/brush.svg</normaloff>:/images/icons/brush.svg</iconset>
          </property>
         </widget>
        </item>
@@ -123,6 +123,12 @@
    <header location="global">..tag_tree</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>addButton</tabstop>
+  <tabstop>addGroupButton</tabstop>
+  <tabstop>removeButton</tabstop>
+  <tabstop>treeView</tabstop>
+ </tabstops>
  <resources>
   <include location="DeClutter.qrc"/>
  </resources>
