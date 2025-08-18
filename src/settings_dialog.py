@@ -2,6 +2,7 @@ import sys
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
 from PySide6.QtCore import Qt
 from declutter.store import load_settings, save_settings
+from src.startup import is_enabled as startup_is_enabled, enable as startup_enable, disable as startup_disable
 
 from src.ui.ui_settings_dialog import Ui_settingsDialog
 
@@ -52,7 +53,7 @@ class SettingsDialog(QDialog):
             if idx >= 0:
                 self.ui.styleComboBox.setCurrentIndex(idx)
 
-        # IMPORTANT: apply the theme lock logic once after style selection
+        # Apply the theme lock logic once after style selection
         self._update_theme_lock(self.ui.styleComboBox.currentText())
 
         # Initialize theme combo from saved settings
@@ -77,6 +78,17 @@ class SettingsDialog(QDialog):
         rbs[self.settings['date_type']].setChecked(True)
         self.ui.ruleExecIntervalEdit.setText(
             str(self.settings['rule_exec_interval']/60))
+        
+        # Startup checkbox handling:
+        # - Windows: hide it (managed by installer/OS).
+        # - macOS: show and bind actual state.
+        if sys.platform.startswith("win"):
+            self.ui.startAtLoginCheckBox.setVisible(False)
+        else:
+            try:
+                self.ui.startAtLoginCheckBox.setChecked(startup_is_enabled())
+            except Exception:
+                self.ui.startAtLoginCheckBox.setChecked(False)
         
 
     def _update_theme_lock(self, style_name: str):
@@ -170,6 +182,16 @@ class SettingsDialog(QDialog):
             if self.ui.fileTypesTable.item(i, 0) and self.ui.fileTypesTable.item(i, 0).text():
                 self.settings['file_types'][self.ui.fileTypesTable.item(
                     i, 0).text()] = self.ui.fileTypesTable.item(i, 1).text()
+
+        if not sys.platform.startswith("win"):
+            try:
+                want = self.ui.startAtLoginCheckBox.isChecked()
+                if want:
+                    startup_enable()
+                else:
+                    startup_disable()
+            except Exception:
+                pass
 
         save_settings(self.settings)
         super(SettingsDialog, self).accept()

@@ -44,7 +44,7 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename
 
 [Tasks]
 Name: desktopicon; Description: "Create a &desktop icon"; Flags: unchecked 
-Name: StartMenuEntry; Description: "Start {#MyAppName} service when Windows starts"
+Name: StartMenuEntry; Description: "Start {#MyAppName} when Windows starts"
 ;Name: StartAfterInstall; Description: Run application after install
 
 [Run]

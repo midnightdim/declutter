@@ -420,10 +420,6 @@ class RulesWindow(QMainWindow):
 
         self.quitAction = QAction("Quit", self)
         # self.quitAction.triggered.connect(QApplication.quit)
-        try:
-            self.quitAction.triggered.disconnect()
-        except Exception:
-            pass
         self.quitAction.triggered.connect(self._handle_quit)
 
     def create_tray_icon(self):
