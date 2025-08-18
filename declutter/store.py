@@ -22,6 +22,7 @@ PRIMITIVE_KEYS = {
     "theme": "System",
     "rules_window_geometry": None,
     "tagger_window_geometry": None,
+    "rules_window_visible_on_exit": True,
 }
 
 

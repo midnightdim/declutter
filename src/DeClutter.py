@@ -1,5 +1,4 @@
 import sys
-import os
 from copy import deepcopy
 from time import time
 import logging
@@ -52,7 +51,7 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
-        
+
         # Restore geometry
         try:
             geom = self.settings.get("rules_window_geometry")
@@ -61,7 +60,7 @@ class RulesWindow(QMainWindow):
                 self.restoreGeometry(ba)
         except Exception:
             pass
-        
+
         style = self.settings.get("style", "Fusion")
         theme = self.settings.get("theme", "System")
         apply_style_and_theme(QApplication.instance(), style, theme)
@@ -146,7 +145,9 @@ class RulesWindow(QMainWindow):
                                             asset["name"].endswith(".exe")
                                             and "Windows" in asset["name"]
                                         ):
-                                            webbrowser.open(asset["browser_download_url"])
+                                            webbrowser.open(
+                                                asset["browser_download_url"]
+                                            )
                                             return
                             # Fallback to releases page if no specific asset found
                             webbrowser.open(
@@ -418,7 +419,12 @@ class RulesWindow(QMainWindow):
         self.showSettingsWindow.triggered.connect(self.show_settings)
 
         self.quitAction = QAction("Quit", self)
-        self.quitAction.triggered.connect(QApplication.quit)
+        # self.quitAction.triggered.connect(QApplication.quit)
+        try:
+            self.quitAction.triggered.disconnect()
+        except Exception:
+            pass
+        self.quitAction.triggered.connect(self._handle_quit)
 
     def create_tray_icon(self):
         """Creates the system tray icon and its context menu."""
@@ -447,30 +453,75 @@ class RulesWindow(QMainWindow):
         self.tagger.show()
         self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution  # TBD this doesn't look like the best solution
 
-    def closeEvent(self, event):
-        """Persist window geometry before close (added)."""
+    def _handle_quit(self):
+        # Mark that we are quitting, then initiate app shutdown
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("will_quit", True)
+        QApplication.quit()
+
+    def showEvent(self, e):
+        # Ensure a user-shown window will be shown next startup
         try:
             s = load_settings()
-            ba = self.saveGeometry()
-            s["rules_window_geometry"] = list(bytes(ba))
+            s["rules_window_visible_on_exit"] = True
+            save_settings(s)
+        except Exception:
+            pass
+        super().showEvent(e)
+
+    def hideEvent(self, e):
+        """
+        Hide to tray. Only set next-start visibility to False if not quitting.
+        """
+        app = QApplication.instance()
+        will_quit = bool(app.property("will_quit")) if app is not None else False
+
+        if will_quit:
+            super().hideEvent(e)
+            return
+
+        try:
+            s = load_settings()
+            s["rules_window_visible_on_exit"] = False
+            s["rules_window_geometry"] = list(bytes(self.saveGeometry()))
+            save_settings(s)
+        except Exception:
+            pass
+        super().hideEvent(e)
+
+    def closeEvent(self, event):
+        """
+        Persist final state before application quits or the window is closed.
+        """
+        app = QApplication.instance()
+        will_quit = bool(app.property("will_quit")) if app is not None else False
+
+        try:
+            s = load_settings()
+            s["rules_window_geometry"] = list(bytes(self.saveGeometry()))
+            if will_quit:
+                # On explicit quit, record actual visibility at the moment we initiated quit
+                s["rules_window_visible_on_exit"] = self.isVisible()
+            # Else: leave visibility to hideEvent (X-to-tray flow)
             save_settings(s)
         except Exception:
             pass
         super().closeEvent(event)
 
-    @Slot(str, list)
-    def show_tray_message(self, message, details):
-        """Shows a message in the system tray."""
-        if message:
-            self.trayIcon.showMessage(
-                "DeClutter",
-                message,
-                QSystemTrayIcon.Information,
-                15000,
-            )
+        @Slot(str, list)
+        def show_tray_message(self, message, details):
+            """Shows a message in the system tray."""
+            if message:
+                self.trayIcon.showMessage(
+                    "DeClutter",
+                    message,
+                    QSystemTrayIcon.Information,
+                    15000,
+                )
 
-        self.service_run_details = details if details else self.service_run_details
-        self.service_runs = False
+            self.service_run_details = details if details else self.service_run_details
+            self.service_runs = False
 
 
 def make_fusion_light_palette() -> QPalette:
@@ -696,7 +747,11 @@ def main():
     app.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
 
     window = RulesWindow()
-    window.show()
+    # Decide visibility based on persisted flag
+    settings = load_settings()
+    if settings["rules_window_visible_on_exit"]:
+        window.show()
+
     window.setWindowTitle("DeClutter (beta) " + VERSION)
     sys.exit(app.exec())
 
