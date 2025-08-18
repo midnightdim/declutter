@@ -26,6 +26,8 @@ from src.ui.ui_list_dialog import Ui_listDialog
 from declutter.config import VERSION, LOG_FILE
 from declutter.store import load_settings, save_settings
 from declutter.rules import apply_all_rules, apply_rule, get_rule_by_id
+from declutter.file_utils import open_file
+from declutter.logging_utils import _refresh_log_file_handler
 
 from src.declutter_tagger import TaggerWindow
 
@@ -235,10 +237,9 @@ class RulesWindow(QMainWindow):
 
     def open_log_file(self):
         """Opens the log file."""
-        os.startfile(LOG_FILE)
+        open_file(LOG_FILE)
 
     def clear_log_file(self):
-        """Clears the log file."""
         reply = QMessageBox.question(
             self,
             "Warning",
@@ -247,8 +248,11 @@ class RulesWindow(QMainWindow):
         )
         if reply == QMessageBox.Yes:
             try:
-                with open(LOG_FILE, "w"):
-                    pass
+                _refresh_log_file_handler()  # detach/close existing handler
+                with open(LOG_FILE, "w", encoding="utf-8"):
+                    pass  # truncate
+                _refresh_log_file_handler(mode="a+")  # reattach so logging continues
+                logging.info("Log file cleared.")
             except Exception as e:
                 logging.exception(f"exception {e}")
 

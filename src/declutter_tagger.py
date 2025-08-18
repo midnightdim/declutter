@@ -60,7 +60,7 @@ from declutter.tags import (
     remove_tag,
     get_tags_and_groups,
 )
-from declutter.file_utils import get_file_type
+from declutter.file_utils import get_file_type, open_file
 
 from src.file_system_model_lite import FileSystemModelLite
 from src.condition_dialog import ConditionDialog
@@ -751,7 +751,8 @@ class TaggerWindow(QMainWindow):
             elif widget_type == 1:
                 self.tag_combos[group_id] = QComboBox(self)
                 self.tag_combos[group_id].addItems(
-                    [""] + [
+                    [""]
+                    + [
                         self.tag_model.item(i).child(k).data(Qt.UserRole)["name"]
                         for k in range(self.tag_model.item(i).rowCount())
                     ]
@@ -810,14 +811,25 @@ class TaggerWindow(QMainWindow):
                 for t in get_all_tags_by_group_id(group["id"]):
                     if t not in all_files_tags:
                         self.tag_checkboxes[t].setTristate(False)
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Unchecked:
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.Unchecked
+                        ):
                             self.tag_checkboxes[t].setChecked(False)
                     elif all_files_tags.count(t) < len(cur_selection):
                         self.tag_checkboxes[t].setTristate(True)
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.PartiallyChecked:
-                            self.tag_checkboxes[t].setCheckState(Qt.CheckState.PartiallyChecked)
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.PartiallyChecked
+                        ):
+                            self.tag_checkboxes[t].setCheckState(
+                                Qt.CheckState.PartiallyChecked
+                            )
                     else:
-                        if self.tag_checkboxes[t].checkState() is not Qt.CheckState.Checked:
+                        if (
+                            self.tag_checkboxes[t].checkState()
+                            is not Qt.CheckState.Checked
+                        ):
                             self.tag_checkboxes[t].setChecked(True)
             elif group["widget_type"] == 1:
                 # Set combo to the first tag name (string) for this group
@@ -827,9 +839,9 @@ class TaggerWindow(QMainWindow):
                 else:
                     # Defensive: ensure we pass a string even if vals contain tuples by mistake
                     first = vals[0]
-                    self.tag_combos[group["id"]].setCurrentText(first if isinstance(first, tuple) else first)
-
-
+                    self.tag_combos[group["id"]].setCurrentText(
+                        first if isinstance(first, tuple) else first
+                    )
 
     def update_recent_menu(self):
         self.ui.recent_menu.clear()
@@ -1044,7 +1056,7 @@ class TaggerWindow(QMainWindow):
             for file_path in cur_selection:
                 if state:  # checked
                     add_tag(file_path, sender.text())
-                else:      # unchecked
+                else:  # unchecked
                     remove_tag(file_path, sender.text())
 
         elif type(sender) == QComboBox:
@@ -1052,12 +1064,20 @@ class TaggerWindow(QMainWindow):
                 if sender.currentText() == "":
                     remove_tags(
                         file_path,
-                        [sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != ""],
+                        [
+                            sender.itemText(i)
+                            for i in range(sender.count())
+                            if sender.itemText(i) != ""
+                        ],
                     )
                 else:
                     remove_tags(
                         file_path,
-                        [sender.itemText(i) for i in range(sender.count()) if sender.itemText(i) != ""],
+                        [
+                            sender.itemText(i)
+                            for i in range(sender.count())
+                            if sender.itemText(i) != ""
+                        ],
                     )
                     add_tag(file_path, sender.currentText())
 
@@ -1071,7 +1091,9 @@ class TaggerWindow(QMainWindow):
                 for sidx in source_indexes:
                     if sidx.isValid():
                         left = self.model.index(sidx.row(), tag_col, sidx.parent())
-                        self.model.dataChanged.emit(left, left, [Qt.DisplayRole, Qt.BackgroundRole])
+                        self.model.dataChanged.emit(
+                            left, left, [Qt.DisplayRole, Qt.BackgroundRole]
+                        )
         except Exception:
             pass
 
@@ -1292,14 +1314,6 @@ def millis_to_str(duration):
     #     minutes = "0"+minutes
     hours = str(int((millis / (1000 * 60 * 60)) % 24))
     return (hours + ":" if hours != "0" else "") + minutes + ":" + seconds
-
-
-def open_file(filename):
-    if sys.platform == "win32":
-        os.startfile(filename)
-    else:
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, filename])
 
 
 def main():
