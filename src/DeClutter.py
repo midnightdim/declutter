@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStyleFactory,
 )
-from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QTimer
+from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QTimer, QByteArray
 from src.rule_edit_window import RuleEditWindow
 from src.settings_dialog import SettingsDialog
 from src.ui.ui_rules_window import Ui_rulesWindow
@@ -52,6 +52,16 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
+        
+        # Restore geometry
+        try:
+            geom = self.settings.get("rules_window_geometry")
+            if geom:
+                ba = QByteArray(bytes(geom))
+                self.restoreGeometry(ba)
+        except Exception:
+            pass
+        
         style = self.settings.get("style", "Fusion")
         theme = self.settings.get("theme", "System")
         apply_style_and_theme(QApplication.instance(), style, theme)
@@ -436,6 +446,17 @@ class RulesWindow(QMainWindow):
         """Shows the tagger window."""
         self.tagger.show()
         self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution  # TBD this doesn't look like the best solution
+
+    def closeEvent(self, event):
+        """Persist window geometry before close (added)."""
+        try:
+            s = load_settings()
+            ba = self.saveGeometry()
+            s["rules_window_geometry"] = list(bytes(ba))
+            save_settings(s)
+        except Exception:
+            pass
+        super().closeEvent(event)
 
     @Slot(str, list)
     def show_tray_message(self, message, details):

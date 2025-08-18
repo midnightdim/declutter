@@ -72,6 +72,17 @@ class TaggerWindow(QMainWindow):
         self.ui = Ui_taggerWindow()
         self.ui.setupUi(self)
         self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
+        
+        self.settings = load_settings()
+        # Restore geometry
+        try:
+            geom = self.settings.get("tagger_window_geometry")
+            if geom:
+                ba = QByteArray(bytes(geom))
+                self.restoreGeometry(ba)
+        except Exception:
+            pass
+        
         self.player = QMediaPlayer()
         self._audio_output = QAudioOutput()
         self.player.setAudioOutput(self._audio_output)
@@ -328,6 +339,16 @@ class TaggerWindow(QMainWindow):
     def closeEvent(self, event):
         """Stops media playback when the window is closed."""
         self.player.stop()
+        # Persist geometry
+        try:
+            from declutter.store import save_settings, load_settings
+            s = load_settings()
+            ba = self.saveGeometry()
+            s["tagger_window_geometry"] = list(bytes(ba))
+            save_settings(s)
+        except Exception:
+            pass
+        super().closeEvent(event)
 
     def eventFilter(self, source, event):
         """Filters events for specific UI elements to handle custom interactions."""
