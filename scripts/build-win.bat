@@ -18,15 +18,11 @@ rmdir /s /q qml
 cd ../..
 
 REM Run Inno Setup to create the installer
-echo "The application has been built."
-echo "You can now create an installer using Inno Setup."
-set /p build_installer="Do you want to build the installer now? (y/n) "
-if /i "%build_installer%"=="y" (
-    if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "DeClutter.iss"
-    ) else (
-        echo "Inno Setup is not installed in the default location."
-        echo "Please install Inno Setup or update the path in the script."
-        pause
-    )
+if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
+    "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "DeClutter.iss"
+) else (
+    echo "Inno Setup is not installed in the default location."
+    echo "Please install Inno Setup or update the path in the script."
+    pause
 )
+

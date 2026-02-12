@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1302</width>
-    <height>818</height>
+    <width>1200</width>
+    <height>748</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,7 +80,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1302</width>
+     <width>1200</width>
      <height>22</height>
     </rect>
    </property>
@@ -133,7 +133,7 @@
    <property name="minimumSize">
     <size>
      <width>180</width>
-     <height>500</height>
+     <height>300</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -197,7 +197,7 @@
           <x>0</x>
           <y>0</y>
           <width>180</width>
-          <height>476</height>
+          <height>406</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -235,6 +235,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="mediaDockWidget">
+   <property name="minimumSize">
+    <size>
+     <width>103</width>
+     <height>200</height>
+    </size>
+   </property>
    <property name="windowTitle">
     <string>Media Preview</string>
    </property>
@@ -325,6 +331,12 @@
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>192</width>
+     <height>200</height>
+    </size>
    </property>
    <property name="allowedAreas">
     <set>Qt::DockWidgetArea::BottomDockWidgetArea|Qt::DockWidgetArea::LeftDockWidgetArea|Qt::DockWidgetArea::RightDockWidgetArea</set>

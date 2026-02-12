@@ -263,11 +263,11 @@ def get_files_affected_by_rule(rule, allow_empty_conditions=False):
 
 
 
-def get_files_affected_by_rule_folder(rule, dirname, files_found=[]):
+def get_files_affected_by_rule_folder(rule, dirname, files_found=None):
     check_files()  # this is required to clean up the missing or incorrect file paths, TBD optimize this
     files = [get_actual_filename(f) for f in get_all_files_from_db()] if dirname == ALL_TAGGED_TEXT else os.listdir(
         dirname)  # TBD not sure if we need get_actual_filename() here
-    out_files = files_found
+    out_files = files_found if files_found is not None else []
     for f in files:
         if f != '.dc':  # ignoring .dc folder TBD can be removed for now and brough back for sidecar files
             fullname = os.path.join(dirname, f)

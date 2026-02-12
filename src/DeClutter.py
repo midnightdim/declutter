@@ -1,5 +1,4 @@
 import sys
-import os
 from copy import deepcopy
 from time import time
 import logging
@@ -18,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStyleFactory,
 )
-from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QTimer
+from PySide6.QtCore import Qt, QObject, QThread, Signal, Slot, QTimer, QByteArray
 from src.rule_edit_window import RuleEditWindow
 from src.settings_dialog import SettingsDialog
 from src.ui.ui_rules_window import Ui_rulesWindow
@@ -26,6 +25,8 @@ from src.ui.ui_list_dialog import Ui_listDialog
 from declutter.config import VERSION, LOG_FILE
 from declutter.store import load_settings, save_settings
 from declutter.rules import apply_all_rules, apply_rule, get_rule_by_id
+from declutter.file_utils import open_file
+from declutter.logging_utils import _refresh_log_file_handler
 
 from src.declutter_tagger import TaggerWindow
 
@@ -50,6 +51,16 @@ class RulesWindow(QMainWindow):
         self.create_tray_icon()
         self.trayIcon.show()
         self.settings = load_settings()
+
+        # Restore geometry
+        try:
+            geom = self.settings.get("rules_window_geometry")
+            if geom:
+                ba = QByteArray(bytes(geom))
+                self.restoreGeometry(ba)
+        except Exception:
+            pass
+
         style = self.settings.get("style", "Fusion")
         theme = self.settings.get("theme", "System")
         apply_style_and_theme(QApplication.instance(), style, theme)
@@ -134,7 +145,9 @@ class RulesWindow(QMainWindow):
                                             asset["name"].endswith(".exe")
                                             and "Windows" in asset["name"]
                                         ):
-                                            webbrowser.open(asset["browser_download_url"])
+                                            webbrowser.open(
+                                                asset["browser_download_url"]
+                                            )
                                             return
                             # Fallback to releases page if no specific asset found
                             webbrowser.open(
@@ -235,10 +248,9 @@ class RulesWindow(QMainWindow):
 
     def open_log_file(self):
         """Opens the log file."""
-        os.startfile(LOG_FILE)
+        open_file(LOG_FILE)
 
     def clear_log_file(self):
-        """Clears the log file."""
         reply = QMessageBox.question(
             self,
             "Warning",
@@ -247,8 +259,11 @@ class RulesWindow(QMainWindow):
         )
         if reply == QMessageBox.Yes:
             try:
-                with open(LOG_FILE, "w"):
-                    pass
+                _refresh_log_file_handler()  # detach/close existing handler
+                with open(LOG_FILE, "w", encoding="utf-8"):
+                    pass  # truncate
+                _refresh_log_file_handler(mode="a+")  # reattach so logging continues
+                logging.info("Log file cleared.")
             except Exception as e:
                 logging.exception(f"exception {e}")
 
@@ -404,7 +419,8 @@ class RulesWindow(QMainWindow):
         self.showSettingsWindow.triggered.connect(self.show_settings)
 
         self.quitAction = QAction("Quit", self)
-        self.quitAction.triggered.connect(QApplication.quit)
+        # self.quitAction.triggered.connect(QApplication.quit)
+        self.quitAction.triggered.connect(self._handle_quit)
 
     def create_tray_icon(self):
         """Creates the system tray icon and its context menu."""
@@ -432,6 +448,62 @@ class RulesWindow(QMainWindow):
         """Shows the tagger window."""
         self.tagger.show()
         self.tagger.init_tag_checkboxes()  # TBD this doesn't look like the best solution  # TBD this doesn't look like the best solution
+
+    def _handle_quit(self):
+        # Mark that we are quitting, then initiate app shutdown
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("will_quit", True)
+        QApplication.quit()
+
+    def showEvent(self, e):
+        # Ensure a user-shown window will be shown next startup
+        try:
+            s = load_settings()
+            s["rules_window_visible_on_exit"] = True
+            save_settings(s)
+        except Exception:
+            pass
+        super().showEvent(e)
+
+    def hideEvent(self, e):
+        """
+        Hide to tray. Only set next-start visibility to False if not quitting.
+        """
+        app = QApplication.instance()
+        will_quit = bool(app.property("will_quit")) if app is not None else False
+
+        if will_quit:
+            super().hideEvent(e)
+            return
+
+        try:
+            s = load_settings()
+            s["rules_window_visible_on_exit"] = False
+            s["rules_window_geometry"] = list(bytes(self.saveGeometry()))
+            save_settings(s)
+        except Exception:
+            pass
+        super().hideEvent(e)
+
+    def closeEvent(self, event):
+        """
+        Persist final state before application quits or the window is closed.
+        """
+        app = QApplication.instance()
+        will_quit = bool(app.property("will_quit")) if app is not None else False
+
+        try:
+            s = load_settings()
+            s["rules_window_geometry"] = list(bytes(self.saveGeometry()))
+            if will_quit:
+                # On explicit quit, record actual visibility at the moment we initiated quit
+                s["rules_window_visible_on_exit"] = self.isVisible()
+            # Else: leave visibility to hideEvent (X-to-tray flow)
+            save_settings(s)
+        except Exception:
+            pass
+        super().closeEvent(event)
 
     @Slot(str, list)
     def show_tray_message(self, message, details):
@@ -629,15 +701,18 @@ class declutter_service(QThread):
         self.starting_seconds = time()
 
     def run(self):
-        # TBD: Add more detailed logging for rule processing
-        details = []
-        report, details = apply_all_rules(load_settings())
-        msg = ""
-        for key in report.keys():
-            msg += key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""
-        if len(msg) > 0:
-            msg = "Processed files and folders:\n" + msg
-        self.signals.signal1.emit(msg, details)
+        try:
+            details = []
+            report, details = apply_all_rules(load_settings())
+            msg = ""
+            for key in report.keys():
+                msg += key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""
+            if len(msg) > 0:
+                msg = "Processed files and folders:\n" + msg
+            self.signals.signal1.emit(msg, details)
+        except Exception as e:
+            logging.exception(f"Scheduled rule execution failed: {e}")
+            self.signals.signal1.emit("", [])
 
 
 class new_version_checker(QThread):
@@ -671,7 +746,11 @@ def main():
     app.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
 
     window = RulesWindow()
-    window.show()
+    # Decide visibility based on persisted flag
+    settings = load_settings()
+    if settings["rules_window_visible_on_exit"]:
+        window.show()
+
     window.setWindowTitle("DeClutter (beta) " + VERSION)
     sys.exit(app.exec())
 

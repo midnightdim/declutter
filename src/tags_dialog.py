@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QAbstractItemView,
 )
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QStandardItemModel, QStandardItem, QIcon
 from src.ui.ui_tags_dialog import Ui_tagsDialog
 from declutter.tags import (

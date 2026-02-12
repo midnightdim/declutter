@@ -165,6 +165,15 @@
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
+   <property name="locale">
+    <locale language="English" country="UnitedStates"/>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -181,6 +190,9 @@
    <addaction name="actionOpen_Tagger"/>
   </widget>
   <action name="actionAdd">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::DocumentPageSetup" resource="DeClutter.qrc">
      <normaloff>:/images/icons/document-new.svg</normaloff>:/images/icons/document-new.svg</iconset>
@@ -206,6 +218,9 @@
    </property>
   </action>
   <action name="actionDelete">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::EditDelete" resource="DeClutter.qrc">
      <normaloff>:/images/icons/trash.svg</normaloff>:/images/icons/trash.svg</iconset>
@@ -218,12 +233,33 @@
    </property>
   </action>
   <action name="actionExecute">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart" resource="DeClutter.qrc">
      <normaloff>:/images/icons/media-play.svg</normaloff>:/images/icons/media-play.svg</iconset>
    </property>
    <property name="text">
     <string>Execute</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="autoRepeat">
+    <bool>true</bool>
+   </property>
+   <property name="visible">
+    <bool>true</bool>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+   <property name="priority">
+    <enum>QAction::Priority::NormalPriority</enum>
    </property>
   </action>
   <action name="actionMove_up">

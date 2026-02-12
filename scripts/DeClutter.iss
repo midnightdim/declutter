@@ -20,8 +20,8 @@ DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#MyAppName}.exe
 Compression=lzma2
 SolidCompression=yes
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 OutputBaseFilename={#MyAppName}-{#MyAppVersion}-Windows-x64
 ; OutputDir=userdocs:Inno Setup Examples Output
 
@@ -44,7 +44,7 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename
 
 [Tasks]
 Name: desktopicon; Description: "Create a &desktop icon"; Flags: unchecked 
-Name: StartMenuEntry; Description: "Start {#MyAppName} service when Windows starts"
+Name: StartMenuEntry; Description: "Start {#MyAppName} when Windows starts"
 ;Name: StartAfterInstall; Description: Run application after install
 
 [Run]
