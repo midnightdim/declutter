@@ -1,4 +1,5 @@
 import logging
+import os
 from declutter.config import LOG_FILE
 
 def _refresh_log_file_handler(mode="a+"):
@@ -6,7 +7,7 @@ def _refresh_log_file_handler(mode="a+"):
     root = logging.getLogger()
     old = None
     for h in list(root.handlers):
-        if isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == LOG_FILE:
+        if isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == os.path.abspath(LOG_FILE):
             try:
                 h.flush()
             except Exception:

@@ -505,19 +505,19 @@ class RulesWindow(QMainWindow):
             pass
         super().closeEvent(event)
 
-        @Slot(str, list)
-        def show_tray_message(self, message, details):
-            """Shows a message in the system tray."""
-            if message:
-                self.trayIcon.showMessage(
-                    "DeClutter",
-                    message,
-                    QSystemTrayIcon.Information,
-                    15000,
-                )
+    @Slot(str, list)
+    def show_tray_message(self, message, details):
+        """Shows a message in the system tray."""
+        if message:
+            self.trayIcon.showMessage(
+                "DeClutter",
+                message,
+                QSystemTrayIcon.Information,
+                15000,
+            )
 
-            self.service_run_details = details if details else self.service_run_details
-            self.service_runs = False
+        self.service_run_details = details if details else self.service_run_details
+        self.service_runs = False
 
 
 def make_fusion_light_palette() -> QPalette:
@@ -701,15 +701,18 @@ class declutter_service(QThread):
         self.starting_seconds = time()
 
     def run(self):
-        # TBD: Add more detailed logging for rule processing
-        details = []
-        report, details = apply_all_rules(load_settings())
-        msg = ""
-        for key in report.keys():
-            msg += key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""
-        if len(msg) > 0:
-            msg = "Processed files and folders:\n" + msg
-        self.signals.signal1.emit(msg, details)
+        try:
+            details = []
+            report, details = apply_all_rules(load_settings())
+            msg = ""
+            for key in report.keys():
+                msg += key + ": " + str(report[key]) + "\n" if report[key] > 0 else ""
+            if len(msg) > 0:
+                msg = "Processed files and folders:\n" + msg
+            self.signals.signal1.emit(msg, details)
+        except Exception as e:
+            logging.exception(f"Scheduled rule execution failed: {e}")
+            self.signals.signal1.emit("", [])
 
 
 class new_version_checker(QThread):
