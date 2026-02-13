@@ -91,11 +91,27 @@ def get_size(filepath):
         return 0  # TBD add error handling
 
 
+def _escape_glob(name):
+    """Escape glob-special characters so fnmatch treats them literally.
+
+    fnmatch interprets [, ], *, and ? as glob metacharacters.  When the
+    *filename* (not the pattern) contains these characters they must be
+    escaped so they are matched literally.
+    """
+    # Order matters: escape [ first, then ]
+    return (
+        name
+        .replace("[", "[[]")
+        .replace("]", "[]]")
+    )
+
+
 def get_file_type(path):
     settings = load_settings()
+    filename = _escape_glob(os.path.basename(path))
     for ft in settings["file_types"]:
         for p in settings["file_types"][ft].split(","):
-            if fnmatch(path, p.strip()):
+            if fnmatch(filename, p.strip()):
                 return ft
     return "Other"
 
