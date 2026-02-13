@@ -10,7 +10,8 @@ from declutter.tags import add_tags, remove_tags
 from declutter.config import ALL_TAGGED_TEXT
 from declutter.store import load_settings
 from declutter.file_utils import (get_file_time, convert_to_days, get_size, advanced_copy,
-                         advanced_move, get_file_type, get_actual_filename)
+                         advanced_move, get_file_type, get_actual_filename,
+                         _escape_glob)
 from declutter.tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
                    check_files, get_all_files_from_db)
 
@@ -326,7 +327,7 @@ def get_files_affected_by_rule_folder(rule, dirname, files_found=None):
                         # TBD need to reflect this in help - it works like this: 'matches any' or 'doesn't match all'
                         for m in c['filemask'].split(','):
                             condition_met = condition_met or fnmatch(
-                                f, m.strip())
+                                _escape_glob(f), m.strip())
                             if condition_met:
                                 break
                         condition_met = condition_met == (
