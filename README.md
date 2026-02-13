@@ -23,6 +23,39 @@ DeClutter is a desktop application built on PySide6 that helps you manage and or
 *   If you work on a project that saves new versions with incremental numbers (like FL Studio or Reaper), you can automatically move older versions of project files to a subfolder, keeping only the N most recent versions.
 *   Quickly navigate your files using tags, which can be more intuitive than navigating a folder tree.
 
+## Advanced Rules
+
+### Target Path Patterns (Move, Copy, Move to Subfolder)
+When specifying a target folder for **Move**, **Copy**, or **Move to Subfolder** actions, you can use dynamic patterns:
+
+*   `<type>` — Replaced with the file's type (e.g. `Document`, `Image`, `Video`), as defined in Settings → File Types.
+*   `<group:GROUP_NAME>` — Replaced with the file's first tag from the specified tag group. If the file has no tags in that group, it is replaced with `None`.
+
+**Examples:**
+
+| Target Folder | File | Resolved Path |
+| :--- | :--- | :--- |
+| `D:\Sorted\<type>` | `photo.jpg` (Image) | `D:\Sorted\Image` |
+| `D:\Sorted\<type>` | `report.pdf` (Document) | `D:\Sorted\Document` |
+| `D:\Projects\<group:Client>` | file tagged `Acme` in group `Client` | `D:\Projects\Acme` |
+| `D:\Archive\<type>\<group:Year>` | `invoice.pdf` tagged `2024` in group `Year` | `D:\Archive\Document\2024` |
+
+### Rename Patterns
+When using the **Rename** action, you can use patterns to dynamically construct the new filename:
+
+*   `<filename>` — The original filename (including extension).
+*   `<folder>` — The name of the parent folder.
+*   `<replace:SEARCH:REPLACEMENT>` — Replaces text in the filename. Leave REPLACEMENT empty to remove text.
+
+**Examples:**
+
+| Pattern | Original File | New Filename |
+| :--- | :--- | :--- |
+| `backup_<filename>` | `document.txt` | `backup_document.txt` |
+| `<folder> - <filename>` | `Work/budget.xls` | `Work - budget.xls` |
+| `<filename><replace: [draft]:>` | `report [draft].doc` | `report.doc` |
+| `<filename><replace:-:_>` | `my-file-name.txt` | `my_file_name.txt` |
+
 ## Technical Details
 
 *   **Framework:** PySide6
