@@ -47,6 +47,15 @@ from src.tags_dialog import TagsDialog, generate_tag_model
 from declutter.config import ALL_TAGGED_TEXT
 from declutter.store import load_settings, save_settings
 from declutter.rules import get_files_affected_by_rule
+from declutter.i18n import (
+    CONDITION_SWITCHES,
+    SOURCE_MODES,
+    combo_value,
+    set_combo_value,
+    setup_combo,
+    summarize_condition,
+    tr,
+)
 from declutter.tags import (
     tag_get_color,
     set_tags,
@@ -141,12 +150,40 @@ class TaggerWindow(QMainWindow):
         self.ui.sourceComboBox.currentIndexChanged.connect(self.update_ui)
 
         self._clipboard_mime = None
+        self.apply_localization()
 
         # Populate initial UI elements
         self.populate()  # TBD can't it be just a part of init()?
 
+    def apply_localization(self):
+        self.setWindowTitle(tr("app.tagger_title"))
+        self.ui.menuOptions.setTitle(tr("menu.options"))
+        self.ui.menuFile.setTitle(tr("menu.file"))
+        self.ui.recent_menu.setTitle(tr("menu.recent_folders"))
+        self.ui.menuView.setTitle(tr("menu.view"))
+        self.ui.tagsDockWidget.setWindowTitle(tr("tags.title"))
+        self.ui.mediaDockWidget.setWindowTitle(tr("media.preview"))
+        self.ui.filtersDockWidget.setWindowTitle(tr("filters.title"))
+        self.ui.tagsDockWidget.toggleViewAction().setText(tr("tags.title"))
+        self.ui.mediaDockWidget.toggleViewAction().setText(tr("media.preview"))
+        self.ui.filtersDockWidget.toggleViewAction().setText(tr("filters.title"))
+        self.ui.browseButton.setText(tr("button.browse"))
+        self.ui.mediaPlayButton.setToolTip(tr("media.play"))
+        self.ui.mediaPlayButton.setText("")
+        self.ui.filterAddButton.setText(tr("button.add"))
+        self.ui.filterRemoveButton.setText(tr("button.remove"))
+        self.ui.filterClearButton.setText(tr("button.clear"))
+        if hasattr(self.ui, "label"):
+            self.ui.label.setText(tr("filters.label_suffix"))
+        self.ui.actionManage_Tags.setText(tr("tags.manage"))
+        self.ui.actionNone.setText(tr("tagger.none"))
+        self.ui.actionNew_tagger_window.setText(tr("tagger.new_window"))
+        setup_combo(self.ui.sourceComboBox, SOURCE_MODES, "source")
+        setup_combo(self.ui.filterConditionSwitchCombo, CONDITION_SWITCHES, "condition_switch")
+        self.refresh_conditions(skip_update=True)
+
     def in_tagged_mode(self):
-        return self.ui.sourceComboBox.currentText() == "Tagged"
+        return combo_value(self.ui.sourceComboBox) == "Tagged"
 
     def _current_target_dir(self):
         # Only allow pasting into Folder mode, since Tagged view isn't a real FS destination
@@ -194,9 +231,9 @@ class TaggerWindow(QMainWindow):
 
     def update_treeview(self):
         """Updates the file tree view based on the selected source and filter conditions."""
-        mode = self.ui.sourceComboBox.currentText()
+        mode = combo_value(self.ui.sourceComboBox)
         self.player.stop()
-        self.rule["condition_switch"] = self.ui.filterConditionSwitchCombo.currentText()
+        self.rule["condition_switch"] = combo_value(self.ui.filterConditionSwitchCombo)
         self.ui.treeView.setEditTriggers(
             QAbstractItemView.EditKeyPressed | QAbstractItemView.SelectedClicked
         )
@@ -269,12 +306,12 @@ class TaggerWindow(QMainWindow):
     def edit_condition(self, cond):
         """Opens a dialog to edit an existing condition."""
         self.condition_window = ConditionDialog()
-        self.condition_window.loadCondition(
+        self.condition_window.load_condition(
             self.rule["conditions"][
                 self.ui.conditionListWidget.indexFromItem(cond).row()
             ]
         )
-        self.condition_window.exec_()
+        self.condition_window.exec()
         self.refresh_conditions()
 
     def delete_condition(self):
@@ -289,52 +326,16 @@ class TaggerWindow(QMainWindow):
         self.rule["conditions"] = []
         self.refresh_conditions()
 
-    def refresh_conditions(self):
+    def refresh_conditions(self, skip_update=False):
         """Refreshes the list of conditions displayed in the UI."""
-        conds = []
-
-        for c in self.rule["conditions"]:
-            if c["type"] == "tags" and c["tag_switch"] != "tags in group":
-                conds.append(
-                    "Has "
-                    + c["tag_switch"]
-                    + (
-                        " of these tags: " + ", ".join(c["tags"])
-                        if c["tag_switch"] not in ("no tags", "any tags")
-                        else ""
-                    )
-                )
-            elif c["type"] == "tags" and c["tag_switch"] == "tags in group":
-                conds.append("Has tags in group: " + c["tag_group"])
-            elif c["type"] == "date":
-                conds.append(
-                    "Age is "
-                    + c["age_switch"]
-                    + " "
-                    + str(c["age"])
-                    + " "
-                    + c["age_units"]
-                )
-            elif c["type"] == "name":
-                if not "name_switch" in c.keys():
-                    c["name_switch"] = "matches"
-                conds.append("Name " + c["name_switch"] + " " + str(c["filemask"]))
-            elif c["type"] == "size":
-                conds.append(
-                    "File size is "
-                    + c["size_switch"]
-                    + " "
-                    + str(c["size"])
-                    + c["size_units"]
-                )
-            elif c["type"] == "type":
-                conds.append(
-                    "File type " + c["file_type_switch"] + " " + c["file_type"]
-                )
+        if not hasattr(self, "rule"):
+            return
+        conds = [summarize_condition(c) for c in self.rule["conditions"]]
 
         self.ui.conditionListWidget.clear()
         self.ui.conditionListWidget.addItems(conds)
-        self.update_treeview()
+        if not skip_update:
+            self.update_treeview()
 
     def closeEvent(self, event):
         """Stops media playback when the window is closed."""
@@ -407,8 +408,8 @@ class TaggerWindow(QMainWindow):
                         count = len(indexes)
                         reply = QMessageBox.question(
                             self,
-                            "Delete files",
-                            f"Permanently delete {count} item(s)? This cannot be undone.",
+                            tr("dialog.permanent_delete_title"),
+                            tr("dialog.permanent_delete", count=count),
                             QMessageBox.Yes | QMessageBox.No,
                             QMessageBox.No,
                         )
@@ -430,7 +431,7 @@ class TaggerWindow(QMainWindow):
                             if path:
                                 remove_all_tags(path)
                         self.ui.statusbar.showMessage(
-                            str(len(indexes)) + " item(s) deleted"
+                            tr("status.deleted", count=len(indexes))
                         )
                     else:
                         for index in indexes:
@@ -450,7 +451,7 @@ class TaggerWindow(QMainWindow):
                                     pass
                                 remove_all_tags(path)
                         self.ui.statusbar.showMessage(
-                            str(len(indexes)) + " item(s) sent to trash"
+                            tr("status.trashed", count=len(indexes))
                         )
                     return True
 
@@ -551,8 +552,8 @@ class TaggerWindow(QMainWindow):
                         if os.path.exists(dst_path):
                             reply = QMessageBox.question(
                                 self,
-                                "File exists",
-                                f"File '{os.path.basename(dst_path)}' already exists in the target folder.\nOverwrite?",
+                                tr("dialog.file_exists_title"),
+                                tr("dialog.file_exists", file=os.path.basename(dst_path)),
                                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
                                 QMessageBox.No,
                             )
@@ -874,14 +875,14 @@ class TaggerWindow(QMainWindow):
 
     def open_file_from_recent(self, action):
         """Opens a recently accessed folder when selected from the menu."""
-        self.ui.sourceComboBox.setCurrentText("Folder")
+        set_combo_value(self.ui.sourceComboBox, "Folder")
         self.update_ui()
         self.ui.pathEdit.setText(normpath(action.data()))
         self.change_path()
 
     def update_ui(self):
         """Updates the UI elements based on the selected source mode (Folder/Tagged)."""
-        mode = self.ui.sourceComboBox.currentText()
+        mode = combo_value(self.ui.sourceComboBox)
         self.ui.pathEdit.setEnabled(mode == "Folder")
         self.ui.browseButton.setEnabled(mode == "Folder")
         self.update_treeview()
@@ -934,13 +935,13 @@ class TaggerWindow(QMainWindow):
         self.prev_indexes = indexes
         # TBD Review this
         num_selected = len(self.ui.treeView.selectionModel().selectedRows())
-        self.ui.statusbar.showMessage(str(num_selected) + " item(s) selected")
+        self.ui.statusbar.showMessage(tr("status.selected", count=num_selected))
         self.update_tag_checkboxes()
 
     def choose_path(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
         directory = QFileDialog.getExistingDirectory(
-            self, "QFileDialog.getExistingDirectory()", self.ui.pathEdit.text(), options
+            self, tr("dialog.select_folder"), self.ui.pathEdit.text(), options
         )
         if directory:
             self.ui.pathEdit.setText(normpath(directory))
@@ -1012,7 +1013,10 @@ class TaggerWindow(QMainWindow):
 
     def create_folder(self):
         folder, ok = QInputDialog.getText(
-            self, "Create new folder", "Enter folder name:", QLineEdit.Normal
+            self,
+            tr("dialog.create_folder_title"),
+            tr("dialog.create_folder_label"),
+            QLineEdit.Normal,
         )
         if ok and folder != "":
             index = self.ui.treeView.currentIndex()
@@ -1030,7 +1034,7 @@ class TaggerWindow(QMainWindow):
                 os.mkdir(full_path)
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Error", "Can't create this folder", QMessageBox.Ok
+                    self, tr("dialog.error"), tr("dialog.cant_create_folder"), QMessageBox.Ok
                 )
 
     def context_menu(self, position):
@@ -1049,8 +1053,8 @@ class TaggerWindow(QMainWindow):
 
         menu = QMenu()
 
-        createFolderAct = QAction("&Create folder", self)
-        createFolderAct.setStatusTip("Create a new folder")
+        createFolderAct = QAction(tr("dialog.create_folder_title"), self)
+        createFolderAct.setStatusTip(tr("dialog.create_folder_title"))
         createFolderAct.triggered.connect(self.create_folder)
         menu.addAction(createFolderAct)
 
@@ -1130,10 +1134,11 @@ class TagFSModel(QFileSystemModel):
         return Qt.MoveAction | Qt.CopyAction
 
     def headerData(self, section, orientation, role):
-        if section == 4 and role == Qt.DisplayRole:
-            return "Tag(s)"
-        else:
-            return super(TagFSModel, self).headerData(section, orientation, role)
+        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+            headers = ["Name", "Size", "Type", "Date Modified", "Tags"]
+            if section < len(headers):
+                return tr("file_header." + headers[section])
+        return super(TagFSModel, self).headerData(section, orientation, role)
 
     def data(self, index, role):
         if index.column() == 2 and role == Qt.DisplayRole:

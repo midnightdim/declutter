@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QStandardItemModel, QStandardItem, QIcon
 from src.ui.ui_tags_dialog import Ui_tagsDialog
+from declutter.i18n import localized_group_name, tr
 from declutter.tags import (
     get_all_tags,
     get_tags_and_groups,
@@ -36,6 +37,7 @@ class TagsDialog(QDialog):
         super(TagsDialog, self).__init__()
         self.ui = Ui_tagsDialog()
         self.ui.setupUi(self)
+        self.apply_localization()
 
         self.model = model
 
@@ -56,6 +58,13 @@ class TagsDialog(QDialog):
         self.ui.treeView.expandAll()
         self.ui.treeView.setExpandsOnDoubleClick(False)
         self.ui.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+    def apply_localization(self):
+        self.setWindowTitle(tr("tags.manage"))
+        self.ui.addButton.setText(tr("button.add_tag"))
+        self.ui.addGroupButton.setText(tr("button.add_group"))
+        self.ui.editButton.setText(tr("button.edit"))
+        self.ui.removeButton.setText(tr("button.delete"))
 
     def _update_toolbar_buttons_state(self, *args):
         """Enable/disable edit and delete buttons based on selection."""
@@ -80,7 +89,11 @@ class TagsDialog(QDialog):
         if cur_item["type"] == "tag":
             cur_tag = cur_item["name"]
             newtag, ok = QInputDialog.getText(
-                self, "Rename tag", "Enter new name:", QLineEdit.Normal, cur_tag
+                self,
+                tr("dialog.rename_tag_title"),
+                tr("dialog.rename_tag"),
+                QLineEdit.Normal,
+                cur_tag,
             )
 
             if ok and newtag != "" and newtag != cur_tag:
@@ -102,8 +115,14 @@ class TagsDialog(QDialog):
                     file_word = "file" if usage_count == 1 else "files"
                     merge = QMessageBox.question(
                         self,
-                        "Warning",
-                        f"This tag already exists. Files tagged with '{cur_tag}' ({usage_count} {file_word}) will be tagged with '{newtag}'.\nAre you sure you want to proceed?",
+                        tr("dialog.warning"),
+                        tr(
+                            "dialog.merge_tag",
+                            old_tag=cur_tag,
+                            new_tag=newtag,
+                            count=usage_count,
+                            files=file_word,
+                        ),
                         QMessageBox.Yes | QMessageBox.No,
                     )
                     proceed = merge == QMessageBox.Yes
@@ -174,8 +193,8 @@ class TagsDialog(QDialog):
                     if newgroup in other_groups:
                         QMessageBox.information(
                             self,
-                            "Can't do that",
-                            "Another group with this name already exists. Please choose a different name.",
+                            tr("dialog.cant_do_that"),
+                            tr("dialog.duplicate_group"),
                         )
                     else:
                         rename_group(group, newgroup)
@@ -251,8 +270,8 @@ class TagsDialog(QDialog):
                     if newgroup in other_groups:
                         QMessageBox.information(
                             self,
-                            "Can't do that",
-                            "Another group with this name already exists. Please choose a different name.",
+                            tr("dialog.cant_do_that"),
+                            tr("dialog.duplicate_group"),
                         )
                     else:
                         rename_group(group, newgroup)
@@ -277,7 +296,7 @@ class TagsDialog(QDialog):
             color = QColorDialog.getColor(
                 cur_color if cur_color is not None else Qt.gray,
                 self,
-                "Select color",
+                tr("dialog.select_color"),
                 QColorDialog.ShowAlphaChannel,
             )
             if color.isValid():
@@ -302,7 +321,7 @@ class TagsDialog(QDialog):
             group_id = self.ui.treeView.currentIndex().data(Qt.UserRole)["id"]
 
         tag, ok = QInputDialog.getText(
-            self, "Add new tag", "Enter tag name:", QLineEdit.Normal
+            self, tr("dialog.add_tag_title"), tr("dialog.input_tag_name"), QLineEdit.Normal
         )
         if not ok or tag == "":
             return
@@ -313,7 +332,7 @@ class TagsDialog(QDialog):
         existing = set(get_all_tags())
         if tag in existing:
             QMessageBox.information(
-                self, "Duplicate tag", f"A tag named '{tag}' already exists."
+                self, tr("dialog.warning"), tr("dialog.duplicate_tag", tag=tag)
             )
             return
 
@@ -322,14 +341,16 @@ class TagsDialog(QDialog):
             create_tag(tag, group_id)
         except Exception as e:
             # Most likely sqlite3.IntegrityError: UNIQUE constraint failed: tags.name
-            QMessageBox.critical(self, "Error", f"Failed to create tag '{tag}': {e}")
+            QMessageBox.critical(
+                self, tr("dialog.error"), tr("dialog.create_tag_failed", tag=tag, error=e)
+            )
             return
 
         self.reload_model()  # keep behavior: refresh view
 
     def add_group(self):
         group, ok = QInputDialog.getText(
-            self, "Add new group", "Enter group name:", QLineEdit.Normal
+            self, tr("dialog.add_group_title"), tr("dialog.input_group_name"), QLineEdit.Normal
         )
         if ok and group != "":
             id = create_group(group)
@@ -365,13 +386,19 @@ class TagsDialog(QDialog):
             except Exception:
                 count = 0
 
-            msg = f'Are you sure you want to delete this tag: "{tag}"?'
+            msg = tr("dialog.delete_tag", tag=tag)
             if count > 0:
-                msg += f"\nThis tag is used by {count} file{'s' if count != 1 else ''}.\nDeleting it will remove the tag from {'those files' if count != 1 else 'that file'}."
+                msg = tr(
+                    "dialog.delete_tag_used",
+                    tag=tag,
+                    count=count,
+                    files="file" if count == 1 else "files",
+                    target="that file" if count == 1 else "those files",
+                )
 
             reply = QMessageBox.question(
                 self,
-                "Warning",
+                tr("dialog.warning"),
                 msg,
                 QMessageBox.Yes | QMessageBox.No,
             )
@@ -387,21 +414,19 @@ class TagsDialog(QDialog):
             group = data
             if group["id"] == 1:
                 QMessageBox.critical(
-                    self, "Can't do that", "You can't delete the default group, sorry."
+                    self, tr("dialog.cant_do_that"), tr("dialog.cant_delete_default_group")
                 )
                 return
 
             msgBox = QMessageBox(
                 QMessageBox.Question,
-                "Question",
-                "You're about to delete this group:\n"
-                + group["name"]
-                + "\nWould you like to keep its tags (will be moved to Default group) or delete them all?",
+                tr("dialog.keep_or_delete_tags_title"),
+                tr("dialog.delete_group", group=group["name"]),
             )
             # to default group
-            msgBox.addButton("Keep tags", QMessageBox.YesRole)
-            msgBox.addButton("Delete tags", QMessageBox.NoRole)
-            msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            msgBox.addButton(tr("button.keep_tags"), QMessageBox.YesRole)
+            msgBox.addButton(tr("button.delete"), QMessageBox.NoRole)
+            msgBox.addButton(tr("button.cancel"), QMessageBox.RejectRole)
             reply = msgBox.exec()
             if reply != 2:
                 delete_group(group["id"], not reply)
@@ -421,8 +446,8 @@ class TagsDialog(QDialog):
 
 def generate_tag_model(model, data, groups_selectable=True):
     for group in data.keys():
-        item = QStandardItem(group)
-        item.setData(group, Qt.DisplayRole)
+        item = QStandardItem(localized_group_name(group, data[group]))
+        item.setData(localized_group_name(group, data[group]), Qt.DisplayRole)
         item.setData(data[group], Qt.UserRole)
         try:
             if data[group].get("id") == 1:
@@ -458,32 +483,38 @@ class GroupDialog(QDialog):
         vbox = QVBoxLayout()
 
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Multi-value (checkboxes)", "Single value (combobox)"])
+        self.comboBox.addItems([tr("group_dialog.checkboxes"), tr("group_dialog.combo")])
 
         self.lineEdit = QLineEdit(group)
 
         # New: checkbox to control name_shown
         from PySide6.QtWidgets import QCheckBox, QLabel
 
-        self.showNameCheck = QCheckBox("Show group name")
+        self.showNameCheck = QCheckBox(tr("group_dialog.show_name"))
         self.showNameCheck.setChecked(bool(name_shown))
 
         # Optional info for Default group
         if is_default:
-            note = QLabel("This is the default group")
+            note = QLabel(tr("dialog.group_note_default"))
             note.setStyleSheet("color: palette(mid);")  # subtle
             vbox.addWidget(note)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.accepted.connect(self.accept)
+        ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        cancel_button = self.buttonBox.button(QDialogButtonBox.Cancel)
+        if ok_button:
+            ok_button.setText(tr("button.ok"))
+        if cancel_button:
+            cancel_button.setText(tr("button.cancel"))
 
         vbox.addWidget(self.lineEdit)
         vbox.addWidget(self.comboBox)
         vbox.addWidget(self.showNameCheck)
         vbox.addWidget(self.buttonBox)
 
-        self.setWindowTitle("Edit Group")
+        self.setWindowTitle(tr("group_dialog.title"))
         self.setWindowIcon(QIcon(":/images/icons/DeClutter.ico"))
         self.setLayout(vbox)
 

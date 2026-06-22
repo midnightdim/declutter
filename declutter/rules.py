@@ -13,6 +13,7 @@ from declutter.file_utils import (get_file_time, convert_to_days, get_size, adva
                          advanced_move, get_file_type, get_actual_filename)
 from declutter.tags import (get_tags, set_tags, remove_all_tags, get_file_tags_by_group, get_tag_groups, 
                    check_files, get_all_files_from_db)
+from declutter.i18n import tr
 
 def apply_rule(rule, dryrun=False):
     report = {'copied': 0, 'moved': 0, 'moved to subfolder': 0, 'deleted': 0,
@@ -39,33 +40,33 @@ def apply_rule(rule, dryrun=False):
                                         rmtree(target)
                                         result = copytree(f, target)
                                         # hide_dc(result) # TBD only for sidecar files
-                                        msg = "Replaced " + str(result) + " with " + f
+                                        msg = tr("file_action.replaced", target=str(result), file=f)
                                     report['copied'] += 1
                             else:
                                 if not dryrun:
                                     # TBD will probably crash if target exists!
                                     result = copytree(f, target)
                                     # hide_dc(result) # TBD only for sidecar files
-                                msg = "Copied " + f + " to " + str(result)
+                                msg = tr("file_action.copied", file=f, target=str(result))
                                 report['copied'] += 1
                         else:
                             if target.is_file() and os.stat(target).st_size == os.stat(f).st_size:  # TBD comparing sizes may be not enough
-                                msg = "File " + f + " already exists in the target location and has the same size, skipping"
+                                msg = tr("file_action.same_size_skip", file=f)
                             else:
                                 if not dryrun:
                                     result = advanced_copy(
                                         f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 else:
-                                    msg = "Copied " + f + " to " + str(result)
+                                    msg = tr("file_action.copied", file=f, target=str(result))
                                 if result:
                                     report['copied'] += 1
-                                    msg = "Copied " + f + " to " + str(result)
+                                    msg = tr("file_action.copied", file=f, target=str(result))
                         if rule['keep_tags']:
                             tags = get_tags(f)
                             if set_tags(result, tags):
-                                msg += ", tags copied too"
+                                msg += tr("file_action.tags_copied")
                             else:
-                                msg += ", tags not copied"
+                                msg += tr("file_action.tags_not_copied")
                     except Exception as e:
                         logging.exception(f'exception {e}')
                 elif rule['action'] == 'Move':
@@ -78,18 +79,18 @@ def apply_rule(rule, dryrun=False):
                             result = advanced_move(
                                 f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                             if result:
-                                msg = "Moved " + f + " to " + str(result)
+                                msg = tr("file_action.moved", file=f, target=str(result))
                                 report['moved'] += 1
                                 remove_all_tags(f)
                                 # TBD implement removing tags if keep_tags == False
                                 if rule['keep_tags'] and tags:
                                     set_tags(result, tags)
                                     # if Path(get_tag_file_path(f)).is_file(): # TBD bring this back for sidecar files
-                                    msg += ", with tags"
+                                    msg += tr("file_action.with_tags")
                         except Exception as e:
                             logging.exception(f'exception {e}')
                     else:
-                        msg = "Moved " + f + " to " + target_folder
+                        msg = tr("file_action.moved", file=f, target=target_folder)
                 elif rule['action'] == 'Rename':
                     if 'name_pattern' in rule.keys() and rule['name_pattern']:
                         newname = rule['name_pattern'].replace(
@@ -120,14 +121,13 @@ def apply_rule(rule, dryrun=False):
                                         remove_all_tags(f)
                                         set_tags(newfullname, tags)
                                     report['renamed'] += 1
-                                    msg = 'Renamed ' + f + ' to ' + str(result)
+                                    msg = tr("file_action.renamed", file=f, target=str(result))
                             except Exception as e:
                                 logging.exception(e)
                         else:
-                            msg = 'Renamed ' + f + ' to ' + newname
+                            msg = tr("file_action.renamed", file=f, target=newname)
                     else:
-                        msg = 'Error: name pattern is missing for rule ' + \
-                            rule['name']
+                        msg = tr("file_action.name_pattern_missing", rule=rule['name'])
                         logging.error(
                             "Name pattern is missing for rule " + rule['name'])
                 elif rule['action'] == 'Move to subfolder':
@@ -142,18 +142,16 @@ def apply_rule(rule, dryrun=False):
                             if result:
                                 remove_all_tags(f)
                                 report['moved to subfolder'] += 1
-                                msg = "Moved " + f + " to subfolder: " + \
-                                    str(target_subfolder)
+                                msg = tr("file_action.moved_subfolder", file=f, target=str(target_subfolder))
 
                                 # TBD implement removing tags if keep_tags == False
                                 if rule['keep_tags'] and tags:
                                     set_tags(result, tags)
-                                    msg += ", with tags"
+                                    msg += tr("file_action.with_tags")
                         else:
-                            msg = "Moved " + f + " to subfolder: " + \
-                                str(target_subfolder)
+                            msg = tr("file_action.moved_subfolder", file=f, target=str(target_subfolder))
                 elif rule['action'] == 'Delete':
-                    msg = "Deleted " + f
+                    msg = tr("file_action.deleted", file=f)
                     if not dryrun:
                         report['deleted'] += 1
                         os.remove(f)
@@ -161,7 +159,7 @@ def apply_rule(rule, dryrun=False):
                         # if get_tag_file_path(f).is_file(): # TBD implement this for sidecar files
                         #     os.remove(get_tag_file_path(f))
                 elif rule['action'] == 'Send to Trash':
-                    msg = "Sent to trash " + f
+                    msg = tr("file_action.sent_trash", file=f)
                     if not dryrun:
                         report['trashed'] += 1
                         send2trash(f)
@@ -172,7 +170,7 @@ def apply_rule(rule, dryrun=False):
                     if not dryrun:
                         if rule['tags'] and not set(rule['tags']).issubset(set(get_tags(f))):
                             add_tags(f, rule['tags'])
-                            msg = "Tagged " + f + " with " + str(rule['tags'])
+                            msg = tr("file_action.tagged", file=f, tags=str(rule['tags']))
                             report['tagged'] += 1
                 elif rule['action'] == 'Remove tags':
                     if not dryrun:                    
@@ -182,13 +180,13 @@ def apply_rule(rule, dryrun=False):
                             tags_to_remove = list(current_tags.intersection(rule['tags']))
                             if tags_to_remove:
                                 remove_tags(f, tags_to_remove)
-                                msg = f"Removed these tags from {f}: {tags_to_remove}"
+                                msg = tr("file_action.untagged", file=f, tags=tags_to_remove)
                                 report['untagged'] += 1
                 elif rule['action'] == 'Clear all tags':
                     if not dryrun:
                         if get_tags(f):
                             remove_all_tags(f)
-                            msg = "Cleared tags for  " + f
+                            msg = tr("file_action.cleared_tags", file=f)
                             report['cleared tags'] += 1
                 if msg:
                     details.append(msg)

@@ -8,6 +8,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, QDateTime, QLocale, QFileInfo, QMimeDatabase, Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeView, QFileIconProvider, QAbstractItemView
 from declutter.tags import get_tags, tag_get_color, get_all_files_from_db
+from declutter.i18n import tr
 
 FSMItemOrNone = Union["_FileSystemModelLiteItem", None]
 
@@ -111,7 +112,7 @@ class FileSystemModelLite(QAbstractItemModel):
         self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole
     ) -> Any:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self._root_item.data(section)
+            return tr("file_header." + self._root_item.data(section))
         return None
 
     def index(

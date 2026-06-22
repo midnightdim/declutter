@@ -20,6 +20,7 @@ PRIMITIVE_KEYS = {
     "date_type": 0,
     "style": "Fusion",
     "theme": "System",
+    "language": "en",
     "rules_window_geometry": None,
     "tagger_window_geometry": None,
     "rules_window_visible_on_exit": True,

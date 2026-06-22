@@ -1,8 +1,19 @@
 import sys
-from PySide6.QtWidgets import QDialog, QTableWidgetItem, QApplication, QStyleFactory, QMessageBox
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QTableWidgetItem,
+    QApplication,
+    QStyleFactory,
+    QMessageBox,
+)
 from PySide6.QtCore import Qt
 from declutter.store import load_settings, save_settings
 from src.startup import is_enabled as startup_is_enabled, enable as startup_enable, disable as startup_disable
+from declutter.i18n import THEMES, combo_value, set_combo_value, setup_combo, setup_language_combo, tr
 
 from src.ui.ui_settings_dialog import Ui_settingsDialog
 
@@ -12,10 +23,51 @@ class SettingsDialog(QDialog):
         super(SettingsDialog, self).__init__()
         self.ui = Ui_settingsDialog()
         self.ui.setupUi(self)
+        self._setup_language_controls()
         self.initialize()
+
+    def _setup_language_controls(self):
+        self.languageLabel = QLabel(self)
+        self.languageComboBox = QComboBox(self)
+        layout = QHBoxLayout()
+        layout.addWidget(self.languageLabel)
+        layout.addWidget(self.languageComboBox)
+        layout.addStretch()
+        self.ui.verticalLayout_2.insertLayout(3, layout)
+
+    def apply_localization(self):
+        self.setWindowTitle(tr("settings.title"))
+        self.ui.tabWidget.setTabText(0, tr("settings.main_tab"))
+        self.ui.tabWidget.setTabText(1, tr("settings.date_tab"))
+        self.ui.tabWidget.setTabText(2, tr("settings.file_types_tab"))
+        self.ui.label_2.setText(tr("settings.process_interval"))
+        self.ui.label_3.setText(tr("settings.minutes"))
+        self.ui.label_4.setText(tr("settings.style"))
+        self.ui.themeLabel.setText(tr("settings.theme"))
+        self.languageLabel.setText(tr("settings.language"))
+        self.ui.startAtLoginCheckBox.setText(tr("settings.launch_startup"))
+        self.ui.dateDefGroupBox.setTitle(tr("settings.date_title"))
+        self.ui.label.setText(tr("settings.date_question"))
+        self.ui.radioButton.setText(tr("date_option.0"))
+        self.ui.radioButton_2.setText(tr("date_option.1"))
+        self.ui.radioButton_3.setText(tr("date_option.2"))
+        self.ui.radioButton_4.setText(tr("date_option.3"))
+        self.ui.radioButton_5.setText(tr("date_option.4"))
+        self.ui.fileTypesTable.horizontalHeaderItem(0).setText(tr("column.name"))
+        self.ui.fileTypesTable.horizontalHeaderItem(1).setText(tr("column.filemask"))
+        self.ui.addFileTypeButton.setText(tr("button.add_file_type"))
+        self.ui.label_5.setText(tr("file_types.note"))
+
+        ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
+        if ok_button:
+            ok_button.setText(tr("button.ok"))
+        if cancel_button:
+            cancel_button.setText(tr("button.cancel"))
 
     def initialize(self):
         self.settings = load_settings()
+        self.apply_localization()
         
         i = 0
         self.format_fields = {}
@@ -58,16 +110,14 @@ class SettingsDialog(QDialog):
 
         # Initialize theme combo from saved settings
         saved_theme = self.settings.get("theme", "System")
+        setup_combo(self.ui.themeComboBox, THEMES, "theme", saved_theme)
+        setup_language_combo(self.languageComboBox, self.settings.get("language", "en"))
         if self.ui.styleComboBox.currentText().lower() == "windowsvista":
             # UI lock: force Light for windowsvista
-            t_idx = self.ui.themeComboBox.findText("Light")
-            if t_idx >= 0:
-                self.ui.themeComboBox.setCurrentIndex(t_idx)
+            set_combo_value(self.ui.themeComboBox, "Light")
             self.ui.themeComboBox.setEnabled(False)
         else:
-            t_idx = self.ui.themeComboBox.findText(saved_theme)
-            if t_idx >= 0:
-                self.ui.themeComboBox.setCurrentIndex(t_idx)
+            set_combo_value(self.ui.themeComboBox, saved_theme)
             self.ui.themeComboBox.setEnabled(True)
 
         # Keep reacting when user changes style
@@ -96,9 +146,7 @@ class SettingsDialog(QDialog):
         self.ui.themeComboBox.setEnabled(not is_vista)
         if is_vista:
             # Force Light in UI for windowsvista
-            idx = self.ui.themeComboBox.findText("Light")
-            if idx >= 0:
-                self.ui.themeComboBox.setCurrentIndex(idx)
+            set_combo_value(self.ui.themeComboBox, "Light")
 
     def cell_changed(self, row, col):
         if col == 0:
@@ -108,7 +156,7 @@ class SettingsDialog(QDialog):
                 self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i, 0) and i != row]
             if new_value in other_values:  # settings['file_types'].keys():
                 QMessageBox.critical(
-                    self, "Error", "Duplicate format name, please change it")
+                    self, tr("dialog.error"), tr("dialog.duplicate_file_type"))
                 self.ui.fileTypesTable.editItem(
                     self.ui.fileTypesTable.item(row, 0))
                 return False
@@ -134,11 +182,10 @@ class SettingsDialog(QDialog):
                             c = settings['rules'][i]['conditions'][k]
                             if c['type'] == 'type' and c['file_type'] == prev_value:
                                 count += 1
-                    used_in_rules = "\nIt's used in " + \
-                        str(count)+" condition(s) (which won't be removed)." if count > 0 else ""
+                    used_in_rules = tr("dialog.remove_file_type_used", count=count) if count > 0 else ""
                     # TBD remove orphaned conditions
-                    reply = QMessageBox.question(self, "Warning",
-                                                 "This will delete the format. Are you sure?"+used_in_rules,
+                    reply = QMessageBox.question(self, tr("dialog.warning"),
+                                                 tr("dialog.remove_file_type", used=used_in_rules),
                                                  QMessageBox.Yes | QMessageBox.No)
                     if reply == QMessageBox.Yes:
                         del settings['file_types'][prev_value]
@@ -160,7 +207,7 @@ class SettingsDialog(QDialog):
             self.ui.fileTypesTable.rowCount()) if self.ui.fileTypesTable.item(i, 0)]
         if len(format_names) != len(set(format_names)):
             QMessageBox.critical(
-                self, "Error", "Duplicate format name(s) detected, please remove duplicates")
+                self, tr("dialog.error"), tr("dialog.duplicate_file_types"))
             return False
 
         rbs = [c for c in self.ui.dateDefGroupBox.children()
@@ -174,7 +221,8 @@ class SettingsDialog(QDialog):
         if self.settings['style'].lower() == "windowsvista":
             self.settings['theme'] = "Light"
         else:
-            self.settings['theme'] = self.ui.themeComboBox.currentText()
+            self.settings['theme'] = combo_value(self.ui.themeComboBox)
+        self.settings['language'] = combo_value(self.languageComboBox)
 
         self.settings['file_types'] = {}
         # TBD add validation

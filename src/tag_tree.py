@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QDialog, QWidget, QHBoxLayout, QVBoxLayout
 from declutter.tags import move_tag_to_group, move_tag_to_tag, move_group_to_group
+from declutter.i18n import tr
 
 def get_tree_selection_level(index):
     """Returns the level of the given QModelIndex in the tree."""
@@ -87,7 +88,7 @@ class TagsDialog(QDialog):
 
     def initUI(self):
         """Initializes the UI for the TagsDialog."""
-        self.setWindowTitle("Manage Tags")  # Optional: Add a title for clarity
+        self.setWindowTitle(tr("tags.manage"))  # Optional: Add a title for clarity
 
         layout = QVBoxLayout(self)  # Use vertical layout for dialog simplicity
 
