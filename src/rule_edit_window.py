@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QMessageBox,
     QListWidgetItem,
+    QDialogButtonBox,
 )
 from PySide6.QtCore import QItemSelectionModel
 
@@ -20,6 +21,17 @@ from src.tags_dialog import generate_tag_model
 from declutter.rules import get_files_affected_by_rule
 from declutter.tags import get_tags_and_groups
 from declutter.config import ALL_TAGGED_TEXT
+from declutter.i18n import (
+    ACTIONS,
+    CONDITION_SWITCHES,
+    OVERWRITE_OPTIONS,
+    combo_value,
+    localized_source,
+    set_combo_value,
+    setup_combo,
+    summarize_condition,
+    tr,
+)
 
 
 class RuleEditWindow(QDialog):
@@ -28,6 +40,7 @@ class RuleEditWindow(QDialog):
 
         self.ui = Ui_RuleEditWindow()
         self.ui.setupUi(self)
+        self.apply_localization()
 
         self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
@@ -73,12 +86,61 @@ class RuleEditWindow(QDialog):
         self.ui.ruleNameEdit.setFocus()
         self.action_change()
 
+    def apply_localization(self):
+        self.setWindowTitle(tr("rules.add_edit_title"))
+        self.ui.keepTagsCheckBox.setText(tr("rules.keep_tags"))
+        self.ui.keepFolderStructureCheckBox.setText(tr("rules.keep_folder_structure"))
+        self.ui.folderBrowseButton.setText(tr("button.browse"))
+        self.ui.label_3.setText(tr("rules.when"))
+        self.ui.label_4.setText(tr("rules.when_suffix"))
+        self.ui.toFolderLabel.setText(tr("rules.to_folder"))
+        self.ui.targetFolderEdit.setToolTip(tr("tooltip.path_tokens"))
+        self.ui.subfolderEdit.setToolTip(tr("tooltip.path_tokens"))
+        self.ui.renameEdit.setToolTip(tr("tooltip.rename_tokens"))
+        self.ui.conditionAddButton.setText(tr("button.add"))
+        self.ui.conditionRemoveButton.setText(tr("button.remove"))
+        self.ui.conditionSaveButton.setText(tr("button.save"))
+        self.ui.conditionLoadButton.setText(tr("button.load"))
+        self.ui.label_5.setText(tr("rules.do_following"))
+        self.ui.label.setText(tr("rules.rule_name"))
+        self.ui.enabledCheckBox.setText(tr("rules.enabled"))
+        self.ui.recursiveCheckBox.setText(tr("rules.recursive"))
+        self.ui.folderAddButton.setText(tr("button.add_folder"))
+        self.ui.sourceRemoveButton.setText(tr("button.remove"))
+        self.ui.allTaggedAddButton.setText(tr("rules.all_tagged"))
+        self.ui.label_2.setText(tr("rules.sources"))
+        self.ui.fileWithSameNameLabel.setText(tr("rules.file_conflict"))
+        self.ui.advancedButton.setText(tr("button.advanced"))
+        self.ui.testButton.setText(tr("button.test"))
+        self.ui.ignoreNewestCheckBox.setText(tr("rules.ignore"))
+        self.ui.newestLabel.setText(tr("rules.newest"))
+        self._set_selected_tags_label([])
+
+        self.ui.actionComboBox.setMinimumWidth(150)
+        self.ui.actionComboBox.setMaximumWidth(190)
+        setup_combo(self.ui.conditionSwitchComboBox, CONDITION_SWITCHES, "condition_switch")
+        setup_combo(self.ui.actionComboBox, ACTIONS, "action")
+        setup_combo(self.ui.overwriteComboBox, OVERWRITE_OPTIONS, "overwrite")
+
+        save_button = self.ui.buttonBox.button(QDialogButtonBox.Save)
+        cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
+        if save_button:
+            save_button.setText(tr("button.save"))
+        if cancel_button:
+            cancel_button.setText(tr("button.cancel"))
+
+    def _set_selected_tags_label(self, tags):
+        if tags:
+            self.ui.selectedTagsLabel.setText(tr("rules.selected_tags", tags=", ".join(tags)))
+        else:
+            self.ui.selectedTagsLabel.setText(tr("rules.selected_tags_empty"))
+
     def tags_selection_changed(self):
         selected_tags = [
             self.ui.tagsView.model().itemFromIndex(index).text()
             for index in self.ui.tagsView.selectedIndexes()
         ]
-        self.ui.selectedTagsLabel.setText('Selected tags: ' + ', '.join(selected_tags))
+        self._set_selected_tags_label(selected_tags)
 
     def show_advanced(self):
         self.ui.line.setVisible(True)
@@ -131,37 +193,7 @@ class RuleEditWindow(QDialog):
 
     def refresh_conditions(self):
         # Rebuilds the textual list of conditions in the widget
-        conds = []
-        for c in self.rule.get('conditions', []):
-            ctype = c.get('type')
-
-            if ctype == 'tags' and c.get('tag_switch') != 'tags in group':
-                tag_switch = c.get('tag_switch', '')
-                if tag_switch in ('no tags', 'any tags'):
-                    desc = 'Has ' + tag_switch
-                else:
-                    desc = 'Has ' + tag_switch + ' of these tags: ' + ', '.join(c.get('tags', []))
-                conds.append(desc)
-
-            elif ctype == 'tags' and c.get('tag_switch') == 'tags in group':
-                conds.append('Has tags in group: ' + c.get('tag_group', ''))
-
-            elif ctype == 'date':
-                conds.append('Age is ' + c.get('age_switch', '') + ' ' + str(c.get('age', '')) + ' ' + c.get('age_units', ''))
-
-            elif ctype == 'name':
-                name_switch = c.get('name_switch', 'matches')
-                conds.append('Name ' + name_switch + ' ' + str(c.get('filemask', '')))
-
-            elif ctype == 'size':
-                conds.append('File size is ' + c.get('size_switch', '') + ' ' + str(c.get('size', '')) + c.get('size_units', ''))
-
-            elif ctype == 'type':
-                conds.append('File type ' + c.get('file_type_switch', '') + ' ' + c.get('file_type', ''))
-
-            else:
-                # Fallback textualization
-                conds.append(str(c))
+        conds = [summarize_condition(c) for c in self.rule.get('conditions', [])]
 
         self.ui.conditionListWidget.clear()
         self.ui.conditionListWidget.addItems(conds)
@@ -169,13 +201,13 @@ class RuleEditWindow(QDialog):
     def select_folder(self):
         """Opens a folder selection dialog and sets the selected path to the appropriate text field."""
         # Decide which field to populate
-        if self.ui.actionComboBox.currentText() == "Move to subfolder":
+        if combo_value(self.ui.actionComboBox) == "Move to subfolder":
             folderField = self.ui.subfolderEdit
         else:
             folderField = self.ui.targetFolderEdit
 
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
-        directory = QFileDialog.getExistingDirectory(self, "Select folder", folderField.text(), options)
+        directory = QFileDialog.getExistingDirectory(self, tr("dialog.select_folder"), folderField.text(), options)
         if directory:
             folderField.setText(directory)
 
@@ -191,14 +223,14 @@ class RuleEditWindow(QDialog):
         self.rule['name'] = self.ui.ruleNameEdit.text()
         self.rule['enabled'] = self.ui.enabledCheckBox.isChecked()
         self.rule['recursive'] = self.ui.recursiveCheckBox.isChecked()
-        self.rule['condition_switch'] = self.ui.conditionSwitchComboBox.currentText()
-        self.rule['action'] = self.ui.actionComboBox.currentText()
+        self.rule['condition_switch'] = combo_value(self.ui.conditionSwitchComboBox)
+        self.rule['action'] = combo_value(self.ui.actionComboBox)
         self.rule['keep_tags'] = self.ui.keepTagsCheckBox.isChecked()
         self.rule['keep_folder_structure'] = self.ui.keepFolderStructureCheckBox.isChecked()
         self.rule['target_folder'] = self.ui.targetFolderEdit.text()
         self.rule['target_subfolder'] = self.ui.subfolderEdit.text()
         self.rule['name_pattern'] = self.ui.renameEdit.text()
-        self.rule['overwrite_switch'] = self.ui.overwriteComboBox.currentText()
+        self.rule['overwrite_switch'] = combo_value(self.ui.overwriteComboBox)
         self.rule['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
         self.rule['ignore_newest'] = self.ui.ignoreNewestCheckBox.isChecked()
         self.rule['ignore_N'] = self.ui.numberNewestEdit.text()
@@ -209,29 +241,29 @@ class RuleEditWindow(QDialog):
         error = ""
         # Validation chain
         if self.rule['ignore_newest'] and self.rule['ignore_N'] == "":
-            error = "Please specify the number of files to ignore"
+            error = tr("error.rule_ignore_count_missing")
         if self.rule['action'] == "Rename" and self.rule['name_pattern'] == "":
-            error = "Please specify the name pattern"
+            error = tr("error.rule_name_pattern_missing")
         if self.rule['action'] == "Move to subfolder" and self.rule['target_subfolder'] == "":
-            error = "Please specify the target subfolder"
+            error = tr("error.rule_target_subfolder_missing")
         if self.rule['action'] in ("Move", "Copy") and self.rule['target_folder'] == "":
-            error = "Please specify the target folder"
+            error = tr("error.rule_target_folder_missing")
         if not self.rule.get('conditions'):
-            error = "Please add at least one condition"
+            error = tr("error.rule_condition_missing")
         if not self.rule.get('folders'):
-            error = "Please select at least one source"
+            error = tr("error.rule_source_missing")
         if self.rule['name'] == "":
-            error = "Please enter the name"
+            error = tr("error.rule_name_missing")
 
         if error:
-            QMessageBox.critical(self, "Error", error, QMessageBox.Ok)
+            QMessageBox.critical(self, tr("dialog.error"), error, QMessageBox.Ok)
             return
 
         if 'id' not in self.rule and not self.rule['enabled']:
             reply = QMessageBox.question(
                 self,
-                "Enable rule?",
-                "The rule is not enabled, would you like to enable it before saving?",
+                tr("dialog.enable_rule_title"),
+                tr("dialog.enable_rule"),
                 QMessageBox.Yes | QMessageBox.No,
             )
             if reply == QMessageBox.Yes:
@@ -245,14 +277,15 @@ class RuleEditWindow(QDialog):
         msgBox = QDialog(self)
         msgBox.ui = Ui_listDialog()
         msgBox.ui.setupUi(msgBox)
+        msgBox.setWindowTitle(tr("dialog.rule_executed"))
 
         affected = get_files_affected_by_rule(self.rule)
         if affected:
-            msgBox.ui.label.setText(str(len(affected)) + " file(s) affected by this rule:")
+            msgBox.ui.label.setText(tr("list.files_affected", count=len(affected)))
             msgBox.ui.listWidget.addItems(affected)
         else:
             msgBox.ui.listWidget.setVisible(False)
-            msgBox.ui.label.setText("No files affected by this rule.")
+            msgBox.ui.label.setText(tr("list.no_files_affected"))
 
         msgBox.exec()
 
@@ -267,22 +300,24 @@ class RuleEditWindow(QDialog):
         self.rule.setdefault('keep_folder_structure', False)
         self.rule.setdefault('target_subfolder', '')
         self.rule.setdefault('name_pattern', '')
-        self.rule.setdefault('overwrite_switch', self.ui.overwriteComboBox.currentText())
+        self.rule.setdefault('overwrite_switch', combo_value(self.ui.overwriteComboBox))
         self.rule.setdefault('ignore_newest', False)
         self.rule.setdefault('ignore_N', '')
 
         # Populate UI from rule
         self.ui.ruleNameEdit.setText(self.rule.get('name', ''))
         self.ui.sourceListWidget.clear()
-        self.ui.sourceListWidget.addItems(self.rule.get('folders', []))
+        self.ui.sourceListWidget.addItems(
+            [localized_source(source) for source in self.rule.get('folders', [])]
+        )
         self.ui.enabledCheckBox.setChecked(bool(self.rule.get('enabled', False)))
         self.ui.recursiveCheckBox.setChecked(bool(self.rule.get('recursive', False)))
-        self.ui.conditionSwitchComboBox.setCurrentText(self.rule.get('condition_switch', 'all'))
+        set_combo_value(self.ui.conditionSwitchComboBox, self.rule.get('condition_switch', 'all'))
 
         self.refresh_conditions()
 
         # Action-dependent fields
-        self.ui.actionComboBox.setCurrentIndex(self.ui.actionComboBox.findText(self.rule.get('action', 'Move')))
+        set_combo_value(self.ui.actionComboBox, self.rule.get('action', 'Move'))
         self.ui.targetFolderEdit.setText(self.rule.get('target_folder', ''))
         self.ui.keepTagsCheckBox.setChecked(bool(self.rule.get('keep_tags', False)))
         self.ui.keepFolderStructureCheckBox.setChecked(bool(self.rule.get('keep_folder_structure', False)))
@@ -290,9 +325,7 @@ class RuleEditWindow(QDialog):
         self.ui.renameEdit.setText(self.rule.get('name_pattern', ''))
 
         if 'overwrite_switch' in self.rule:
-            self.ui.overwriteComboBox.setCurrentIndex(
-                self.ui.overwriteComboBox.findText(self.rule['overwrite_switch'])
-            )
+            set_combo_value(self.ui.overwriteComboBox, self.rule['overwrite_switch'])
 
         # Restore tag selections in the tree
         sel_model = self.ui.tagsView.selectionModel()
@@ -305,7 +338,7 @@ class RuleEditWindow(QDialog):
                 child = parent_item.child(k)
                 if child.text() in target_tags:
                     sel_model.select(model.indexFromItem(child), QItemSelectionModel.Select)
-        self.ui.selectedTagsLabel.setText('Selected tags: ' + ','.join(self.rule.get('tags', [])))
+        self._set_selected_tags_label(self.rule.get('tags', []))
 
         # Apply action visibility
         self.action_change()
@@ -321,7 +354,7 @@ class RuleEditWindow(QDialog):
             self.ui.newestLabel.setVisible(True)
 
     def action_change(self):
-        state = self.ui.actionComboBox.currentText()
+        state = combo_value(self.ui.actionComboBox)
 
         self.ui.toFolderLabel.setVisible(state in ("Move", "Copy"))
         self.ui.targetFolderEdit.setVisible(state in ("Move", "Copy"))
@@ -341,7 +374,7 @@ class RuleEditWindow(QDialog):
 
     def add_folder(self):
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
-        directory = QFileDialog.getExistingDirectory(self, "Select folder", '', options)
+        directory = QFileDialog.getExistingDirectory(self, tr("dialog.select_folder"), '', options)
         if directory:
             folders = self.rule.setdefault('folders', [])
             normalized = normpath(directory)
@@ -353,7 +386,7 @@ class RuleEditWindow(QDialog):
         folders = self.rule.setdefault('folders', [])
         if ALL_TAGGED_TEXT not in folders:
             folders.append(ALL_TAGGED_TEXT)
-            self.ui.sourceListWidget.addItem(ALL_TAGGED_TEXT)
+            self.ui.sourceListWidget.addItem(localized_source(ALL_TAGGED_TEXT))
 
     def delete_source(self):
         indexes = self.ui.sourceListWidget.selectedIndexes()

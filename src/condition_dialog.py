@@ -1,12 +1,24 @@
 import sys
 from PySide6.QtGui import QStandardItemModel, QIcon
-from PySide6.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QAbstractItemView, QMessageBox, QDialogButtonBox
 from PySide6.QtCore import QItemSelectionModel
 
 from src.ui.ui_condition_dialog import Ui_Condition
 
 from declutter.store import load_settings
 from declutter.tags import get_all_tag_groups, get_tags_and_groups
+from declutter.i18n import (
+    CONDITION_TYPES,
+    DATE_UNITS,
+    NAME_SWITCHES,
+    TAG_SWITCHES,
+    TYPE_SWITCHES,
+    combo_value,
+    localized_file_type,
+    set_combo_value,
+    setup_combo,
+    tr,
+)
 from src.tags_dialog import generate_tag_model
 
 
@@ -17,6 +29,7 @@ class ConditionDialog(QDialog):
         self.ui = Ui_Condition()
         self.ui.setupUi(self)
         self.condition = {}
+        self.apply_localization()
 
         self.ui.tagsView.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tag_model = QStandardItemModel()
@@ -27,7 +40,7 @@ class ConditionDialog(QDialog):
         self.ui.tagsView.clicked.connect(self.tags_selection_changed)
 
         # Populate file types into combo
-        self.ui.typeCombo.insertItems(0, list(load_settings()['file_types'].keys()))
+        self._populate_file_types()
 
         # Initial visibility
         self.update_visibility()
@@ -36,18 +49,61 @@ class ConditionDialog(QDialog):
         self.ui.conditionCombo.currentIndexChanged.connect(self.update_visibility)
         self.ui.tagsCombo.currentIndexChanged.connect(self.update_tags_visibility)
 
+    def apply_localization(self):
+        self.setWindowTitle(tr("condition.dialog_title"))
+        self.ui.label.setText(tr("condition.select_by"))
+        self.ui.nameLabel.setText(tr("condition.file_name"))
+        self.ui.expressionLabel.setText(tr("condition.expression"))
+        self.ui.filenameHint.setText(tr("condition.hint_masks"))
+        self.ui.ageLabel.setText(tr("condition.file_age"))
+        self.ui.sizeLabel.setText(tr("condition.file_size"))
+        self.ui.tagLabel.setText(tr("condition.file_has"))
+        self.ui.tagLabel2.setText(tr("condition.of_selected_tags"))
+        self.ui.typeLabel.setText(tr("condition.file_type"))
+        self._set_selected_tags_label([])
+
+        setup_combo(self.ui.conditionCombo, CONDITION_TYPES, "condition_type")
+        setup_combo(self.ui.nameCombo, NAME_SWITCHES, "name_switch")
+        setup_combo(self.ui.ageUnitsCombo, DATE_UNITS, "date_unit")
+        setup_combo(self.ui.tagsCombo, TAG_SWITCHES, "tag_switch")
+        setup_combo(self.ui.typeSwitchCombo, TYPE_SWITCHES, "type_switch")
+
+        ok_button = self.ui.buttonBox.button(QDialogButtonBox.Ok)
+        cancel_button = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
+        if ok_button:
+            ok_button.setText(tr("button.ok"))
+        if cancel_button:
+            cancel_button.setText(tr("button.cancel"))
+
+    def _populate_file_types(self):
+        current = combo_value(self.ui.typeCombo)
+        self.ui.typeCombo.blockSignals(True)
+        self.ui.typeCombo.clear()
+        for file_type in load_settings()['file_types'].keys():
+            self.ui.typeCombo.addItem(localized_file_type(file_type), file_type)
+        set_combo_value(self.ui.typeCombo, current)
+        self.ui.typeCombo.blockSignals(False)
+
+    def _set_selected_tags_label(self, tags):
+        if tags:
+            self.ui.selectedTagsLabel.setText(
+                tr("condition.selected_tags", tags=", ".join(tags))
+            )
+        else:
+            self.ui.selectedTagsLabel.setText(tr("condition.selected_tags_empty"))
+
     def tags_selection_changed(self):
         selected_tags = [
             self.ui.tagsView.model().itemFromIndex(index).text()
             for index in self.ui.tagsView.selectedIndexes()
         ]
-        self.ui.selectedTagsLabel.setText('Selected tags: ' + ', '.join(selected_tags))
+        self._set_selected_tags_label(selected_tags)
 
     def update_visibility(self):
         """
         Updates the visibility of UI elements based on the selected condition type.
         """
-        state = self.ui.conditionCombo.currentText()
+        state = combo_value(self.ui.conditionCombo)
 
         self.ui.nameLabel.setVisible(state == "name")
         self.ui.nameCombo.setVisible(state == "name")
@@ -72,7 +128,7 @@ class ConditionDialog(QDialog):
         self.ui.tagsView.setVisible(state == "tags")
         self.ui.selectedTagsLabel.setVisible(state == "tags")
         self.ui.tagGroupsCombo.setVisible(
-            state == "tags" and self.ui.tagsCombo.currentText() == "tags in group"
+            state == "tags" and combo_value(self.ui.tagsCombo) == "tags in group"
         )
 
         self.ui.typeCombo.setVisible(state == "type")
@@ -87,8 +143,8 @@ class ConditionDialog(QDialog):
         Updates the visibility of tag-related UI elements based on the selected tag condition.
         Only relevant when condition type is 'tags'.
         """
-        cond_type = self.ui.conditionCombo.currentText()
-        state = self.ui.tagsCombo.currentText()
+        cond_type = combo_value(self.ui.conditionCombo)
+        state = combo_value(self.ui.tagsCombo)
 
         # If not in 'tags' condition, hide tag-specific widgets
         if cond_type != 'tags':
@@ -123,25 +179,25 @@ class ConditionDialog(QDialog):
                 pass
             else:
                 # Select condition type first
-                self.ui.conditionCombo.setCurrentIndex(self.ui.conditionCombo.findText(cond.get('type', '')))
+                set_combo_value(self.ui.conditionCombo, cond.get('type', ''))
                 ctype = cond.get('type')
 
                 if ctype == 'name':
-                    self.ui.nameCombo.setCurrentIndex(self.ui.nameCombo.findText(cond.get('name_switch', '')))
+                    set_combo_value(self.ui.nameCombo, cond.get('name_switch', ''))
                     self.ui.filemask.setText(cond.get('filemask', ''))
 
                 elif ctype == 'date':
-                    self.ui.ageCombo.setCurrentIndex(self.ui.ageCombo.findText(cond.get('age_switch', '')))
+                    set_combo_value(self.ui.ageCombo, cond.get('age_switch', ''))
                     self.ui.age.setText(str(cond.get('age', '')))
-                    self.ui.ageUnitsCombo.setCurrentIndex(self.ui.ageUnitsCombo.findText(cond.get('age_units', '')))
+                    set_combo_value(self.ui.ageUnitsCombo, cond.get('age_units', ''))
 
                 elif ctype == 'size':
-                    self.ui.sizeCombo.setCurrentIndex(self.ui.sizeCombo.findText(cond.get('size_switch', '')))
+                    set_combo_value(self.ui.sizeCombo, cond.get('size_switch', ''))
                     self.ui.size.setText(str(cond.get('size', '')))
-                    self.ui.sizeUnitsCombo.setCurrentIndex(self.ui.sizeUnitsCombo.findText(cond.get('size_units', '')))
+                    set_combo_value(self.ui.sizeUnitsCombo, cond.get('size_units', ''))
 
                 elif ctype == 'tags':
-                    self.ui.tagsCombo.setCurrentIndex(self.ui.tagsCombo.findText(cond.get('tag_switch', '')))
+                    set_combo_value(self.ui.tagsCombo, cond.get('tag_switch', ''))
                     # Set tag group if applicable
                     if 'tag_group' in cond:
                         self.ui.tagGroupsCombo.setCurrentText(cond['tag_group'])
@@ -160,11 +216,11 @@ class ConditionDialog(QDialog):
                                     if child.text() in tags_to_select:
                                         idx = model.indexFromItem(child)
                                         sel_model.select(idx, QItemSelectionModel.Select)
-                            self.ui.selectedTagsLabel.setText('Selected tags: ' + ', '.join(tags_to_select))
+                            self._set_selected_tags_label(tags_to_select)
 
                 elif ctype == 'type':
-                    self.ui.typeSwitchCombo.setCurrentIndex(self.ui.typeSwitchCombo.findText(cond.get('file_type_switch', '')))
-                    self.ui.typeCombo.setCurrentIndex(self.ui.typeCombo.findText(cond.get('file_type', '')))
+                    set_combo_value(self.ui.typeSwitchCombo, cond.get('file_type_switch', ''))
+                    set_combo_value(self.ui.typeCombo, cond.get('file_type', ''))
         finally:
             self.ui.conditionCombo.blockSignals(False)
             self.ui.tagsCombo.blockSignals(False)
@@ -176,45 +232,45 @@ class ConditionDialog(QDialog):
     def accept(self):
         error = ""
 
-        ctype = self.ui.conditionCombo.currentText()
+        ctype = combo_value(self.ui.conditionCombo)
         self.condition['type'] = ctype
 
         if ctype == 'name':
-            self.condition['name_switch'] = self.ui.nameCombo.currentText()
+            self.condition['name_switch'] = combo_value(self.ui.nameCombo)
             if self.ui.filemask.text() == "":
-                error = "Filemask can't be empty"
+                error = tr("error.filemask_empty")
             self.condition['filemask'] = self.ui.filemask.text()
 
         elif ctype == 'date':
-            self.condition['age_switch'] = self.ui.ageCombo.currentText()
+            self.condition['age_switch'] = combo_value(self.ui.ageCombo)
             try:
                 self.condition['age'] = float(self.ui.age.text())
             except Exception:
-                error = "Incorrect Age value"
-            self.condition['age_units'] = self.ui.ageUnitsCombo.currentText()
+                error = tr("error.incorrect_age")
+            self.condition['age_units'] = combo_value(self.ui.ageUnitsCombo)
 
         elif ctype == 'size':
-            self.condition['size_switch'] = self.ui.sizeCombo.currentText()
+            self.condition['size_switch'] = combo_value(self.ui.sizeCombo)
             try:
                 self.condition['size'] = float(self.ui.size.text())
             except Exception:
-                error = "Incorrect Size value"
-            self.condition['size_units'] = self.ui.sizeUnitsCombo.currentText()
+                error = tr("error.incorrect_size")
+            self.condition['size_units'] = combo_value(self.ui.sizeUnitsCombo)
 
         elif ctype == 'tags':
-            self.condition['tag_switch'] = self.ui.tagsCombo.currentText()
+            self.condition['tag_switch'] = combo_value(self.ui.tagsCombo)
             self.condition['tags'] = [index.data() for index in self.ui.tagsView.selectedIndexes()]
             if self.condition['tag_switch'] == 'tags in group':
                 self.condition['tag_group'] = self.ui.tagGroupsCombo.currentText()
             if not self.condition['tags'] and self.condition['tag_switch'] not in ('no tags', 'any tags', 'tags in group'):
-                error = "You haven't selected any tags"
+                error = tr("error.no_tags_selected")
 
         elif ctype == 'type':
-            self.condition['file_type_switch'] = self.ui.typeSwitchCombo.currentText()
-            self.condition['file_type'] = self.ui.typeCombo.currentText()
+            self.condition['file_type_switch'] = combo_value(self.ui.typeSwitchCombo)
+            self.condition['file_type'] = combo_value(self.ui.typeCombo)
 
         if error:
-            QMessageBox.critical(self, "Error", error, QMessageBox.Ok)
+            QMessageBox.critical(self, tr("dialog.error"), error, QMessageBox.Ok)
         else:
             super(ConditionDialog, self).accept()
 
