@@ -22,6 +22,27 @@ from declutter.tags import get_tags_and_groups
 from declutter.config import ALL_TAGGED_TEXT
 
 
+def validate_rule(rule):
+    """Returns the error message to show for an incomplete or invalid rule, or "" if it can be saved."""
+    error = ""
+    # Validation chain, the last failing check wins
+    if rule['ignore_newest'] and not rule['ignore_N'].strip().isdecimal():
+        error = "The number of newest files to ignore must be a whole number"
+    if rule['action'] == "Rename" and rule['name_pattern'] == "":
+        error = "Please specify the name pattern"
+    if rule['action'] == "Move to subfolder" and rule['target_subfolder'] == "":
+        error = "Please specify the target subfolder"
+    if rule['action'] in ("Move", "Copy") and rule['target_folder'] == "":
+        error = "Please specify the target folder"
+    if not rule.get('conditions'):
+        error = "Please add at least one condition"
+    if not rule.get('folders'):
+        error = "Please select at least one source"
+    if rule['name'] == "":
+        error = "Please enter the name"
+    return error
+
+
 class RuleEditWindow(QDialog):
     def __init__(self):
         super(RuleEditWindow, self).__init__()
@@ -206,23 +227,7 @@ class RuleEditWindow(QDialog):
     def accept(self):
         self.update_rule_from_ui()
 
-        error = ""
-        # Validation chain
-        if self.rule['ignore_newest'] and self.rule['ignore_N'] == "":
-            error = "Please specify the number of files to ignore"
-        if self.rule['action'] == "Rename" and self.rule['name_pattern'] == "":
-            error = "Please specify the name pattern"
-        if self.rule['action'] == "Move to subfolder" and self.rule['target_subfolder'] == "":
-            error = "Please specify the target subfolder"
-        if self.rule['action'] in ("Move", "Copy") and self.rule['target_folder'] == "":
-            error = "Please specify the target folder"
-        if not self.rule.get('conditions'):
-            error = "Please add at least one condition"
-        if not self.rule.get('folders'):
-            error = "Please select at least one source"
-        if self.rule['name'] == "":
-            error = "Please enter the name"
-
+        error = validate_rule(self.rule)
         if error:
             QMessageBox.critical(self, "Error", error, QMessageBox.Ok)
             return

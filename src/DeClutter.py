@@ -327,14 +327,11 @@ class RulesWindow(QMainWindow):
 
     def delete_rule(self):
         """Deletes the selected rule(s)."""
-        del_indexes = [r.row() for r in self.ui.rulesTable.selectedIndexes()]
+        # selectedIndexes() returns one index per selected cell, so a selected row appears once per column
+        del_indexes = {r.row() for r in self.ui.rulesTable.selectedIndexes()}
 
         if del_indexes:
-            del_names = [
-                r["name"]
-                for r in self.settings["rules"]
-                if self.settings["rules"].index(r) in del_indexes
-            ]
+            del_names = [self.settings["rules"][i]["name"] for i in sorted(del_indexes)]
 
             reply = QMessageBox.question(
                 self,
@@ -348,6 +345,8 @@ class RulesWindow(QMainWindow):
                 for ind in sorted(del_indexes, reverse=True):
                     del self.settings["rules"][ind]
                     self.ui.rulesTable.removeRow(ind)
+                # the scheduler reloads rules from the store, so an unsaved deletion keeps running
+                save_settings(self.settings)
 
                 self.ui.rulesTable.setRangeSelected(
                     QTableWidgetSelectionRange(

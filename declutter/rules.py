@@ -25,6 +25,7 @@ def apply_rule(rule, dryrun=False):
                 "Processing rule" + (" [DRYRUN mode]" if dryrun else "") + ": " + rule['name'])
             for f in files:
                 msg = ""
+                result = None  # set only by a real (not dry-run) operation on this file
                 p = Path(f)
                 if rule['action'] == 'Copy':
                     target_folder = resolve_path(rule['target_folder'], p)
@@ -39,28 +40,27 @@ def apply_rule(rule, dryrun=False):
                                         rmtree(target)
                                         result = copytree(f, target)
                                         # hide_dc(result) # TBD only for sidecar files
-                                        msg = "Replaced " + str(result) + " with " + f
+                                    msg = "Replaced " + str(target) + " with " + f
                                     report['copied'] += 1
                             else:
                                 if not dryrun:
                                     # TBD will probably crash if target exists!
                                     result = copytree(f, target)
                                     # hide_dc(result) # TBD only for sidecar files
-                                msg = "Copied " + f + " to " + str(result)
+                                msg = "Copied " + f + " to " + str(target)
                                 report['copied'] += 1
                         else:
                             if target.is_file() and os.stat(target).st_size == os.stat(f).st_size:  # TBD comparing sizes may be not enough
                                 msg = "File " + f + " already exists in the target location and has the same size, skipping"
+                            elif dryrun:
+                                msg = "Copied " + f + " to " + str(target)
                             else:
-                                if not dryrun:
-                                    result = advanced_copy(
-                                        f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
-                                else:
-                                    msg = "Copied " + f + " to " + str(result)
+                                result = advanced_copy(
+                                    f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 if result:
                                     report['copied'] += 1
                                     msg = "Copied " + f + " to " + str(result)
-                        if rule['keep_tags']:
+                        if rule['keep_tags'] and result:
                             tags = get_tags(f)
                             if set_tags(result, tags):
                                 msg += ", tags copied too"
@@ -69,11 +69,11 @@ def apply_rule(rule, dryrun=False):
                     except Exception as e:
                         logging.exception(f'exception {e}')
                 elif rule['action'] == 'Move':
+                    target_folder = resolve_path(rule['target_folder'], p)
+                    target = Path(target_folder) / str(p).replace(':', '') if ('keep_folder_structure' in rule.keys(
+                    ) and rule['keep_folder_structure']) else Path(target_folder) / p.name
                     if not dryrun:
                         tags = get_tags(f)
-                        target_folder = resolve_path(rule['target_folder'], p)
-                        target = Path(target_folder) / str(p).replace(':', '') if ('keep_folder_structure' in rule.keys(
-                        ) and rule['keep_folder_structure']) else Path(target_folder) / p.name
                         try:
                             result = advanced_move(
                                 f, target, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
@@ -89,7 +89,7 @@ def apply_rule(rule, dryrun=False):
                         except Exception as e:
                             logging.exception(f'exception {e}')
                     else:
-                        msg = "Moved " + f + " to " + target_folder
+                        msg = "Moved " + f + " to " + str(target)
                 elif rule['action'] == 'Rename':
                     if 'name_pattern' in rule.keys() and rule['name_pattern']:
                         newname = resolve_name_pattern(rule['name_pattern'], p)
@@ -249,8 +249,13 @@ def apply_all_rules(settings):
     report = {}
     details = []
     for rule in settings['rules']:
-        # TBD doesn't look optimal / had to use load_settings for testing, should be just settings
-        rule_report, rule_details = apply_rule(rule, load_settings()['dryrun'])
+        try:
+            # TBD doesn't look optimal / had to use load_settings for testing, should be just settings
+            rule_report, rule_details = apply_rule(rule, load_settings()['dryrun'])
+        except Exception as e:
+            # a broken rule must not stop the rules after it
+            logging.exception(f"Rule '{rule.get('name', '')}' failed and was skipped: {e}")
+            continue
         report = {k: report.get(k, 0) + rule_report.get(k, 0)
                   for k in set(report) | set(rule_report)}
         details.extend(rule_details)
