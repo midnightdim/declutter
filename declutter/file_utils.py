@@ -149,8 +149,9 @@ def advanced_move(source_path, target_path, overwrite=False, copy=False):
             logging.exception(e)
             return False
     else:
-        # Target exists — check size
-        if get_size(source_path) == get_size(target_path):
+        # Target exists. A file and a folder are never duplicates and never overwrite each other.
+        same_type = Path(source_path).is_dir() == Path(target_path).is_dir()
+        if same_type and get_size(source_path) == get_size(target_path):
             # Optional hash comparison to confirm identical content
             try:
                 settings = load_settings()
@@ -197,8 +198,8 @@ def advanced_move(source_path, target_path, overwrite=False, copy=False):
                     else:
                         return False
         else:
-            # Different size — overwrite or increment
-            if overwrite:
+            # Different size or type: overwrite or increment
+            if overwrite and same_type:
                 try:
                     remove_file_or_dir(target_path)
                     if copy:

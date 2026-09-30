@@ -92,20 +92,20 @@ def apply_rule(rule, dryrun=False):
                         msg = "Moved " + f + " to " + target_folder
                 elif rule['action'] == 'Rename':
                     if 'name_pattern' in rule.keys() and rule['name_pattern']:
-                        newname = rule['name_pattern'].replace(
-                            '<filename>', p.name)
-                        newname = newname.replace('<folder>', p.parent.name)
-                        # TBD what if there are multiple replace tokens?
-                        rep = re.findall("<replace:(.*):(.*)>", newname)
-                        newname = re.sub("<replace(.*?)>", '', newname)
-                        for r in rep:
-                            newname = newname.replace(r[0], r[1])
-                        if not dryrun:
+                        newname = resolve_name_pattern(rule['name_pattern'], p)
+                        if not is_valid_filename(newname):
+                            msg = 'Skipped renaming ' + f + ': pattern "' + \
+                                rule['name_pattern'] + '" produced an invalid name "' + newname + '"'
+                            logging.error(msg)
+                        elif newname == p.name:
+                            pass  # the pattern doesn't change this name
+                        elif not dryrun:
                             try:
                                 result = advanced_move(p, Path(
                                     p.parent) / newname, (rule['overwrite_switch'] == 'overwrite') if 'overwrite_switch' in rule.keys() else False)
                                 if result:
-                                    newfullname = Path(p.parent / newname)
+                                    # result may differ from newname, e.g. "name (1)" after a collision
+                                    newfullname = Path(result)
                                     if newfullname.is_dir():  # if renamed a folder check if its children are in the list, and if they are update their paths
                                         for i in range(len(files)):
                                             if p in Path(files[i]).parents:
@@ -196,6 +196,36 @@ def apply_rule(rule, dryrun=False):
     # else:
     #     logging.debug("Rule "+rule['name'] + " disabled, skipping.")
     return report, details
+
+REPLACE_TOKEN = re.compile(r"<replace:(.*?):(.*?)>")
+NAME_TOKEN = re.compile(r"<filename>|<folder>")
+INVALID_NAME_CHARS = set('<>:"/\\|?*') if os.name == 'nt' else {'/'}
+
+
+def resolve_name_pattern(pattern, path):
+    """Builds the new name for path from a Rename pattern.
+
+    <filename> and <folder> are expanded, then every <replace:A:B> is applied
+    in order. Tokens are read from the pattern itself, never from the expanded
+    names. A pattern made only of <replace:> tokens edits the original name.
+    """
+    p = Path(path)
+    replacements = REPLACE_TOKEN.findall(pattern)
+    newname = REPLACE_TOKEN.sub('', pattern)
+    if replacements and not newname.strip():
+        newname = '<filename>'
+    newname = NAME_TOKEN.sub(
+        lambda m: p.name if m.group() == '<filename>' else p.parent.name, newname)
+    for search, replacement in replacements:
+        if search:  # an empty search would insert the replacement between every character
+            newname = newname.replace(search, replacement)
+    return newname
+
+
+def is_valid_filename(name):
+    """True if name is a plain file name that keeps the file in its current folder."""
+    return name not in ('', '.', '..') and not any(c in INVALID_NAME_CHARS for c in name)
+
 
 # resolves patterns in taget_folder name
 # <group:group_name> replaced with the first tag that path is tagged with; if path has no tags in this group, replaced with None

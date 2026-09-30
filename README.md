@@ -47,6 +47,8 @@ When using the **Rename** action, you can use patterns to dynamically construct 
 *   `<folder>` — The name of the parent folder.
 *   `<replace:SEARCH:REPLACEMENT>` — Replaces text in the filename. Leave REPLACEMENT empty to remove text.
 
+Several `<replace:...>` tokens are applied in order. A pattern that contains only `<replace:...>` tokens edits the original filename, so `<replace: [draft]:>` is the same as `<filename><replace: [draft]:>`. If a pattern produces an empty or invalid name, the file is skipped and an error is logged.
+
 **Examples:**
 
 | Pattern | Original File | New Filename |
@@ -55,6 +57,8 @@ When using the **Rename** action, you can use patterns to dynamically construct 
 | `<folder> - <filename>` | `Work/budget.xls` | `Work - budget.xls` |
 | `<filename><replace: [draft]:>` | `report [draft].doc` | `report.doc` |
 | `<filename><replace:-:_>` | `my-file-name.txt` | `my_file_name.txt` |
+| `<replace: - WEBSITE.COM:>` | `clip - WEBSITE.COM.mp4` | `clip.mp4` |
+| `<filename><replace: [ad]:><replace:-:_>` | `my-clip [ad].mp4` | `my_clip.mp4` |
 
 ## Technical Details
 
