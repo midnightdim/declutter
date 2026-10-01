@@ -60,6 +60,19 @@ Several `<replace:...>` tokens are applied in order. A pattern that contains onl
 | `<replace: - WEBSITE.COM:>` | `clip - WEBSITE.COM.mp4` | `clip.mp4` |
 | `<filename><replace: [ad]:><replace:-:_>` | `my-clip [ad].mp4` | `my_clip.mp4` |
 
+#### Rename never moves a file
+A renamed file always stays in its folder. The new name can't contain `\` or `/` (or, on Windows, any of `< > : " | ? *`). If a pattern produces such a name, for example `Archive\<filename>`, the file is skipped and an error is logged.
+
+To move files, use a separate rule:
+
+| Goal | How |
+| :--- | :--- |
+| Move files into a subfolder | A **Move to subfolder** rule, e.g. with subfolder `Archive` |
+| Rename files and move them into a subfolder | A **Rename** rule followed by a **Move to subfolder** rule |
+| Move files up a level or somewhere else | A **Move** rule with that folder as the target |
+
+When you combine a Rename rule with a Move rule, put the Rename rule above the Move rule (rules run from top to bottom, use **Move up** and **Move down** in the Rules window to reorder them), and make sure the Move rule's conditions match the new filename.
+
 ## Technical Details
 
 *   **Framework:** PySide6
